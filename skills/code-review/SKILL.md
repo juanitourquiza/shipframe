@@ -1,7 +1,7 @@
 ---
 name: code-review
 description: Two-phase code review. Phase 1 runs fast pre-commit checks for spec compliance, type safety, and stack alignment. Phase 2 audits SOLID principles and structural integrity. Use before committing or opening a PR.
-argument-hint: [--base-branch <branch>]
+argument-hint: '[--base-branch <branch>]'
 allowed-tools: Read Grep Glob Bash
 effort: high
 ---

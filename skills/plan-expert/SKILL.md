@@ -1,7 +1,7 @@
 ---
 name: plan-expert
 description: Plans how to execute a task or feature by breaking it into detailed, actionable subtasks. Accepts a ClickUp ticket ID or a free-form description. If a ticket is provided, fetches it via ClickUp MCP and creates subtasks directly on the ticket. If a description is provided, delegates to create-task to create a parent ClickUp ticket first, then creates subtasks on it.
-argument-hint: [--ticket-id <id>] [--description "<text>"]
+argument-hint: '[--ticket-id <id>] [--description "<text>"]'
 allowed-tools: Read Grep Glob Bash AskUserQuestion mcp__clickup__clickup_get_task mcp__clickup__clickup_create_task mcp__clickup__clickup_get_workspace_hierarchy TaskCreate TaskUpdate Skill
 effort: medium
 ---

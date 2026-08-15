@@ -1,6 +1,6 @@
 ---
 name: wiki-sync
-description: Synchronizes the wiki with changes in source repositories since the last sync, always diffing against each repo's configured base branch — regardless of what branch is currently checked out locally. Invoke when the user asks to sync or update the wiki, or wants to bring it up to date with recent commits.
+description: Synchronizes the wiki with changes in source repositories since the last sync, always diffing against origin/main. Invoke when the user asks to sync or update the wiki, or wants to bring it up to date with recent commits.
 allowed-tools: Read Write Edit Bash
 effort: medium
 ---
@@ -28,7 +28,7 @@ If `wiki/sync-config.md` doesn't exist, abort:
 > "wiki/sync-config.md not found. Run /wiki-init to configure repos, or create it manually."
 
 Parse `wiki/sync-config.md` to extract:
-- `REPOS`: list of `{ name, path, base_branch }` objects from the Repositories table. The `base_branch` comes from the `Base branch` column in the table; if that column is absent or the value is empty for a given repo, default to `main`.
+- `REPOS`: list of `{ name, path }` objects from the Repositorios table
 - `IMPACT_PATTERNS`: per-repo list of file glob patterns with wiki impact
 - `NO_IMPACT_PATTERNS`: list of patterns to ignore
 
@@ -52,29 +52,23 @@ Format expected:
 ```
 
 If `wiki/sync.md` doesn't exist, treat all repos as first-time syncs.
-Use `git -C [path] rev-parse --short origin/[repo.base_branch]` to get the current remote base branch tip as a baseline,
-then run a full scan instead of a diff. The file list for the scan must come from
-the remote base branch tree, not the local working tree (the repo may be checked
-out to a different branch):
-
-```bash
-git -C [path] ls-tree -r --name-only origin/[repo.base_branch]
-```
+Use `git -C [path] rev-parse --short origin/main` to get the current origin/main as a baseline,
+then run a full scan of recently modified files instead of a diff.
 
 ---
 
 ## Step 2 — Compute the diff for each repo
 
-For each repo in `REPOS`, first fetch the latest remote state for the repo's base branch:
+For each repo in `REPOS`, first fetch the latest remote state:
 
 ```bash
-git -C [repo.path] fetch origin [repo.base_branch] 2>/dev/null
+git -C [repo.path] fetch origin main 2>/dev/null
 ```
 
-Then compute the diff against the repo's base branch:
+Then compute the diff against `origin/main`:
 
 ```bash
-git -C [repo.path] log [last-hash]..origin/[repo.base_branch] --name-status --pretty=format:"" 2>/dev/null
+git -C [repo.path] log [last-hash]..origin/main --name-status --pretty=format:"" 2>/dev/null
 ```
 
 Where `[last-hash]` comes from `wiki/sync.md` for that repo.
@@ -108,14 +102,7 @@ Follow conventions loaded in Step 0 for all edits.
 
 ### Added (`A`) or Modified (`M`)
 
-1. Read the file's content **as it exists on the repo's remote base branch** —
-   never read it from the local working tree, since the repo may currently be
-   checked out to a different branch than `[repo.base_branch]`:
-   ```bash
-   git -C [repo.path] show origin/[repo.base_branch]:[file-path] 2>/dev/null
-   ```
-   This never switches branches or touches the working tree, so it works
-   regardless of what's currently checked out locally.
+1. Read the file from the repo.
 2. Identify which wiki page(s) cover it (`wiki/index.md` as reference).
 3. Update those pages — amplify, do not rewrite. Add or adjust only what
    the changed file introduces; preserve everything else.
@@ -147,11 +134,11 @@ Scan modified pages for `[[wikilinks]]` that don't resolve to an existing
 
 ## Step 5 — Update sync state
 
-For each repo, get the current base branch hash:
+For each repo, get the current `origin/main` hash:
 
 ```bash
-git -C [repo.path] rev-parse --short origin/[repo.base_branch] 2>/dev/null
-git -C [repo.path] log -1 origin/[repo.base_branch] --pretty=format:"%s" 2>/dev/null
+git -C [repo.path] rev-parse --short origin/main 2>/dev/null
+git -C [repo.path] log -1 origin/main --pretty=format:"%s" 2>/dev/null
 ```
 
 Overwrite `wiki/sync.md` with the new hashes and today's date:
@@ -232,4 +219,4 @@ Ignored (no wiki impact): tests/SomeTest.php, composer.lock, ...
 - Do not update `wiki/sync.md` if the sync failed or was aborted partway.
 - Do not ask for confirmation before applying changes.
 - Do not invent conventions. All standards come from `.claude/wiki-conventions.md`.
-- Do not hardcode repo paths, file patterns, or branch names — always read from `wiki/sync-config.md`.
+- Do not hardcode repo paths or file patterns — always read from `wiki/sync-config.md`.

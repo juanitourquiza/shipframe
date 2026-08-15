@@ -1,7 +1,7 @@
 ---
 name: feature-discovery
 description: Acts as a functional analyst to gather all requirements of a feature through structured questioning. Produces a comprehensive feature specification ready to be turned into a ClickUp ticket, user story, or epic.
-argument-hint: [--description "<initial feature idea>"]
+argument-hint: '[--description "<initial feature idea>"]'
 allowed-tools: AskUserQuestion mcp__clickup__clickup_get_workspace_hierarchy mcp__clickup__clickup_create_task TaskCreate Skill
 effort: medium
 ---

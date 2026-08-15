@@ -1,7 +1,7 @@
 ---
 name: create-pr
 description: Creates a GitHub pull request (always as Draft) with a fully auto-populated standardized template. Infers the base branch, derives the description from the diff and commits, detects shared code impact, tags stakeholders from CODEOWNERS, and builds a concrete test plan from the changes. Uses gh CLI as the primary creation method with GitHub MCP as fallback. Designed to run without human input when called by an agent, or with a confirmation step when invoked directly.
-argument-hint: [--base <branch>] [--ticket-id <id>] [--auto]
+argument-hint: '[--base <branch>] [--ticket-id <id>] [--auto]'
 allowed-tools: Bash AskUserQuestion mcp__github__create_pull_request mcp__github__list_branches
 effort: low
 ---
@@ -99,7 +99,7 @@ Example: `feat/CU-abc123-user-auth-flow` → `[Feature] User auth flow (CU-abc12
 
 ## Step 5 — Populate the PR template
 
-The canonical PR body structure is defined in `templates/pull_request_template.md` at the project root of the **ai-toolbox** repo (the repo where this skill lives). Read that file and use it as the exact skeleton — do not invent or remove sections. Populate every placeholder by analyzing the git context from Step 2. Instructions inside each section below describe how to derive the content — follow them precisely. The rendered output must not contain the instruction text or placeholder markers.
+The canonical PR body structure is defined in `templates/pull_request_template.md` at the project root of the **ShipFrame** repo (the repo where this skill lives). Read that file and use it as the exact skeleton — do not invent or remove sections. Populate every placeholder by analyzing the git context from Step 2. Instructions inside each section below describe how to derive the content — follow them precisely. The rendered output must not contain the instruction text or placeholder markers.
 
 ---
 

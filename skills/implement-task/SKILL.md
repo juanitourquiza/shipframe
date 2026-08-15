@@ -1,7 +1,7 @@
 ---
 name: implement-task
 description: Implements a task end-to-end. Given a ClickUp ticket ID or a plain description, reads the project context, builds a file-level implementation plan, writes the code, runs verification, commits, and opens a PR. Use when you want an agent to autonomously work on a well-scoped task.
-argument-hint: [--ticket-id <id>] [--description "<text>"]
+argument-hint: '[--ticket-id <id>] [--description "<text>"]'
 allowed-tools: Glob Read Grep Write Edit Bash AskUserQuestion mcp__clickup__clickup_get_task mcp__github__create_pull_request TaskCreate TaskUpdate
 effort: high
 ---

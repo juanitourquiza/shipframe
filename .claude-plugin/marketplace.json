@@ -1,38 +1,39 @@
 {
-  "name": "axis-human-ai-toolbox",
+  "name": "shipframe",
   "owner": {
-    "name": "Axis Human",
-    "email": "[EMAIL_ADDRESS]"
+    "name": "Juan Urquiza",
+    "email": ""
   },
   "metadata": {
-    "description": "A curated set of skills and agents for software teams. Covers accessibility auditing, code review, project initialization, and an end-to-end feature planning workflow backed by ClickUp.",
-    "version": "1.1.4"
+    "description": "AI coding workflows for teams that plan, prove, and ship.",
+    "version": "0.1.0"
   },
   "plugins": [
     {
-      "name": "axis-human-ai-toolbox",
+      "name": "shipframe",
       "source": {
         "source": "github",
-        "repo": "Axis-Human/dev-workflow-plugin"
+        "repo": "juanitourquiza/shipframe"
       },
-      "description": "Skills and agents for software teams: accessibility auditing, code review, project initialization, and feature planning with ClickUp integration.",
-      "version": "1.1.4",
+      "description": "Skills, agents, release evidence, and project profiles for disciplined AI-assisted software delivery.",
+      "version": "0.1.0",
       "author": {
-        "name": "Axis Human"
+        "name": "Juan Urquiza"
       },
-      "homepage": "https://github.com/Axis-Human/dev-workflow-plugin",
-      "repository": "https://github.com/Axis-Human/dev-workflow-plugin",
+      "homepage": "https://github.com/juanitourquiza/shipframe",
+      "repository": "https://github.com/juanitourquiza/shipframe",
       "keywords": [
-        "axis",
-        "human",
+        "shipframe",
         "ai",
-        "toolbox",
         "skills",
         "agents",
         "code-review",
-        "accessibility",
-        "planning",
-        "clickup"
+        "release",
+        "deploy-evidence",
+        "clickup",
+        "codex",
+        "claude-code",
+        "opencode"
       ],
       "strict": true
     }

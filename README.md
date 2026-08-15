@@ -1,382 +1,213 @@
-# Dev Workflow — Claude Code Plugin
+# ShipFrame — AI Coding Workflows for Teams
 
-A Claude Code plugin with a curated set of skills and agents for software teams. Covers accessibility auditing, code review, project initialization, design system documentation, and end-to-end feature planning workflows backed by ClickUp.
+**ShipFrame** is a practical AI coding workflow toolkit for teams that plan, prove, and ship software changes with discipline.
+
+It provides reusable skills, agent workflows, templates, and project profiles for Claude Code, Codex CLI, and OpenCode. The core workflow is generic enough for any software team, while project-specific behavior lives in opt-in profiles.
+
+> Tagline: **AI coding workflows for teams that plan, prove, and ship.**
+
+---
+
+## What ShipFrame does
+
+ShipFrame turns natural-language development requests into a repeatable delivery lifecycle:
+
+```text
+Refresh context → Discover requirements → Plan work → Implement → Verify → Review → Release evidence → PR
+```
+
+It is designed for:
+
+- teams working from tickets, GitHub branches, and PRs;
+- developers who want agent help without “vibe coding”;
+- projects that need exact release evidence before declaring work complete;
+- multi-project teams that need generic workflows plus project-specific profiles.
 
 ---
 
 ## What's inside
 
-### Skills
+### Core workflow skills
 
-Skills are reusable workflows invoked with a `/` command directly in Claude Code. Each skill is independent and can be used on its own.
-
-| Skill | Command | What it does |
-|---|---|---|
-| **init-project** | `/init-project` | Scans the codebase and generates an `AGENTS.md` with the detected stack, structure, and dev commands. Run this first on any new project. |
-| **code-review** | `/code-review` | Two-phase code review: fast pre-commit checks (spec compliance, type safety, security) followed by a deep SOLID / KISS / DRY structural audit. |
-| **a11y-auditor** | `/a11y-auditor` | Audits code or components for accessibility barriers against WCAG 2.2 (A, AA, AAA). Auto-detects web vs. mobile stack. |
-| **feature-discovery** | `/feature-discovery` | Acts as a functional analyst to gather all feature requirements through structured questioning. Outputs a comprehensive spec and optionally creates a ClickUp ticket. |
-| **plan-expert** | `/plan-expert` | Takes a ClickUp ticket or a free-form description and breaks it into detailed, ordered subtasks using a structured 8-section template. Creates subtasks on the ClickUp ticket or as a local task list. |
-| **design-expert** | `/design-expert` | Scans the project for all design-related information (colors, typography, spacing, component patterns, dark mode, design system) and generates or updates a `DESIGN.md` file. |
-| **design-system-docs** | `/design-system-docs` | Audits design system documentation. If Storybook is present, reviews its quality and suggests improvements. If not, produces a step-by-step plan to implement it. |
-| **design-system-setup** | `/design-system-setup` | End-to-end design system setup. Runs `design-expert` → `design-system-docs` → `plan-expert` in sequence to document the design system, audit or plan Storybook, and create all execution tasks in ClickUp or locally. |
-| **planning-features** | `/planning-features` | End-to-end feature planning. Runs `feature-discovery` then `plan-expert` back to back — gathers requirements, creates a ClickUp ticket, and breaks it into an execution plan. |
-| **create-pr** | `/create-pr` | Creates a GitHub PR with a fully auto-populated standardized template. Infers base branch, derives description from the diff, detects shared code impact, tags stakeholders from CODEOWNERS, and builds a concrete test plan. Designed to run without human input when called by an agent. |
-| **implement-task** | `/implement-task` | Implements a task end-to-end. Given a ClickUp ticket ID or description, reads project context, plans at the file level, writes the code, runs automated checks + `code-review`, applies fixes, commits, and opens a PR via `create-pr`. |
-
-### Agents
-
-Agents follow an **orchestrator → sub-agent** architecture. The `orchestrator-agent` is the only agent Claude auto-selects — it analyzes every user request and routes to the correct specialist sub-agent.
-
-### Orchestrator (default)
-
-| Agent | Role |
+| Skill | What it does |
 |---|---|
-| **orchestrator-agent** | **Default entry point.** Handles any user request by classifying intent and routing to the right sub-agent. Always runs first; always responds last. |
+| `init-project` | Scans a repo and creates project context for future agents. |
+| `project-memory-refresh` | Reads WIKI/AGENTS/git state before non-trivial work. |
+| `feature-discovery` | Gathers requirements through structured questioning. |
+| `plan-expert` | Breaks work into ordered, actionable subtasks. |
+| `implement-task` | Implements a scoped task, verifies it, commits, and prepares a PR. |
+| `code-review` | Two-phase review: fast checks plus structural/SOLID audit. |
+| `create-task` | Converts raw input into ClickUp-ready task templates. |
+| `create-issue` | Triage flow for bugs/issues. |
+| `create-pr` | Opens a draft PR with a populated template from git context. |
 
-### Sub-agents (invoked by orchestrator only)
+### Engineering discipline skills
 
-| Agent | Activated when |
+| Skill | What it does |
 |---|---|
-| **planning-features-agent** | `new_feature` intent — coordinates discovery + planning end-to-end. |
-| **feature-discovery-agent** | Called by `planning-features-agent` — structured requirement interviews → FEATURE_SPEC + ClickUp ticket. |
-| **plan-expert-agent** | `quick_task`, `refactor`, or after discovery — decomposes specs into 8-section subtasks. |
-| **implement-task-agent** | `implementation` intent or after planning — writes code, runs review, commits, opens PR. |
-| **design-system-setup-agent** | `design_system` intent — design-expert → design-system-docs → plan-expert pipeline. |
+| `domain-modeling` | Builds glossary/ADRs and sharpens project language. |
+| `codebase-design` | Designs deeper modules and cleaner seams. |
+| `tdd` | Guides red/green/refactor through public seams. |
+| `bug-diagnosis` | Builds a tight repro loop before changing code. |
+| `research` | Researches against primary sources and captures findings. |
+| `handoff` | Creates a compact handoff for the next agent/session. |
 
-> **How to use:** Just describe what you want in natural language. The orchestrator routes automatically. Use `/` skills for direct, one-off invocations when you know exactly which step to run.
+### Release and evidence skills
 
-### Standalone agents (Playwright test automation)
-
-These three agents are **not** routed through the orchestrator. They form a self-contained end-to-end browser-testing pipeline and are invoked directly via `/agents` (or by naming them). They run against a live web app through the `playwright-test` MCP server.
-
-| Agent | Role |
+| Skill | What it does |
 |---|---|
-| **playwright-test-planner** | Explores a running web app in a real browser, maps user flows, and writes a comprehensive Markdown test plan (happy paths, edge cases, negative scenarios). |
-| **playwright-test-generator** | Takes a test plan and generates Playwright `.spec.ts` files — executing each step live in the browser to produce robust, best-practice selectors and assertions. |
-| **playwright-test-healer** | Runs the generated suite, debugs failing tests, fixes selectors/assertions/timing, and re-runs until green. Marks genuinely stuck-but-correct tests as `test.fixme()`. |
+| `project-profile` | Loads repo-specific workflow rules without hardcoding them into core. |
+| `project-release` | Generic release orchestrator for frontend/backend/full-stack/docs/library releases. |
+| `release-checklist` | Produces project-aware release gates. |
+| `frontend-release` | Verifies frontend builds, routes, i18n, chunks, and smoke checks. |
+| `backend-release` | Verifies API/backend tests, migrations, queues, integrations, and endpoint smoke. |
+| `deploy-evidence` | Collects concrete proof before saying a deploy/release is done. |
+
+### Integration and product skills
+
+| Skill | What it does |
+|---|---|
+| `mcp-debugging` | Diagnoses MCP connector failures with live tool evidence. |
+| `client-copy-review` | Reviews client-facing copy, bilingual consistency, and approval constraints. |
+| `a11y-auditor` | Audits accessibility against WCAG 2.2. |
+| `design-expert` | Documents design tokens and UI conventions. |
+| `design-system-docs` | Audits Markdown/Storybook design system documentation. |
+| `design-system-setup` | Runs the design documentation pipeline end-to-end. |
+
+### Wiki skills
+
+| Skill | What it does |
+|---|---|
+| `wiki-init` | Creates the project wiki vault. |
+| `wiki-query` | Answers from the wiki index and pages. |
+| `wiki-sync` | Updates wiki docs from repo diffs. |
+| `wiki-forge` | Ingests source material into a connected Markdown wiki. |
 
 ---
 
-## Requirements
+## Project profiles
 
-- [Claude Code](https://claude.ai/code) CLI installed
-- A ClickUp account with API access (for skills that create/read tickets)
-- A GitHub personal access token (for the GitHub MCP server)
+ShipFrame keeps project-specific behavior out of the generic core.
+
+A project can opt in with:
+
+```text
+shipframe.profile.md
+.shipframe/profile.md
+.shipframe/project-profile.md
+```
+
+Profiles can define:
+
+- repo topology;
+- release/deploy process;
+- smoke-test routes;
+- version/tag policy;
+- i18n rules;
+- client copy constraints;
+- integration-specific verification.
+
+Starter packs live in `project-packs/`:
+
+- `project-packs/angular/`
+- `project-packs/laravel/`
+- `project-packs/mcp/`
+- `project-packs/pulsai-profile/`
+
+The PULSAI profile is intentionally optional: it is useful for PULSAI-style projects but not hardcoded into the public ShipFrame workflow.
 
 ---
 
 ## Installation
 
-### Option 1 — One-line install (recommended)
-
-Run this from your terminal — no cloning or manual steps required:
+### One-line install
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/Axis-Human/dev-workflow-plugin/main/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/juanitourquiza/shipframe/main/install.sh | bash
 ```
 
-This installs the plugin and configures the required hooks in `~/.claude/settings.json` automatically.
-
----
-
-### Option 2 — Install directly via Claude Code (no cloning required)
-
-Point Claude Code to the GitHub repository URL and it will install the plugin automatically:
+### Local clone
 
 ```bash
-claude 
+git clone https://github.com/juanitourquiza/shipframe ~/tools/shipframe
+cd ~/tools/shipframe
+./install.sh --codex
+./install.sh --claude
+./install.sh --opencode
 ```
+
+### Targets
 
 ```bash
-/plugin marketplace add axis-human/dev-workflow-plugin
-```   
-
-Claude Code fetches the plugin from GitHub and keeps it available. To update to the latest version at any time:
-
-```bash
-claude plugins update axis-human-ai-toolbox
+./install.sh --claude     # Claude Code plugin + hooks
+./install.sh --opencode   # OpenCode skills + converted agents
+./install.sh --codex      # Codex CLI skills + global workflow block
+./install.sh --all        # all supported tools
 ```
 
----
-
-### Option 3 — Clone and install locally
-
-Use this option if you want to modify skills or develop your own on top of this plugin.
-
-**1. Clone the repository**
-
-Pick a permanent location on your machine — this folder needs to stay there as long as you want the plugin active.
-
-```bash
-git clone https://github.com/Axis-Human/dev-workflow-plugin ~/tools/axis-human-ai-toolbox
-```
-
-**2. Register the plugin with Claude Code**
-
-```bash
-claude /plugin marketplace add ~/tools/axis-human-ai-toolbox
-claude plugins enable axis-human-ai-toolbox
-```
-
-Or open `~/.claude/settings.json` and add it manually:
-
-```json
-{
-  "enabledPlugins": {
-    "axis-human-ai-toolbox": true
-  }
-}
-```
-
-**3. Keep it up to date**
-
-Since the plugin runs from your local clone, updating is a regular `git pull`:
-
-```bash
-cd ~/tools/axis-human-ai-toolbox && git pull
-```
-
----
-
-### Verify the setup
-
-Open Claude Code in any project and run:
-
-```
-/init-project
-```
-
-If the skill runs and produces an `AGENTS.md` file, the plugin is working.
-
----
-
-## Usage
-
-### Skills
-
-All skills accept optional arguments. Run without arguments and the skill will ask for what it needs.
-
-```bash
-# Scan the project and generate AGENTS.md
-/init-project
-
-# Review only files changed against main
-/code-review --base-branch main
-
-# Audit for WCAG AA compliance (default)
-/a11y-auditor
-
-# Audit for WCAG AAA compliance
-/a11y-auditor --level AAA
-
-# Start a feature discovery session
-/feature-discovery
-
-# Start with an initial idea
-/feature-discovery --description "Allow users to export reports as PDF"
-
-# Plan from a ClickUp ticket
-/plan-expert --ticket-id abc123xyz
-
-# Plan from a description
-/plan-expert --description "Build a user authentication flow with email and OAuth"
-
-# Document the project's design system
-/design-expert
-
-# Audit or plan Storybook documentation
-/design-system-docs
-
-# Full design system setup (design-expert + design-system-docs + plan-expert)
-/design-system-setup
-
-# Full feature planning session (feature-discovery + plan-expert)
-/planning-features
-
-# Create a PR with auto-populated template from the current branch diff
-/create-pr
-
-# Create a PR targeting a specific base branch
-/create-pr --base develop
-
-# Implement a task from a ClickUp ticket and open a PR
-/implement-task --ticket-id abc123xyz
-
-# Implement a task from a description (runs plan-expert first, then implements)
-/implement-task --description "Add email validation to the signup form"
-```
-
-### Agents
-
-Agents are invoked by describing the task naturally — Claude Code selects the right agent automatically based on what you ask. They are also accessible via `/agents`.
-
-```
-# Feature planning
-"I want to plan a new feature"
-"Let's plan the user notification system"
-
-# Design system setup
-"Set up the design system for this project"
-"I want to document our design system and plan the Storybook work"
-
-# Task implementation
-"Implement ticket CU-abc123"
-"Work on this task and open a PR when done"
-```
-
-### Playwright test automation workflow
-
-The three Playwright agents chain into a **plan → generate → heal** pipeline that builds and maintains an end-to-end test suite for a live web app — no manual test writing required.
-
-```
-playwright-test-planner  →  playwright-test-generator  →  playwright-test-healer
-   (explore + plan)            (write .spec.ts files)        (run + debug until green)
-```
-
-**Prerequisites**
-
-- Playwright installed in the target project (`npm install -D @playwright/test && npx playwright install`).
-- The `playwright-test` MCP server (declared in `.mcp.json`). It launches via `npx playwright run-test-mcp-server` and works on macOS, Linux, and Windows out of the box.
-  > **Windows note:** if `npx` isn't resolved when the server spawns, wrap it through `cmd`:
-  > ```json
-  > "playwright-test": { "command": "cmd", "args": ["/c", "npx", "playwright", "run-test-mcp-server"] }
-  > ```
-- A running instance of the app under test (the planner navigates to it in a browser).
-
-**How to run it**
-
-Invoke each agent in order via `/agents`, or just describe the step in natural language:
-
-```
-# 1. Explore the app and produce a test plan
-"Use playwright-test-planner to create a test plan for http://localhost:3000"
-
-# 2. Turn the plan into Playwright spec files
-"Use playwright-test-generator to generate tests from the saved plan"
-
-# 3. Run the suite and fix any failures
-"Use playwright-test-healer to run the tests and fix what's broken"
-```
-
-Each step hands off to the next: the planner saves a Markdown plan, the generator reads that plan and writes one `.spec.ts` per scenario, and the healer runs the suite and repairs failing tests (marking any it can't fix as `test.fixme()` with an explanatory comment). You can also run the healer on its own any time tests start failing after app changes.
-
----
-
-## Project structure
-
-```
-axis-human-ai-toolbox/
-├── .claude-plugin/
-│   └── plugin.json                      # Plugin metadata
-├── agents/
-│   ├── orchestrator-agent.md            # Default entry point — routes all intents
-│   ├── planning-features-agent.md       # Sub-agent: discovery + planning pipeline
-│   ├── feature-discovery-agent.md       # Sub-agent: requirement interviews
-│   ├── plan-expert-agent.md             # Sub-agent: technical decomposition
-│   ├── implement-task-agent.md          # Sub-agent: code + PR delivery
-│   ├── design-system-setup-agent.md     # Sub-agent: design system pipeline
-│   ├── playwright-test-planner.md       # Standalone: explore app → test plan
-│   ├── playwright-test-generator.md     # Standalone: test plan → .spec.ts files
-│   ├── playwright-test-healer.md        # Standalone: run + fix failing tests
-├── skills/
-│   ├── a11y-auditor/
-│   │   └── SKILL.md
-│   ├── code-review/
-│   │   └── SKILL.md
-│   ├── create-pr/
-│   │   └── SKILL.md
-│   ├── design-expert/
-│   │   └── SKILL.md
-│   ├── design-system-docs/
-│   │   └── SKILL.md
-│   ├── design-system-setup/
-│   │   └── SKILL.md
-│   ├── feature-discovery/
-│   │   └── SKILL.md
-│   ├── implement-task/
-│   │   └── SKILL.md
-│   ├── init-project/
-│   │   └── SKILL.md
-│   ├── plan-expert/
-│   │   └── SKILL.md
-│   └── planning-features/
-│       └── SKILL.md
-└── README.md
-```
-
----
-
-## Adding a new skill
-
-1. Create a new directory under `skills/`:
-   ```bash
-   mkdir skills/my-skill
-   ```
-
-2. Create `skills/my-skill/SKILL.md` with this frontmatter:
-   ```markdown
-   ---
-   name: my-skill
-   description: One-line description of when and why to use this skill.
-   argument-hint: [--option <value>]
-   allowed-tools: Read Grep Glob Bash AskUserQuestion
-   effort: low|medium|high
-   ---
-
-   # my-skill
-
-   Instructions for Claude to follow when this skill is invoked...
-   ```
-
-3. The skill is immediately available as `/my-skill` in any project where this plugin is enabled.
-
----
-
-## Adding a new agent
-
-1. Create a new file under `agents/`:
-   ```bash
-   touch agents/my-agent.md
-   ```
-
-2. Write the agent file with this frontmatter:
-   ```markdown
-   ---
-   name: my-agent
-   description: >
-     Sub-agent: invoked only by the orchestrator-agent when [X intent] is detected.
-     [What it does]. Do not invoke directly.
-   model: claude-opus-4-6
-   color: blue
-   effort: medium
-   tools:
-     - AskUserQuestion
-     - Read
-     - Bash
-   skills:
-     - skill-one
-     - skill-two
-   ---
-
-   Agent orchestration instructions...
-   ```
-
-   **Important:** All agents in this plugin are sub-agents. Only `orchestrator-agent` is
-   auto-selected by Claude Code. New agents must be registered in the orchestrator's Routing Table.
-
-3. Use the `skills` frontmatter field to preload skills. This ensures skills execute inline in the agent's context rather than being delegated to a subagent.
-
-> **Note:** If you want the workflow to also be available as a `/` command, create a matching skill under `skills/my-agent/SKILL.md` with `allowed-tools` instead of `tools` and the same body. Both files can coexist — the agent handles auto-selection, the skill handles direct invocation.
-
----
-
-## MCP servers
-
-| Server | Type | Purpose |
+| Tool | Skills | Orchestration |
 |---|---|---|
-| `github` | HTTP | GitHub repository operations via the Copilot MCP endpoint |
-| `clickup` | HTTP | ClickUp task management — read tickets, create tasks and subtasks |
-| `playwright-test` | stdio | Browser automation for the Playwright test agents — explore apps, generate and run `.spec.ts` tests |
+| Claude Code | plugin marketplace/local plugin | agents + hooks |
+| OpenCode | symlinked skills | converted agents |
+| Codex CLI | symlinked skills | routing table in `~/.codex/AGENTS.md` |
 
-The MCP configuration is automatically picked up by Claude Code as a project-scoped config. Tokens are read from environment variables — never committed to the repo.
+---
+
+## Codex workflow
+
+Codex has no sub-agent delegation, so ShipFrame installs a routing table into `~/.codex/AGENTS.md`.
+
+The Codex agent classifies each request and runs the matching skills in order:
+
+| Intent | Skill sequence |
+|---|---|
+| `new_feature` | `project-memory-refresh` → `feature-discovery` → `plan-expert` |
+| `quick_task` | `project-memory-refresh` → `plan-expert` → `implement-task` → `code-review` → `create-pr` |
+| `bug` | `project-memory-refresh` → `bug-diagnosis` → `implement-task` → `code-review` → `create-pr` |
+| `release` | `project-profile` → `project-release` → `deploy-evidence` |
+| `research` | `project-memory-refresh` → `research` |
+| `handoff` | `handoff` |
+| `code_review` | `code-review` |
+| `wiki_management` | `wiki-query` / `wiki-sync` / `wiki-init` |
+
+---
+
+## Repository structure
+
+```text
+shipframe/
+├── agents/                 # Claude-shaped agents and orchestrator docs
+├── codex/                  # Codex routing workflow
+├── skills/                 # Installable flat skill directories
+├── templates/              # PR, issue, ClickUp, and wiki templates
+├── project-packs/          # Optional project profile starters
+├── wiki/                   # Project wiki vault
+├── raw/                    # Wiki source staging
+├── .claude-plugin/         # Claude plugin metadata
+└── install.sh              # Multi-tool installer
+```
+
+Skills are intentionally kept flat under `skills/<name>/SKILL.md` because the installer symlinks each skill directory into the target tool.
+
+---
+
+## Recommended team workflow
+
+1. Add a project profile to the repo.
+2. Run `project-memory-refresh` before non-trivial work.
+3. Use `feature-discovery` for unclear features.
+4. Use `plan-expert` for ticket breakdown.
+5. Use `implement-task` only after scope is clear.
+6. Run `code-review` before commit/PR.
+7. For releases, run `project-release` and require `deploy-evidence` before saying the release is complete.
+
+---
+
+## Attribution
+
+ShipFrame started from `Axis-Human/dev-workflow-plugin` and includes/adapts engineering workflow ideas and selected MIT-licensed skills from `mattpocock/skills`.
+
+- Axis Human Dev Workflow Plugin: https://github.com/Axis-Human/dev-workflow-plugin
+- Matt Pocock Skills: https://github.com/mattpocock/skills
+
+See `THIRD_PARTY_NOTICES.md`. Confirm upstream licensing/permission before publishing or redistributing beyond private/internal use.

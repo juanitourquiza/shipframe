@@ -18,7 +18,10 @@ Run the full `feature-discovery` skill as defined in its SKILL.md:
 - Complete all three questioning phases
 - Present the final spec and get user confirmation
 - Ask the user if they want to create a ClickUp ticket
-- If the ticket is created, capture `TICKET_ID` and `TICKET_URL` from its output
+
+**If the user agrees to create a ClickUp ticket:**
+- The `feature-discovery` skill will delegate to `create-task` to handle template selection, filling, and creation
+- After `create-task` completes, capture `TICKET_ID` and `TICKET_URL` from its output
 
 **If the user declines:**
 - Store the full confirmed feature spec markdown as `FEATURE_SPEC`

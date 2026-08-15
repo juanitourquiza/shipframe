@@ -83,23 +83,10 @@ this connects the originals to the wiki graph.
 
 ## INGEST — Process sources
 
-### Step 0 — Load conventions and check namespace rules
+### Step 0 — Load conventions
 
 Read `.claude/wiki-conventions.md`. All pages created or modified in this
 operation must follow those conventions without exception.
-
-**Namespace check (multi-repo):** Before naming or locating any new wiki page,
-check if `wiki-conventions.md` defines a "Namespace convention (multi-repo)"
-section. If it does:
-- Determine which source repository the current file/document originates from.
-- If the entity name being created already exists as a page from a different
-  repository, apply the namespace convention: place the page in a per-repo
-  subdirectory (e.g. `entities/[repo-name]/[entity].md`) and use fully qualified
-  wikilinks for cross-repo references.
-- If the entity name is unique across all repos, place it directly in the
-  category folder without a repo subdirectory.
-- Always cross-check `wiki/index.md` for existing pages with the same name
-  before deciding placement.
 
 ### Steps
 
