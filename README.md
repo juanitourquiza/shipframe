@@ -210,4 +210,12 @@ ShipFrame started from `Axis-Human/dev-workflow-plugin` and includes/adapts engi
 - Axis Human Dev Workflow Plugin: https://github.com/Axis-Human/dev-workflow-plugin
 - Matt Pocock Skills: https://github.com/mattpocock/skills
 
-See `THIRD_PARTY_NOTICES.md`. Confirm upstream licensing/permission before publishing or redistributing beyond private/internal use.
+See `THIRD_PARTY_NOTICES.md` for upstream attribution and third-party license details.
+
+---
+
+## License
+
+ShipFrame is released under the MIT License. See [`LICENSE`](LICENSE).
+
+Third-party material remains subject to its original notices and terms; see [`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md).

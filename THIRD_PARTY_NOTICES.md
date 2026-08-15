@@ -1,6 +1,6 @@
 # Third-Party Notices
 
-ShipFrame includes or adapts material from upstream projects.
+ShipFrame includes or adapts material from upstream projects. These notices are kept so public releases preserve attribution while the ShipFrame repository can carry its own MIT license for original ShipFrame contributions and compatible incorporated material.
 
 ## mattpocock/skills
 
@@ -15,34 +15,14 @@ Selected skills and supporting docs are copied/adapted from `mattpocock/skills`:
 
 Source: https://github.com/mattpocock/skills
 
-License text from upstream:
+License: MIT License, Copyright (c) 2026 Matt Pocock.
 
-```text
-MIT License
-
-Copyright (c) 2026 Matt Pocock
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
-```
+The upstream MIT notice applies to the copied/adapted Matt Pocock material and should be retained in copies or substantial portions of that material.
 
 ## Axis-Human/dev-workflow-plugin
 
-ShipFrame started from `Axis-Human/dev-workflow-plugin`. Confirm upstream licensing/permission before publishing or redistributing outside private/internal use.
+ShipFrame started from `Axis-Human/dev-workflow-plugin` and preserves attribution to the original project and authorship lineage.
 
 Source: https://github.com/Axis-Human/dev-workflow-plugin
+
+GitHub license metadata check on 2026-08-15 returned no detected repository license for `Axis-Human/dev-workflow-plugin`. ShipFrame keeps this attribution notice so the origin remains clear; any third-party material from that upstream remains subject to its original terms or permissions, if any.

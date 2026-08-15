@@ -6,5 +6,16 @@
     "name": "Juan Urquiza",
     "url": "https://github.com/juanitourquiza"
   },
-  "keywords": ["shipframe", "ai", "coding", "workflow", "skills", "agents", "code-review", "release", "clickup"]
+  "keywords": [
+    "shipframe",
+    "ai",
+    "coding",
+    "workflow",
+    "skills",
+    "agents",
+    "code-review",
+    "release",
+    "clickup"
+  ],
+  "license": "MIT"
 }

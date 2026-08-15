@@ -35,7 +35,9 @@
         "claude-code",
         "opencode"
       ],
-      "strict": true
+      "strict": true,
+      "license": "MIT"
     }
-  ]
+  ],
+  "license": "MIT"
 }
