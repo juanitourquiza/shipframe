@@ -134,6 +134,10 @@ brew install shipframe
 shipframe install --codex
 ```
 
+If your Homebrew version requires tap trust, run the exact trust command it
+prints (for example, `brew trust --formula juanitourquiza/shipframe/shipframe`)
+and then re-run `brew install shipframe`.
+
 ### Local clone
 
 ```bash
@@ -240,6 +244,11 @@ brew tap juanitourquiza/shipframe
 brew install shipframe
 shipframe install --codex
 ```
+
+Si tu versión de Homebrew exige confianza para taps externos, ejecuta el comando
+exacto que Homebrew imprime (por ejemplo,
+`brew trust --formula juanitourquiza/shipframe/shipframe`) y vuelve a correr
+`brew install shipframe`.
 
 Para instalar desde un clon local:
 
