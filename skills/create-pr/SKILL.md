@@ -1,26 +1,27 @@
 ---
 name: create-pr
-description: Creates a GitHub pull request (always as Draft) with a fully auto-populated standardized template. Infers the base branch, derives the description from the diff and commits, detects shared code impact, tags stakeholders from CODEOWNERS, and builds a concrete test plan from the changes. Uses gh CLI as the primary creation method with GitHub MCP as fallback. Designed to run without human input when called by an agent, or with a confirmation step when invoked directly.
-argument-hint: '[--base <branch>] [--ticket-id <id>] [--auto]'
+description: Creates a GitHub Pull Request or GitLab Merge Request (always as Draft) with a fully auto-populated standardized template. Infers the base branch, derives the description from the diff and commits, detects shared code impact, tags stakeholders from CODEOWNERS, and builds a concrete test plan from the changes. Uses gh for GitHub and glab for GitLab, preserving GitHub MCP fallback for GitHub PRs. Designed to run without human input when called by an agent, or with a confirmation step when invoked directly.
+argument-hint: '[--base <branch>] [--ticket-id <id>] [--provider <auto|github|gitlab>] [--auto]'
 allowed-tools: Bash AskUserQuestion mcp__github__create_pull_request mcp__github__list_branches
 effort: low
 ---
 
 # create-pr
 
-**Role:** Senior engineer opening a pull request.  
-**Goal:** Auto-generate a complete, reviewer-ready PR from git context alone. Every section is derived from the diff, commits, branch name, and project files — no manual writing required. When `--auto` is passed (or when called by another skill/agent), skip all confirmation steps and create the PR immediately.
+**Role:** Senior engineer opening a pull request or merge request.
+**Goal:** Auto-generate a complete, reviewer-ready PR/MR from git context alone. Every section is derived from the diff, commits, branch name, and project files — no manual writing required. When `--auto` is passed (or when called by another skill/agent), skip all confirmation steps and create the PR/MR immediately.
 
 ---
 
 ## Step 1 — Parse arguments
 
 Parse `$ARGUMENTS` for:
-- `--base <branch>` — target branch for the PR (skip inference if provided)
+- `--base <branch>` — target branch for the PR/MR (skip inference if provided)
 - `--ticket-id <id>` — ClickUp or issue ID to reference (optional)
-- `--auto` — skip all confirmation steps and create the PR without asking
+- `--provider <auto|github|gitlab>` — host provider to use; default is `auto`
+- `--auto` — skip all confirmation steps and create the PR/MR without asking
 
-Capture any provided values. Set `AUTO_MODE = true` if `--auto` is present.
+Capture any provided values. Set `AUTO_MODE = true` if `--auto` is present. Set `PROVIDER_INPUT = auto` when `--provider` is omitted. Reject any provider value outside `auto`, `github`, or `gitlab` with a clear error before doing network operations.
 
 ---
 
@@ -32,7 +33,7 @@ Run all commands via Bash. Capture every output — it feeds every section of th
 # Current branch
 git branch --show-current
 
-# Remote URL (to extract OWNER and REPO)
+# Remote URL (to detect provider and extract host/owner/repo)
 git remote get-url origin
 
 # Current git user email (to exclude from FYI tagging)
@@ -51,12 +52,24 @@ git diff <BASE_BRANCH>...HEAD --stat
 git diff <BASE_BRANCH>...HEAD
 ```
 
-Extract `OWNER` and `REPO` from the remote URL:
-- SSH: `git@github.com:owner/repo.git`
-- HTTPS: `https://github.com/owner/repo.git`
+Extract `HOST`, `OWNER`, and `REPO` from the remote URL:
+- GitHub SSH: `git@github.com:owner/repo.git`
+- GitHub HTTPS: `https://github.com/owner/repo.git`
+- GitLab SSH: `git@gitlab.com:owner/repo.git` or `git@gitlab.example.com:group/subgroup/repo.git`
+- GitLab HTTPS: `https://gitlab.com/owner/repo.git` or `https://gitlab.example.com/group/subgroup/repo.git`
+
+Determine `PROVIDER`:
+- If `--provider github` was passed, use `github`.
+- If `--provider gitlab` was passed, use `gitlab`.
+- If `--provider auto` is active and `origin` contains `github.com`, use `github`.
+- If `--provider auto` is active and `origin` contains `gitlab.com`, use `gitlab`.
+- If `--provider auto` is active and the host is not GitHub, treat remotes whose host or path contains `gitlab` as self-hosted GitLab and use `gitlab`.
+- If auto-detection cannot identify the provider, stop and ask the caller to rerun with `--provider github` or `--provider gitlab`.
+
+For GitLab repositories with nested groups, keep the full namespace as `OWNER` (for example, `group/subgroup`) and the final path segment as `REPO`.
 
 If the working tree has uncommitted changes, warn:
-> "Uncommitted changes detected. These will not be included in the PR. Commit them first or proceed anyway."
+> "Uncommitted changes detected. These will not be included in the PR/MR. Commit them first or proceed anyway."
 In `AUTO_MODE`, proceed without asking.
 
 ---
@@ -83,9 +96,9 @@ If the current branch equals `BASE_BRANCH`, stop:
 
 ---
 
-## Step 4 — Infer PR title
+## Step 4 — Infer PR/MR title
 
-Derive the PR title from the branch name:
+Derive the PR/MR title from the branch name:
 1. Strip the type prefix: `feat/`, `fix/`, `chore/`, `refactor/`, `docs/`, `hotfix/`
 2. Strip any ticket/sprint/module prefix (e.g. `CU-abc123-`, `M3-S12-`)
 3. Replace hyphens and underscores with spaces
@@ -97,9 +110,9 @@ Example: `feat/CU-abc123-user-auth-flow` → `[Feature] User auth flow (CU-abc12
 
 ---
 
-## Step 5 — Populate the PR template
+## Step 5 — Populate the PR/MR template
 
-The canonical PR body structure is defined in `templates/pull_request_template.md` at the project root of the **ShipFrame** repo (the repo where this skill lives). Read that file and use it as the exact skeleton — do not invent or remove sections. Populate every placeholder by analyzing the git context from Step 2. Instructions inside each section below describe how to derive the content — follow them precisely. The rendered output must not contain the instruction text or placeholder markers.
+The canonical PR/MR body structure is defined in `templates/pull_request_template.md` at the project root of the **ShipFrame** repo (the repo where this skill lives). Read that file and use it as the exact skeleton — do not invent or remove sections. Populate every placeholder by analyzing the git context from Step 2. Instructions inside each section below describe how to derive the content — follow them precisely. The rendered output must not contain the instruction text or placeholder markers.
 
 ---
 
@@ -116,7 +129,7 @@ Using the commit messages and `git diff` output:
 
 ### Section: Type of Change
 
-From the PR title type label (inferred in Step 4) or the branch prefix, tick exactly one checkbox:
+From the PR/MR title type label (inferred in Step 4) or the branch prefix, tick exactly one checkbox:
 
 | Branch prefix / label | Checkbox to tick |
 |---|---|
@@ -209,9 +222,13 @@ Inspect the changed file paths for UI indicators:
 
 **If UI changes are detected:**
 - List each modified route or page
-- For each, provide the GitHub raw URL format for evidence screenshots:
+- For each, provide a provider-specific raw/blob URL format for evidence screenshots:
   ```
+  # GitHub
   https://github.com/<OWNER>/<REPO>/blob/<CURRENT_BRANCH>/.github/evidence/<filename>.png?raw=true
+
+  # GitLab
+  https://<HOST>/<OWNER>/<REPO>/-/blob/<CURRENT_BRANCH>/.github/evidence/<filename>.png
   ```
 - Note: "Add screenshots at the paths above before requesting review."
 
@@ -287,31 +304,59 @@ Assemble the full PR body using this exact structure:
 ```
 
 If `AUTO_MODE` is **false**, present the rendered body and the inferred title to the user and ask:
-> "Does this PR look correct? Reply Yes to create it, or paste corrections."
+> "Does this PR/MR look correct? Reply Yes to create it, or paste corrections."
 Apply any corrections before proceeding.
 
 If `AUTO_MODE` is **true**, skip confirmation and proceed immediately.
 
 ---
 
-## Step 7 — Create the PR
+## Step 7 — Create the PR/MR
 
-**All PRs must be created as Draft. This is non-negotiable — never omit `--draft`.**
+**All PRs and MRs must be created as Draft. This is non-negotiable — never omit `--draft`.**
 
-### Primary: gh CLI
+Before invoking provider CLIs, write the rendered body to a temporary file and keep its path in `BODY_FILE` so the user can reuse it if creation fails:
+
+```bash
+BODY_FILE="$(mktemp -t shipframe-pr-mr-body.XXXXXX.md)"
+printf '%s\n' "<rendered PR/MR body>" > "$BODY_FILE"
+```
+
+### GitHub provider: gh CLI
+
+Use this path when `PROVIDER=github`.
+
+First verify the local CLI and authentication:
+
+```bash
+command -v gh
+gh auth status
+```
+
+If `gh` is missing or unauthenticated, stop and report:
+
+```text
+GitHub PR not created. ShipFrame generated the body at <BODY_FILE>.
+Install/authenticate GitHub CLI, then rerun:
+  brew install gh
+  gh auth login
+  gh auth status
+```
+
+Create the Draft PR:
 
 ```bash
 gh pr create \
-  --title "<PR title>" \
-  --body "<rendered PR body>" \
+  --title "<PR/MR title>" \
+  --body-file "$BODY_FILE" \
   --base "<BASE_BRANCH>" \
   --head "<current branch>" \
   --draft
 ```
 
-If the command exits with a non-zero status, capture the error and proceed to the fallback below.
+If the command exits with a non-zero status, capture the error and proceed to the GitHub MCP fallback below.
 
-### Fallback: GitHub MCP (only if gh CLI fails)
+### GitHub fallback: GitHub MCP (only if gh CLI fails)
 
 If `gh pr create` failed, create the PR using the MCP tool:
 
@@ -319,28 +364,65 @@ If `gh pr create` failed, create the PR using the MCP tool:
 mcp__github__create_pull_request {
   owner: "<OWNER>",
   repo: "<REPO>",
-  title: "<PR title>",
-  body: "<rendered PR body>",
+  title: "<PR/MR title>",
+  body: "<rendered PR/MR body>",
   head: "<current branch>",
   base: "<BASE_BRANCH>",
   draft: true
 }
 ```
 
-If both methods fail, report the errors from both attempts and stop.
+If both GitHub methods fail, report the errors from both attempts, include `BODY_FILE`, and stop.
+
+### GitLab provider: glab CLI
+
+Use this path when `PROVIDER=gitlab`. There is no GitLab MCP fallback in ShipFrame v1.
+
+First verify the local CLI and authentication:
+
+```bash
+command -v glab
+glab auth status
+```
+
+If `glab` is missing or unauthenticated, stop and report:
+
+```text
+GitLab MR not created. ShipFrame generated the body at <BODY_FILE>.
+Install/authenticate GitLab CLI, then rerun:
+  brew install glab
+  glab auth login
+  glab auth status
+```
+
+Create the Draft MR:
+
+```bash
+glab mr create \
+  --title "<PR/MR title>" \
+  --description "$(cat "$BODY_FILE")" \
+  --target-branch "<BASE_BRANCH>" \
+  --source-branch "<current branch>" \
+  --draft \
+  --yes
+```
+
+If `glab mr create` fails, report the captured error, include `BODY_FILE`, and stop. Do not fall back to GitHub MCP for GitLab remotes.
 
 ---
 
 ## Step 8 — Report
 
 ```
-## Pull Request Created (Draft)
+## Pull Request / Merge Request Created (Draft)
 
-Title:   <title>
-URL:     <pr_url>
-Base:    <BASE_BRANCH> <- <current branch>
-Files:   <count> changed
-Method:  <gh CLI | GitHub MCP (fallback)>
+Title:    <title>
+URL:      <pr_or_mr_url>
+Provider: <github|gitlab>
+Base:     <BASE_BRANCH> <- <current branch>
+Files:    <count> changed
+Method:   <gh CLI | GitHub MCP (fallback) | glab CLI>
+Body:     <BODY_FILE>
 ```
 
-Store `PR_URL` and `PR_NUMBER` in context — downstream skills or agents may need them.
+Store `PR_URL` or `MR_URL` and the request number/IID in context — downstream skills or agents may need them.
