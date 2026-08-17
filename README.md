@@ -177,6 +177,23 @@ shipframe install --all
 Stable ShipFrame releases are tracked with git tags named `vX.Y.Z` (for example,
 `v0.2.0`). The Homebrew formula uses these tags as immutable release sources.
 
+### Installation scope
+
+ShipFrame installs globally for the current macOS/Linux user, not inside the
+project where you run the command:
+
+- Claude Code: installs the `shipframe` plugin and configures user-level hooks in
+  `~/.claude/settings.json`.
+- Codex CLI: links skills into `~/.codex/skills` and injects the managed workflow
+  block into `~/.codex/AGENTS.md`.
+- OpenCode: links skills into `~/.config/opencode/skills` and writes converted
+  agents into `~/.config/opencode/agents`.
+
+Run `shipframe install ...` once per user/machine. Then add project-specific
+rules inside each repository with `shipframe.profile.md`,
+`.shipframe/profile.md`, or `.shipframe/project-profile.md` when a project needs
+custom release, smoke-test, or team conventions.
+
 ---
 
 ## Codex workflow
@@ -269,6 +286,22 @@ cd ~/tools/shipframe
 5. Usa `implement-task` solo cuando el alcance esté definido.
 6. Ejecuta `code-review` antes de commit y PR/MR.
 7. Para releases, ejecuta `project-release` y exige `deploy-evidence` antes de declarar que el deploy está completo.
+
+### Alcance de instalación
+
+ShipFrame se instala globalmente para el usuario actual, no dentro del proyecto
+desde donde corres el comando:
+
+- Claude Code: instala el plugin `shipframe` y configura hooks de usuario en
+  `~/.claude/settings.json`.
+- Codex CLI: enlaza skills en `~/.codex/skills` e inyecta el bloque administrado
+  en `~/.codex/AGENTS.md`.
+- OpenCode: enlaza skills en `~/.config/opencode/skills` y escribe agentes
+  convertidos en `~/.config/opencode/agents`.
+
+Ejecuta `shipframe install ...` una vez por usuario/máquina. Las reglas por
+proyecto van dentro de cada repo usando `shipframe.profile.md`,
+`.shipframe/profile.md` o `.shipframe/project-profile.md`.
 
 ### Compatibilidad GitHub/GitLab
 

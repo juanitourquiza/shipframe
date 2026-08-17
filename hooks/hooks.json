@@ -5,7 +5,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "echo 'MANDATORY ACTION: Before doing anything else, invoke the axis-human-ai-toolbox:orchestrator-agent agent to handle this request.'"
+            "command": "echo 'MANDATORY ACTION: Before doing anything else, invoke the shipframe:orchestrator-agent agent to handle this request.'"
           }
         ]
       }

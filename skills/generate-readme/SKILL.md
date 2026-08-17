@@ -1,13 +1,13 @@
 ---
 name: generate-readme
-description: Generate a project README.md following the Axis/TOTS standard format. Scans the current codebase to detect the tech stack, project purpose, and available commands, then produces a complete, structured README. Use when starting a new project or when a README is missing or outdated.
+description: Generate a project README.md following the ShipFrame team-ready standard. Scans the current codebase to detect the tech stack, project purpose, and available commands, then produces a complete, structured README. Use when starting a new project or when a README is missing or outdated.
 allowed-tools: AskUserQuestion Glob Read Grep Write
 effort: medium
 ---
 
 # generate-readme
 
-Generate a `README.md` file following the Axis/TOTS standard format. Scan the project to auto-detect as much as possible, then ask only what cannot be inferred.
+Generate a `README.md` file following the ShipFrame team-ready standard. Scan the project to auto-detect as much as possible, then ask only what cannot be inferred.
 
 ---
 
@@ -68,7 +68,7 @@ Rules:
 <div align="center">
 <img src="./public/<logo-file>" alt="icon">
 <h3>
- <project-name> 👨🏼‍💻 TOTS
+ <project-name> 🚀 ShipFrame
 </h3>
 
 

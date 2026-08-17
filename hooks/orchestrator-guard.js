@@ -19,7 +19,7 @@ process.stdin.on('end', () => {
   try { input = JSON.parse(raw || '{}'); } catch { process.exit(0); }
 
   // Only the orchestrator is gated; sub-agents and the main loop pass through.
-  // agent_type is plugin-namespaced (e.g. "axis-human-ai-toolbox:orchestrator-agent"),
+  // agent_type is plugin-namespaced (e.g. "shipframe:orchestrator-agent"),
   // so compare the trailing segment, not the whole string.
   const agentType = typeof input.agent_type === 'string' ? input.agent_type : '';
   if (agentType.split(':').pop() !== ORCHESTRATOR) process.exit(0);

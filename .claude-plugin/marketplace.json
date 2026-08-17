@@ -6,7 +6,7 @@
   },
   "metadata": {
     "description": "AI coding workflows for teams that plan, prove, and ship.",
-    "version": "0.2.0"
+    "version": "0.2.1"
   },
   "plugins": [
     {
@@ -16,7 +16,7 @@
         "repo": "juanitourquiza/shipframe"
       },
       "description": "Skills, agents, release evidence, and project profiles for disciplined AI-assisted software delivery.",
-      "version": "0.2.0",
+      "version": "0.2.1",
       "author": {
         "name": "Juan Urquiza"
       },
