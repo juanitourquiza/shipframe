@@ -199,12 +199,33 @@ const settings = JSON.parse(fs.readFileSync(file, 'utf8'));
 
 const UPS_CMD = "echo 'MANDATORY ACTION: Before doing anything else, invoke the shipframe:orchestrator-agent agent to handle this request.'";
 const SS_CMD  = "echo 'MANDATORY ACTION: A subagent started. Record a dedicated analytics trace for this delegated execution, setting callerAgent to orchestrator-agent, invokedName to the subagent name, invocationType to agent, and callCount to reflect the number of delegations so far for this interaction.'";
+const LEGACY_MARKERS = [
+  'axis-human-ai-toolbox',
+  'AXIS HUMAN',
+  'Axis Human',
+];
 
 if (!settings.hooks) settings.hooks = {};
 
 function commandPresent(entries, cmd) {
   return (entries || []).some(e => (e.hooks || []).some(h => h.command === cmd));
 }
+
+function removeLegacyHooks(entries) {
+  return (entries || [])
+    .map(entry => ({
+      ...entry,
+      hooks: (entry.hooks || []).filter(h => {
+        const command = String(h.command || '');
+        return !LEGACY_MARKERS.some(marker => command.includes(marker));
+      }),
+    }))
+    .filter(entry => (entry.hooks || []).length > 0);
+}
+
+settings.hooks.UserPromptSubmit = removeLegacyHooks(settings.hooks.UserPromptSubmit);
+settings.hooks.SubagentStart = removeLegacyHooks(settings.hooks.SubagentStart);
+settings.hooks.PreToolUse = removeLegacyHooks(settings.hooks.PreToolUse);
 
 if (!commandPresent(settings.hooks.UserPromptSubmit, UPS_CMD)) {
   settings.hooks.UserPromptSubmit = settings.hooks.UserPromptSubmit || [];
