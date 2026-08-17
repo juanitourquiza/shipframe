@@ -126,6 +126,14 @@ The PULSAI profile is intentionally optional: it is useful for PULSAI-style proj
 curl -fsSL https://raw.githubusercontent.com/juanitourquiza/shipframe/main/install.sh | bash
 ```
 
+### macOS with Homebrew
+
+```bash
+brew tap juanitourquiza/shipframe
+brew install shipframe
+shipframe install --codex
+```
+
 ### Local clone
 
 ```bash
@@ -145,11 +153,25 @@ cd ~/tools/shipframe
 ./install.sh --all        # all supported tools
 ```
 
+When installed with Homebrew, use the `shipframe` wrapper:
+
+```bash
+shipframe install --claude
+shipframe install --opencode
+shipframe install --codex
+shipframe install --all
+```
+
 | Tool | Skills | Orchestration |
 |---|---|---|
 | Claude Code | plugin marketplace/local plugin | agents + hooks |
 | OpenCode | symlinked skills | converted agents |
 | Codex CLI | symlinked skills | routing table in `~/.codex/AGENTS.md` |
+
+### Stable versions
+
+Stable ShipFrame releases are tracked with git tags named `vX.Y.Z` (for example,
+`v0.2.0`). The Homebrew formula uses these tags as immutable release sources.
 
 ---
 
@@ -209,6 +231,14 @@ ShipFrame es un toolkit práctico de flujos de trabajo con IA para equipos que p
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/juanitourquiza/shipframe/main/install.sh | bash
+```
+
+En macOS también puedes instalar ShipFrame con Homebrew:
+
+```bash
+brew tap juanitourquiza/shipframe
+brew install shipframe
+shipframe install --codex
 ```
 
 Para instalar desde un clon local:
