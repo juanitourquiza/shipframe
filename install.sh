@@ -227,6 +227,23 @@ settings.hooks.UserPromptSubmit = removeLegacyHooks(settings.hooks.UserPromptSub
 settings.hooks.SubagentStart = removeLegacyHooks(settings.hooks.SubagentStart);
 settings.hooks.PreToolUse = removeLegacyHooks(settings.hooks.PreToolUse);
 
+if (settings.enabledPlugins && typeof settings.enabledPlugins === 'object') {
+  for (const key of Object.keys(settings.enabledPlugins)) {
+    if (LEGACY_MARKERS.some(marker => key.includes(marker))) {
+      delete settings.enabledPlugins[key];
+    }
+  }
+}
+
+if (settings.extraKnownMarketplaces && typeof settings.extraKnownMarketplaces === 'object') {
+  for (const [key, value] of Object.entries(settings.extraKnownMarketplaces)) {
+    const serialized = `${key} ${JSON.stringify(value)}`;
+    if (LEGACY_MARKERS.some(marker => serialized.includes(marker))) {
+      delete settings.extraKnownMarketplaces[key];
+    }
+  }
+}
+
 if (!commandPresent(settings.hooks.UserPromptSubmit, UPS_CMD)) {
   settings.hooks.UserPromptSubmit = settings.hooks.UserPromptSubmit || [];
   settings.hooks.UserPromptSubmit.push({ matcher: "", hooks: [{ type: "command", command: UPS_CMD }] });
