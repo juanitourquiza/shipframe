@@ -13,12 +13,12 @@ It provides reusable skills, agent workflows, templates, and project profiles fo
 ShipFrame turns natural-language development requests into a repeatable delivery lifecycle:
 
 ```text
-Refresh context → Discover requirements → Plan work → Implement → Verify → Review → Release evidence → PR
+Refresh context → Discover requirements → Plan work → Implement → Verify → Review → Release evidence → PR/MR
 ```
 
 It is designed for:
 
-- teams working from tickets, GitHub branches, and PRs;
+- teams working from tickets, Git branches, and PRs/MRs;
 - developers who want agent help without “vibe coding”;
 - projects that need exact release evidence before declaring work complete;
 - multi-project teams that need generic workflows plus project-specific profiles.
@@ -35,11 +35,11 @@ It is designed for:
 | `project-memory-refresh` | Reads WIKI/AGENTS/git state before non-trivial work. |
 | `feature-discovery` | Gathers requirements through structured questioning. |
 | `plan-expert` | Breaks work into ordered, actionable subtasks. |
-| `implement-task` | Implements a scoped task, verifies it, commits, and prepares a PR. |
+| `implement-task` | Implements a scoped task, verifies it, commits, and prepares a PR/MR. |
 | `code-review` | Two-phase review: fast checks plus structural/SOLID audit. |
 | `create-task` | Converts raw input into ClickUp-ready task templates. |
 | `create-issue` | Triage flow for bugs/issues. |
-| `create-pr` | Opens a draft PR with a populated template from git context. |
+| `create-pr` | Opens a draft PR/MR with a populated template from git context. |
 
 ### Engineering discipline skills
 
@@ -198,8 +198,55 @@ Skills are intentionally kept flat under `skills/<name>/SKILL.md` because the in
 3. Use `feature-discovery` for unclear features.
 4. Use `plan-expert` for ticket breakdown.
 5. Use `implement-task` only after scope is clear.
-6. Run `code-review` before commit/PR.
+6. Run `code-review` before commit/PR/MR.
 7. For releases, run `project-release` and require `deploy-evidence` before saying the release is complete.
+
+## Español
+
+ShipFrame es un toolkit práctico de flujos de trabajo con IA para equipos que planifican, prueban y publican cambios de software con disciplina. Mantiene un núcleo genérico para cualquier equipo y deja las reglas específicas de cada proyecto en perfiles opcionales.
+
+### Instalación rápida
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/juanitourquiza/shipframe/main/install.sh | bash
+```
+
+Para instalar desde un clon local:
+
+```bash
+git clone https://github.com/juanitourquiza/shipframe ~/tools/shipframe
+cd ~/tools/shipframe
+./install.sh --codex
+./install.sh --claude
+./install.sh --opencode
+```
+
+### Flujo recomendado
+
+1. Agrega un perfil de proyecto cuando el repo tenga reglas propias.
+2. Ejecuta `project-memory-refresh` antes de trabajo no trivial.
+3. Usa `feature-discovery` cuando el alcance no esté claro.
+4. Usa `plan-expert` para desglosar tickets o tareas.
+5. Usa `implement-task` solo cuando el alcance esté definido.
+6. Ejecuta `code-review` antes de commit y PR/MR.
+7. Para releases, ejecuta `project-release` y exige `deploy-evidence` antes de declarar que el deploy está completo.
+
+### Compatibilidad GitHub/GitLab
+
+ShipFrame trabaja con repos Git y puede cerrar el ciclo con Draft Pull Requests en GitHub o Draft Merge Requests en GitLab:
+
+- GitHub usa la CLI `gh` y crea PRs con `gh pr create --draft`.
+- GitLab usa la CLI `glab` y crea MRs con `glab mr create --draft`.
+- El skill `create-pr` conserva su nombre por compatibilidad, pero soporta PR/MR mediante `--provider <auto|github|gitlab>`; `auto` detecta el proveedor desde `origin`.
+- Si falta autenticación, ShipFrame debe detenerse y mostrar el comando exacto: `gh auth login` para GitHub o `glab auth login` para GitLab.
+
+Para preparar GitLab localmente en macOS con Homebrew:
+
+```bash
+brew install glab
+glab auth login
+glab auth status
+```
 
 ---
 

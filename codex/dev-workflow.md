@@ -46,7 +46,7 @@ If missing, run `wiki-init` before anything else. If present, read `WIKI.md` bef
 
 ## Lifecycle
 
-CONTEXT → DEFINE → PLAN → BUILD → VERIFY → REVIEW → RELEASE EVIDENCE → PR.
+CONTEXT → DEFINE → PLAN → BUILD → VERIFY → REVIEW → RELEASE EVIDENCE → PR/MR.
 
 ## Environment setup
 
@@ -61,5 +61,5 @@ git checkout -b {task-id-or-type}-{slug}
 - Do **not** merge code, approve reviews, or delete/archive external tickets unless the user explicitly authorizes that action.
 - Do **not** guess feature requirements — run `feature-discovery` first.
 - Do **not** declare deploy/release complete without `deploy-evidence`.
-- Open PRs as **Draft** unless the user explicitly asks otherwise.
+- Open PRs/MRs as **Draft** unless the user explicitly asks otherwise.
 - Keep project-specific behavior in profiles or packs, not in generic core skills.

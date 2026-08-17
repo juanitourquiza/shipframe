@@ -1,6 +1,6 @@
 ---
 name: implement-task
-description: Implements a task end-to-end. Given a ClickUp ticket ID or a plain description, reads the project context, builds a file-level implementation plan, writes the code, runs verification, commits, and opens a PR. Use when you want an agent to autonomously work on a well-scoped task.
+description: Implements a task end-to-end. Given a ClickUp ticket ID or a plain description, reads the project context, builds a file-level implementation plan, writes the code, runs verification, commits, and opens a PR/MR. Use when you want an agent to autonomously work on a well-scoped task.
 argument-hint: '[--ticket-id <id>] [--description "<text>"]'
 allowed-tools: Glob Read Grep Write Edit Bash AskUserQuestion mcp__clickup__clickup_get_task mcp__github__create_pull_request TaskCreate TaskUpdate
 effort: high
@@ -9,7 +9,7 @@ effort: high
 # implement-task
 
 **Role:** Senior software engineer assigned to a task.  
-**Goal:** Understand a task fully, plan the implementation at the file level, write production-quality code that follows the project's existing conventions, verify it, commit it, and open a PR — all without inventing requirements or deviating from the project's patterns.
+**Goal:** Understand a task fully, plan the implementation at the file level, write production-quality code that follows the project's existing conventions, verify it, commit it, and open a PR/MR — all without inventing requirements or deviating from the project's patterns.
 
 ---
 
@@ -109,7 +109,7 @@ Subtasks to implement in order:
 3. <subtask 3 name> (CU-<id>)  →  branch from: subtask 2 branch
 ...
 
-Each subtask gets its own branch and PR targeting the previous branch.
+Each subtask gets its own branch and PR/MR targeting the previous branch.
 ```
 
 Ask:
@@ -123,7 +123,7 @@ Wait for confirmation. Once confirmed, iterate through `SUBTASK_LIST` in order. 
 4. After the PR is created, update `PREVIOUS_BRANCH = the branch just created for this subtask`
 5. Move to the next subtask
 
-Do not start subtask N+1 until subtask N has a committed branch and an open PR.
+Do not start subtask N+1 until subtask N has a committed branch and an open PR/MR.
 
 ### Multi-subtask report (replaces Step 10)
 
@@ -138,14 +138,14 @@ After all subtasks are complete, output this summary instead of the single-task 
 
 ### Subtasks
 
-| # | Subtask | Branch | PR |
+| # | Subtask | Branch | PR/MR |
 |---|---------|--------|----|
-| 1 | <name> | <branch> | <PR URL> |
-| 2 | <name> | <branch> | <PR URL> |
+| 1 | <name> | <branch> | <PR/MR URL> |
+| 2 | <name> | <branch> | <PR/MR URL> |
 | … | … | … | … |
 
 ### Merge order
-Merge PRs in the order listed above. Each PR targets the previous branch —
+Merge PRs/MRs in the order listed above. Each PR/MR targets the previous branch —
 merging out of order will produce incorrect diffs.
 
 ### Known gaps or follow-up
@@ -346,7 +346,7 @@ If the commit is rejected by a pre-commit hook, fix the issue the hook reports a
 
 ---
 
-## Step 9 — Open the PR
+## Step 9 — Open the PR/MR
 
 Run the `create-pr` skill as defined in its SKILL.md, passing:
 - `--auto` — skip confirmation steps inside `create-pr`
@@ -355,9 +355,9 @@ Run the `create-pr` skill as defined in its SKILL.md, passing:
   - **Single task**: the inferred base branch (`main` / `master` / `develop`)
   - **Multi-subtask**: `CURRENT_BASE` for this iteration (the previous subtask's branch, or the parent feature branch for subtask 1)
 
-Passing `--base` explicitly prevents `create-pr` from re-inferring the target and ensures each subtask PR targets its correct predecessor branch.
+Passing `--base` explicitly prevents `create-pr` from re-inferring the target and ensures each subtask PR/MR targets its correct predecessor branch.
 
-`create-pr` will populate the full PR template from the diff against `--base` and open the PR automatically. Capture the returned `PR_URL`.
+`create-pr` will populate the full PR/MR template from the diff against `--base`, auto-detect GitHub/GitLab from `origin` unless `--provider` is passed, and open the Draft PR/MR automatically. Capture the returned `PR_URL` or `MR_URL`.
 
 ---
 
@@ -368,7 +368,7 @@ Passing `--base` explicitly prevents `create-pr` from re-inferring the target an
 
 **Task:** <task name>
 **Branch:** <branch name>
-**PR:** <PR_URL>
+**PR/MR:** <PR_URL or MR_URL>
 
 ### What was implemented
 <bullet list — semantics: add | update | fix | refactor | delete>
