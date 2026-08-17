@@ -194,6 +194,25 @@ rules inside each repository with `shipframe.profile.md`,
 `.shipframe/profile.md`, or `.shipframe/project-profile.md` when a project needs
 custom release, smoke-test, or team conventions.
 
+### Optional persistent memory with Engram
+
+ShipFrame works without a memory system, but Engram is recommended when you want
+AI agents to remember prior decisions, bug fixes, conventions, and session
+summaries across Claude Code, Codex CLI, and OpenCode.
+
+ShipFrame only checks whether `engram` is available and prints setup guidance; it
+does not install or configure Engram automatically.
+
+```bash
+brew install gentleman-programming/tap/engram
+engram setup codex
+engram setup opencode
+claude plugin marketplace add Gentleman-Programming/engram && claude plugin install engram
+```
+
+Like ShipFrame, Engram is configured globally for the current user/agent. Project
+specific behavior should still live in each repo's ShipFrame profile.
+
 ---
 
 ## Codex workflow
@@ -302,6 +321,26 @@ desde donde corres el comando:
 Ejecuta `shipframe install ...` una vez por usuario/máquina. Las reglas por
 proyecto van dentro de cada repo usando `shipframe.profile.md`,
 `.shipframe/profile.md` o `.shipframe/project-profile.md`.
+
+### Memoria persistente opcional con Engram
+
+ShipFrame funciona sin un sistema de memoria, pero Engram es recomendado cuando
+quieres que los agentes recuerden decisiones, bugs corregidos, convenciones y
+resúmenes entre sesiones de Claude Code, Codex CLI y OpenCode.
+
+ShipFrame solo revisa si `engram` está disponible y muestra instrucciones; no lo
+instala ni lo configura automáticamente.
+
+```bash
+brew install gentleman-programming/tap/engram
+engram setup codex
+engram setup opencode
+claude plugin marketplace add Gentleman-Programming/engram && claude plugin install engram
+```
+
+Igual que ShipFrame, Engram se configura globalmente para el usuario/agente
+actual. Las reglas específicas de cada proyecto siguen viviendo en el perfil de
+ShipFrame dentro de cada repo.
 
 ### Compatibilidad GitHub/GitLab
 

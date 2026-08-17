@@ -36,6 +36,10 @@ Targets:
   -h, --help   Show this help.
 
 If no target is given, an interactive menu is shown.
+
+Optional memory:
+  ShipFrame checks whether Engram is installed and prints setup guidance.
+  It never installs or configures Engram automatically.
 USAGE
 }
 
@@ -520,6 +524,50 @@ install_codex() {
 }
 
 # ---------------------------------------------------------------------------
+# Optional persistent memory — Engram
+#
+#   Engram is recommended, not required. ShipFrame only detects the binary and
+#   prints agent-specific setup commands; it never installs or configures Engram
+#   without the user explicitly doing so.
+# ---------------------------------------------------------------------------
+check_engram_memory() {
+  echo ""
+  echo "Optional persistent memory:"
+
+  if command -v engram >/dev/null 2>&1; then
+    local engram_bin engram_version
+    engram_bin="$(command -v engram)"
+    engram_version="$(engram --version 2>/dev/null || engram version 2>/dev/null || true)"
+    echo "  Engram : detected at $engram_bin"
+    if [ -n "$engram_version" ]; then
+      echo "  Version: $engram_version"
+    fi
+    echo "  Status : persistent memory is available if configured for your agent."
+  else
+    echo "  Engram : not detected"
+    echo "  Install: brew install gentleman-programming/tap/engram"
+  fi
+
+  echo "  Setup  : run the matching optional command when you want memory enabled:"
+  case "$TARGET" in
+    claude)
+      echo "           claude plugin marketplace add Gentleman-Programming/engram && claude plugin install engram"
+      ;;
+    opencode)
+      echo "           engram setup opencode"
+      ;;
+    codex)
+      echo "           engram setup codex"
+      ;;
+    all)
+      echo "           claude plugin marketplace add Gentleman-Programming/engram && claude plugin install engram"
+      echo "           engram setup opencode"
+      echo "           engram setup codex"
+      ;;
+  esac
+}
+
+# ---------------------------------------------------------------------------
 # Dispatch
 # ---------------------------------------------------------------------------
 case "$TARGET" in
@@ -540,3 +588,5 @@ case "$TARGET" in
     install_codex
     ;;
 esac
+
+check_engram_memory
