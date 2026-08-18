@@ -63,3 +63,4 @@ git checkout -b {task-id-or-type}-{slug}
 - Do **not** declare deploy/release complete without `deploy-evidence`.
 - Open PRs/MRs as **Draft** unless the user explicitly asks otherwise.
 - Keep project-specific behavior in profiles or packs, not in generic core skills.
+- Keep README and related repo documentation current whenever a change affects installer behavior, public commands, workflow routing, skill behavior, release process, or project conventions.

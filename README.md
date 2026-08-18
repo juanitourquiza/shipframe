@@ -263,6 +263,13 @@ Skills are intentionally kept flat under `skills/<name>/SKILL.md` because the in
 6. Run `code-review` before commit/PR/MR.
 7. For releases, run `project-release` and require `deploy-evidence` before saying the release is complete.
 
+## Documentation maintenance
+
+ShipFrame treats documentation as part of the shipped change. When a change
+affects installer behavior, user-facing commands, workflow routing, public skill
+behavior, release process, or project conventions, update the README and any
+related repo documentation in the same commit/release.
+
 ## Español
 
 ShipFrame es un toolkit práctico de flujos de trabajo con IA para equipos que planifican, prueban y publican cambios de software con disciplina. Mantiene un núcleo genérico para cualquier equipo y deja las reglas específicas de cada proyecto en perfiles opcionales.
@@ -305,6 +312,14 @@ cd ~/tools/shipframe
 5. Usa `implement-task` solo cuando el alcance esté definido.
 6. Ejecuta `code-review` antes de commit y PR/MR.
 7. Para releases, ejecuta `project-release` y exige `deploy-evidence` antes de declarar que el deploy está completo.
+
+### Mantenimiento de documentación
+
+ShipFrame trata la documentación como parte del cambio publicado. Cuando un
+cambio afecta el instalador, comandos visibles, routing del workflow,
+comportamiento público de skills, proceso de release o convenciones del
+proyecto, actualiza el README y la documentación relacionada del repo en el
+mismo commit/release.
 
 ### Alcance de instalación
 

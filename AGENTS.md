@@ -26,6 +26,7 @@ ShipFrame is an AI coding workflow toolkit for teams that plan, prove, and ship 
 - Do not hardcode PULSAI or any client-specific release behavior into public core skills.
 - Preserve support for Claude Code, Codex CLI, and OpenCode when changing installer or workflow files.
 - For release-related behavior, require concrete deploy evidence before declaring work complete.
+- Keep documentation current in the same change: whenever installer behavior, user-facing commands, workflow routing, public skill behavior, release process, or project conventions change, update README and any affected repo docs before committing/releasing.
 
 ## Verification
 
