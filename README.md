@@ -6,6 +6,9 @@ It provides reusable skills, agent workflows, templates, and project profiles fo
 
 > Tagline: **AI coding workflows for teams that plan, prove, and ship.**
 
+**Website:** https://shipframe.hackeruna.com/  
+**Repository:** https://github.com/juanitourquiza/shipframe
+
 ---
 
 ## What ShipFrame does
@@ -22,6 +25,10 @@ It is designed for:
 - developers who want agent help without “vibe coding”;
 - projects that need exact release evidence before declaring work complete;
 - multi-project teams that need generic workflows plus project-specific profiles.
+
+Visit the ShipFrame landing page for the public overview, product positioning,
+installation entry points, FAQ, and links to the GitHub repository:
+https://shipframe.hackeruna.com/
 
 ---
 
@@ -273,6 +280,12 @@ related repo documentation in the same commit/release.
 ## Español
 
 ShipFrame es un toolkit práctico de flujos de trabajo con IA para equipos que planifican, prueban y publican cambios de software con disciplina. Mantiene un núcleo genérico para cualquier equipo y deja las reglas específicas de cada proyecto en perfiles opcionales.
+
+**Landing:** https://shipframe.hackeruna.com/  
+**Repositorio:** https://github.com/juanitourquiza/shipframe
+
+La landing pública de ShipFrame contiene el resumen del producto, posicionamiento,
+opciones de instalación, FAQ y enlaces al repositorio de GitHub.
 
 ### Instalación rápida
 

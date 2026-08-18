@@ -6,7 +6,7 @@
   },
   "metadata": {
     "description": "AI coding workflows for teams that plan, prove, and ship.",
-    "version": "0.3.1"
+    "version": "0.3.2"
   },
   "plugins": [
     {
@@ -16,11 +16,11 @@
         "repo": "juanitourquiza/shipframe"
       },
       "description": "Skills, agents, release evidence, and project profiles for disciplined AI-assisted software delivery.",
-      "version": "0.3.1",
+      "version": "0.3.2",
       "author": {
         "name": "Juan Urquiza"
       },
-      "homepage": "https://github.com/juanitourquiza/shipframe",
+      "homepage": "https://shipframe.hackeruna.com/",
       "repository": "https://github.com/juanitourquiza/shipframe",
       "keywords": [
         "shipframe",
