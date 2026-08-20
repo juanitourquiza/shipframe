@@ -5,7 +5,7 @@ description: >
   planning-features-agent flow is active. Conducts structured discovery interviews
   to transform vague ideas into precise feature specifications and ClickUp tickets.
   Do not invoke directly.
-model: claude-opus-4-6
+model: opus
 color: green
 effort: high
 tools:

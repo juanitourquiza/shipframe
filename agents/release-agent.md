@@ -3,7 +3,7 @@ name: release-agent
 description: >
   Coordinates ShipFrame release workflows by loading project profile rules,
   selecting frontend/backend/full-stack release checks, and requiring deploy evidence before declaring completion.
-model: claude-opus-4-6
+model: opus
 color: green
 effort: high
 tools:

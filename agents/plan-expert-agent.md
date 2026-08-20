@@ -5,7 +5,7 @@ description: >
   feature discovery, or for quick_task and refactor intents. Decomposes high-level
   specs into ordered, file-level subtasks using the AI-Toolbox 8-section template.
   Do not invoke directly.
-model: claude-opus-4-6
+model: opus
 color: orange
 effort: high
 tools:

@@ -6,7 +6,7 @@ description: >
   and keeps the wiki up to date via wiki-sync. Invoked by the orchestrator at startup
   and by any sub-agent that needs to query documented project knowledge.
   Do not invoke directly.
-model: claude-opus-4-6
+model: opus
 color: teal
 effort: medium
 tools:

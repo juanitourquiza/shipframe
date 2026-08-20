@@ -6,7 +6,7 @@ description: >
   implementation begins, posts a test summary to the task tracker per subtask, and
   returns a test manifest to the orchestrator. Does NOT write production code.
   Do not invoke directly.
-model: claude-sonnet-4-6
+model: sonnet
 color: blue
 effort: medium
 tools:

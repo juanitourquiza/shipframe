@@ -5,7 +5,7 @@ description: >
   feature planning, task implementation, code review, release verification, design systems,
   accessibility, MCP debugging, copy review, or knowledge management. Analyzes intent and routes to the correct specialist automatically.
   Checks for WIKI.md at startup and delegates to wiki-agent to initialize the wiki if it is missing before any other step.
-model: claude-opus-4-6
+model: opus
 color: purple
 effort: high
 tools:

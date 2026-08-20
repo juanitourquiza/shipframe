@@ -42,11 +42,13 @@ https://shipframe.hackeruna.com/
 | `project-memory-refresh` | Reads WIKI/AGENTS/git state before non-trivial work. |
 | `feature-discovery` | Gathers requirements through structured questioning. |
 | `plan-expert` | Breaks work into ordered, actionable subtasks. |
+| `planning-features` | Runs feature discovery and planning as one feature-planning pipeline. |
 | `implement-task` | Implements a scoped task, verifies it, commits, and prepares a PR/MR. |
 | `code-review` | Two-phase review: fast checks plus structural/SOLID audit. |
 | `create-task` | Converts raw input into ClickUp-ready task templates. |
 | `create-issue` | Triage flow for bugs/issues. |
 | `create-pr` | Opens a draft PR/MR with a populated template from git context. |
+| `generate-readme` | Generates a team-ready README by scanning the current codebase. |
 
 ### Engineering discipline skills
 
@@ -158,11 +160,26 @@ cd ~/tools/shipframe
 ### Targets
 
 ```bash
-./install.sh --claude     # Claude Code plugin + hooks
+./install.sh --claude     # Claude Code plugin + plugin-managed hooks
 ./install.sh --opencode   # OpenCode skills + converted agents
 ./install.sh --codex      # Codex CLI skills + global workflow block
 ./install.sh --all        # all supported tools
 ```
+
+### Diagnostics, repair, and uninstall
+
+```bash
+./install.sh --doctor --repo-only        # CI-safe repo checks only
+./install.sh --doctor --all              # read-only local environment diagnostics
+./install.sh --repair --codex --yes      # repair ShipFrame-owned Codex artifacts
+./install.sh --uninstall --all --yes     # remove ShipFrame-owned installed artifacts
+./install.sh --uninstall --all --yes --purge  # also remove ShipFrame cache/state
+```
+
+`--doctor` is always read-only. `--repair` and `--uninstall` are dry-run by
+default and only apply changes with `--yes`. ShipFrame records install ownership
+in `${XDG_STATE_HOME:-~/.local/state}/shipframe/install-state.json` so repair and
+uninstall can distinguish ShipFrame-managed artifacts from user files.
 
 When installed with Homebrew, use the `shipframe` wrapper:
 
@@ -189,12 +206,15 @@ Stable ShipFrame releases are tracked with git tags named `vX.Y.Z` (for example,
 ShipFrame installs globally for the current macOS/Linux user, not inside the
 project where you run the command:
 
-- Claude Code: installs the `shipframe` plugin and configures user-level hooks in
-  `~/.claude/settings.json`.
+- Claude Code: installs the `shipframe` plugin. Hooks are plugin-managed via
+  `hooks/hooks.json`; legacy user-level ShipFrame hooks can be removed with
+  `./install.sh --repair --claude --yes`.
 - Codex CLI: links skills into `~/.codex/skills` and injects the managed workflow
   block into `~/.codex/AGENTS.md`.
 - OpenCode: links skills into `~/.config/opencode/skills` and writes converted
-  agents into `~/.config/opencode/agents`.
+  agents into `~/.config/opencode/agents`. Converted agents inherit the user's
+  OpenCode model by default; pass `--opencode-model provider/model` only when an
+  explicit override is needed.
 
 Run `shipframe install ...` once per user/machine. Then add project-specific
 rules inside each repository with `shipframe.profile.md`,
@@ -232,9 +252,15 @@ The Codex agent classifies each request and runs the matching skills in order:
 |---|---|
 | `new_feature` | `project-memory-refresh` → `feature-discovery` → `plan-expert` |
 | `quick_task` | `project-memory-refresh` → `plan-expert` → `implement-task` → `code-review` → `create-pr` |
+| `implementation` | `project-memory-refresh` → `implement-task` → `code-review` → `create-pr` |
+| `refactor` | `project-memory-refresh` → `codebase-design` → `plan-expert` → `implement-task` → `code-review` → `create-pr` |
 | `bug` | `project-memory-refresh` → `bug-diagnosis` → `implement-task` → `code-review` → `create-pr` |
 | `release` | `project-profile` → `project-release` → `deploy-evidence` |
 | `research` | `project-memory-refresh` → `research` |
+| `design_system` | `project-memory-refresh` → `design-system-setup` |
+| `accessibility_audit` | `project-memory-refresh` → `a11y-auditor` → `implement-task` if fixes are requested |
+| `copy_review` | `project-memory-refresh` → `client-copy-review` |
+| `mcp_debugging` | `project-memory-refresh` → `mcp-debugging` |
 | `handoff` | `handoff` |
 | `code_review` | `code-review` |
 | `wiki_management` | `wiki-query` / `wiki-sync` / `wiki-init` |
@@ -335,6 +361,20 @@ proyecto, actualiza el README y la documentación relacionada del repo en el
 mismo commit/release.
 
 ### Alcance de instalación
+
+### Diagnóstico, reparación y desinstalación
+
+```bash
+./install.sh --doctor --repo-only
+./install.sh --doctor --all
+./install.sh --repair --codex --yes
+./install.sh --uninstall --all --yes
+```
+
+`--doctor` es solo lectura. `--repair` y `--uninstall` son dry-run por defecto y
+solo aplican cambios con `--yes`. En OpenCode los agentes convertidos heredan el
+modelo global del usuario salvo que pases `--opencode-model provider/model`.
+ShipFrame no modifica `~/.codex/config.toml` ni el modelo global de Codex.
 
 ShipFrame se instala globalmente para el usuario actual, no dentro del proyecto
 desde donde corres el comando:

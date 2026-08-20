@@ -5,7 +5,7 @@ description: >
   detected. Runs design-expert → design-system-docs → plan-expert in sequence to
   document design tokens, audit or plan Storybook, and create an execution plan.
   Do not invoke directly.
-model: claude-opus-4-6
+model: opus
 color: teal
 effort: high
 tools:
