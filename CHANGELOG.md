@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## v0.4.1 — 2026-08-20
+
 ### Added
 - Added skills-picker discovery docs for Claude Code, Codex CLI, and OpenCode.
 - Added Codex Agent Skills symlinks in `~/.agents/skills` while preserving `~/.codex/skills` compatibility.
