@@ -1,5 +1,15 @@
 # Changelog
 
+## Unreleased
+
+### Added
+- Added skills-picker discovery docs for Claude Code, Codex CLI, and OpenCode.
+- Added Codex Agent Skills symlinks in `~/.agents/skills` while preserving `~/.codex/skills` compatibility.
+
+### Changed
+- Shortened skill frontmatter descriptions so host skill pickers can match ShipFrame skills more reliably.
+- Updated README skill/routing documentation to cover skills-picker invocation.
+
 ## v0.4.0 — 2026-08-20
 
 ### Added

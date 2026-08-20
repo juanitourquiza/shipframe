@@ -1,6 +1,6 @@
 ---
 name: init-project
-description: Scan the current project, detect its full tech stack, and generate AGENTS.md with structured context for future Claude agents. Use when starting work on a new or unfamiliar codebase.
+description: Scan a new or unfamiliar repo and generate AGENTS.md with stack, commands, structure, and agent context.
 allowed-tools: Glob Read Grep Write
 effort: medium
 ---

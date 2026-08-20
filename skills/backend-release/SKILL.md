@@ -1,6 +1,6 @@
 ---
 name: backend-release
-description: Prepares and verifies backend/API releases with tests, migrations, queues, integrations, and endpoint smoke checks.
+description: Verify backend/API releases with tests, migrations, queues, integrations, and endpoint smoke checks.
 allowed-tools: Read Glob Grep Bash
 argument-hint: '[--app <name>] [--environment <name>]'
 effort: medium

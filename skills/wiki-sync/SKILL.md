@@ -1,6 +1,6 @@
 ---
 name: wiki-sync
-description: Synchronizes the wiki with changes in source repositories since the last sync, always diffing against origin/main. Invoke when the user asks to sync or update the wiki, or wants to bring it up to date with recent commits.
+description: Sync the project wiki with source changes since origin/main, updating docs and the wiki operation log.
 allowed-tools: Read Write Edit Bash
 effort: medium
 ---

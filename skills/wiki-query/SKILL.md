@@ -1,6 +1,6 @@
 ---
 name: wiki-query
-description: Searches and answers questions by querying the active vault's wiki (LLM Wiki / Karpathy pattern). Activate when the user searches the wiki, asks about documented topics, or uses phrases like "what does the wiki say about" or "search my notes". If a wiki/ folder with an index.md exists, this skill is the fastest path to an answer.
+description: Answer questions from the active project wiki by reading the index and relevant wiki pages.
 allowed-tools: Read Glob
 effort: low
 ---

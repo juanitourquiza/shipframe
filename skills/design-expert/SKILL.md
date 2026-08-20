@@ -1,6 +1,6 @@
 ---
 name: design-expert
-description: Scan the current project for all design-related information (theme, brand colors, typography, spacing, design system, component patterns, dark mode, etc.) and generate a DESIGN.md file to guide future AI agents in UI/UX work. Use when starting UI work on an unfamiliar codebase or to document an existing design system.
+description: Scan a UI project for theme, colors, typography, spacing, and component patterns, then generate DESIGN.md.
 allowed-tools: Glob Read Grep Write AskUserQuestion
 effort: medium
 ---

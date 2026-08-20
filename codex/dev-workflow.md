@@ -12,7 +12,7 @@ For every non-trivial request, before acting:
 3. Run the skills in the listed sequence, in order, waiting for each to finish.
 4. Only write code after the required upstream steps (context, spec, plan, tests/review) are done.
 
-Skills live in `~/.codex/skills/<name>/SKILL.md` and are invoked like any other Codex skill. Never re-implement a skill's logic inline — load and follow its `SKILL.md`.
+Skills live in the current Agent Skills layout at `~/.agents/skills/<name>/SKILL.md`; ShipFrame also keeps compatibility symlinks in `~/.codex/skills/<name>/SKILL.md` for existing Codex setups. In Codex, run `/skills` to list them or type `$skill-name` to invoke one explicitly. Never re-implement a skill's logic inline — load and follow its `SKILL.md`.
 
 ## Startup check
 

@@ -279,6 +279,19 @@ const skills=fs.readdirSync('skills').filter(d=>fs.existsSync(path.join('skills'
 const missing=skills.filter(s=>!readme.includes('`'+s+'`'));
 if (missing.length) { console.error(missing.join('\n')); process.exit(1); }
 JS
+  python3 - <<'PY' && report_ok "skill descriptions are picker-friendly" || report_warn "skill descriptions exceed 180 chars"
+from pathlib import Path
+import re
+long=[]
+for p in sorted(Path('skills').glob('*/SKILL.md')):
+    text=p.read_text()
+    m=re.search(r'^description:\s*(.+)$', text, re.M)
+    desc=m.group(1).strip() if m else ''
+    if len(desc) > 180:
+        long.append(f'{p}: {len(desc)}')
+if long:
+    raise SystemExit('\n'.join(long))
+PY
   node <<'JS' && report_ok "Codex README routing matches workflow intents" || report_warn "Codex README routing summary omits some workflow intents"
 const fs=require('fs');
 const wf=fs.readFileSync('codex/dev-workflow.md','utf8'); const rm=fs.readFileSync('README.md','utf8');
@@ -326,7 +339,7 @@ environment_doctor() {
     opencode|all) check_symlink_dir "$HOME/.config/opencode/skills" "$SOURCE_DIR/skills" "OpenCode skills" ;;
   esac
   case "$TARGET" in
-    codex|all) check_symlink_dir "$HOME/.codex/skills" "$SOURCE_DIR/skills" "Codex skills" ;;
+    codex|all) check_symlink_dir "$HOME/.agents/skills" "$SOURCE_DIR/skills" "Agent Skills (Codex)"; check_symlink_dir "$HOME/.codex/skills" "$SOURCE_DIR/skills" "Legacy Codex skills" ;;
   esac
   if [[ "$TARGET" =~ ^(codex|all)$ ]]; then
     if [ -f "$HOME/.codex/AGENTS.md" ] && grep -q '<!-- BEGIN shipframe' "$HOME/.codex/AGENTS.md"; then
@@ -470,7 +483,11 @@ install_opencode() {
   return 0
 }
 
-install_codex_skills() { link_skills "$HOME/.codex/skills" "install"; }
+install_codex_skills() {
+  link_skills "$HOME/.agents/skills" "install"
+  echo ""
+  link_skills "$HOME/.codex/skills" "install"
+}
 install_codex_workflow() {
   resolve_source_dir
   local workflow_src="$SOURCE_DIR/codex/dev-workflow.md" codex_home agents_file
@@ -497,13 +514,14 @@ JS
 install_codex() {
   install_codex_skills; echo ""; install_codex_workflow; echo ""
   echo "Codex CLI install complete."
-  echo "  Skills   : $HOME/.codex/skills    (symlinks — auto-update via git pull)"
+  echo "  Skills   : $HOME/.agents/skills   (Codex recommended layout)"
+  echo "  Legacy   : $HOME/.codex/skills    (compatibility symlinks)"
   echo "  Workflow : $HOME/.codex/AGENTS.md (managed block — re-run install to update)"
   echo "  Model    : unchanged (Codex config.toml is user-owned)"
   echo "  Source   : $SOURCE_DIR"
   write_manifest
   local artifacts=() artifact
-  while IFS= read -r artifact; do artifacts+=("$artifact"); done < <(collect_skill_artifacts "$HOME/.codex/skills"; printf '%s\n' "$HOME/.codex/AGENTS.md")
+  while IFS= read -r artifact; do artifacts+=("$artifact"); done < <(collect_skill_artifacts "$HOME/.agents/skills"; collect_skill_artifacts "$HOME/.codex/skills"; printf '%s\n' "$HOME/.codex/AGENTS.md")
   record_artifacts codex "${artifacts[@]}"
   return 0
 }
@@ -541,7 +559,7 @@ run_uninstall() {
       if command_exists claude; then if [ "$YES" = true ]; then claude plugin uninstall shipframe || true; else echo "  dry-run: would run claude plugin uninstall shipframe"; fi; fi ;;
   esac
   case "$TARGET" in opencode|all) echo "Removing OpenCode artifacts..."; uninstall_symlinked_skills "$HOME/.config/opencode/skills"; remove_opencode_agents ;; esac
-  case "$TARGET" in codex|all) echo "Removing Codex artifacts..."; uninstall_symlinked_skills "$HOME/.codex/skills"; remove_codex_block ;; esac
+  case "$TARGET" in codex|all) echo "Removing Codex artifacts..."; uninstall_symlinked_skills "$HOME/.agents/skills"; uninstall_symlinked_skills "$HOME/.codex/skills"; remove_codex_block ;; esac
   if [ "$PURGE" = true ]; then
     if [ "$YES" = true ]; then rm -rf "$PLUGIN_CACHE" "$STATE_DIR"; echo "Purged $PLUGIN_CACHE and $STATE_DIR"; else echo "dry-run: would purge $PLUGIN_CACHE and $STATE_DIR"; fi
   fi
@@ -549,7 +567,7 @@ run_uninstall() {
 run_repair() {
   case "$TARGET" in claude|all) echo "Repairing Claude settings..."; remove_legacy_claude_hooks ;; esac
   case "$TARGET" in opencode|all) echo "Repairing OpenCode skills/agents..."; link_skills "$HOME/.config/opencode/skills" repair; install_opencode_agents ;; esac
-  case "$TARGET" in codex|all) echo "Repairing Codex skills/workflow..."; link_skills "$HOME/.codex/skills" repair; install_codex_workflow ;; esac
+  case "$TARGET" in codex|all) echo "Repairing Codex skills/workflow..."; link_skills "$HOME/.agents/skills" repair; link_skills "$HOME/.codex/skills" repair; install_codex_workflow ;; esac
   [ "$YES" = true ] && write_manifest || true
 }
 check_engram_memory() {

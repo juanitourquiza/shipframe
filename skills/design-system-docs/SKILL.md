@@ -1,6 +1,6 @@
 ---
 name: design-system-docs
-description: Audit design system documentation in the current project. Detects whether documentation lives in Markdown files or Storybook. If Storybook is present, audits its quality and suggests improvements. If only Markdown (or no docs at all), produces a step-by-step plan to implement Storybook and improve existing documentation.
+description: Audit design system docs in Markdown or Storybook and propose concrete documentation or Storybook improvements.
 allowed-tools: Glob Read Grep Bash
 effort: medium
 ---

@@ -1,6 +1,6 @@
 ---
 name: project-release
-description: Orchestrates a generic project release by loading project profile rules, running target-specific release checks, and collecting deploy evidence.
+description: Orchestrate a generic release by loading project profile rules, running checks, and collecting deploy evidence.
 allowed-tools: Read Glob Grep Bash Skill
 argument-hint: '[--target <frontend|backend|full-stack|library|docs>] [--environment <name>]'
 effort: high

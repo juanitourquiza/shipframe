@@ -196,6 +196,64 @@ shipframe install --all
 | OpenCode | symlinked skills | converted agents |
 | Codex CLI | symlinked skills | routing table in `~/.codex/AGENTS.md` |
 
+### Use ShipFrame from skills picker
+
+ShipFrame is packaged so skills are discoverable after install, while public
+marketplace/catalog visibility depends on each host review process.
+
+#### Claude Code
+
+```text
+/plugin marketplace add juanitourquiza/shipframe
+/plugin install shipframe
+/reload-plugins
+/shipframe:code-review
+```
+
+Claude plugin skills are namespaced as `/shipframe:<skill>` to avoid collisions
+with personal or project skills. Use `/help` or the custom commands view to
+confirm a skill is listed after reload.
+
+#### Codex CLI
+
+```bash
+shipframe install --codex
+# or: ./install.sh --codex
+```
+
+Then open Codex and run:
+
+```text
+/skills
+$code-review
+$plan-expert
+```
+
+Codex uses the open Agent Skills layout at `~/.agents/skills/<name>/SKILL.md`.
+ShipFrame also writes compatibility symlinks to `~/.codex/skills` for existing
+setups, and keeps the workflow block in `~/.codex/AGENTS.md`.
+
+#### OpenCode
+
+```bash
+shipframe install --opencode
+# or: ./install.sh --opencode
+```
+
+OpenCode discovers ShipFrame from `~/.config/opencode/skills/<name>/SKILL.md`
+and loads skills on demand through its native `skill` tool. OpenCode can also
+see compatible skills in `~/.agents/skills` and `~/.claude/skills`; install the
+Codex target too when you want ShipFrame available through the shared
+`~/.agents/skills` location.
+
+Quick smoke checks:
+
+```bash
+./install.sh --doctor --all
+ls ~/.agents/skills/code-review/SKILL.md
+ls ~/.config/opencode/skills/code-review/SKILL.md
+```
+
 ### Stable versions
 
 Stable ShipFrame releases are tracked with git tags named `vX.Y.Z` (for example,
@@ -209,12 +267,15 @@ project where you run the command:
 - Claude Code: installs the `shipframe` plugin. Hooks are plugin-managed via
   `hooks/hooks.json`; legacy user-level ShipFrame hooks can be removed with
   `./install.sh --repair --claude --yes`.
-- Codex CLI: links skills into `~/.codex/skills` and injects the managed workflow
-  block into `~/.codex/AGENTS.md`.
+- Codex CLI: links skills into `~/.agents/skills` for the current Agent
+  Skills layout, also links compatibility copies into `~/.codex/skills`, and
+  injects the managed workflow block into `~/.codex/AGENTS.md`.
 - OpenCode: links skills into `~/.config/opencode/skills` and writes converted
-  agents into `~/.config/opencode/agents`. Converted agents inherit the user's
-  OpenCode model by default; pass `--opencode-model provider/model` only when an
-  explicit override is needed.
+  agents into `~/.config/opencode/agents`. OpenCode also discovers compatible
+  skills from `~/.agents/skills` and `~/.claude/skills` if those locations are
+  populated. Converted agents inherit the user's OpenCode model by default;
+  pass `--opencode-model provider/model` only when an explicit override is
+  needed.
 
 Run `shipframe install ...` once per user/machine. Then add project-specific
 rules inside each repository with `shipframe.profile.md`,
@@ -379,16 +440,28 @@ ShipFrame no modifica `~/.codex/config.toml` ni el modelo global de Codex.
 ShipFrame se instala globalmente para el usuario actual, no dentro del proyecto
 desde donde corres el comando:
 
-- Claude Code: instala el plugin `shipframe` y configura hooks de usuario en
-  `~/.claude/settings.json`.
-- Codex CLI: enlaza skills en `~/.codex/skills` e inyecta el bloque administrado
-  en `~/.codex/AGENTS.md`.
+- Claude Code: instala el plugin `shipframe`; los hooks se gestionan desde
+  `hooks/hooks.json` del plugin.
+- Codex CLI: enlaza skills en `~/.agents/skills` como layout actual de Agent
+  Skills, conserva symlinks compatibles en `~/.codex/skills` e inyecta el
+  bloque administrado en `~/.codex/AGENTS.md`.
 - OpenCode: enlaza skills en `~/.config/opencode/skills` y escribe agentes
-  convertidos en `~/.config/opencode/agents`.
+  convertidos en `~/.config/opencode/agents`; también puede descubrir skills
+  compatibles desde `~/.agents/skills` y `~/.claude/skills`.
 
 Ejecuta `shipframe install ...` una vez por usuario/máquina. Las reglas por
 proyecto van dentro de cada repo usando `shipframe.profile.md`,
 `.shipframe/profile.md` o `.shipframe/project-profile.md`.
+
+### Usar ShipFrame desde el skills picker
+
+ShipFrame queda discoverable localmente después de instalarlo. La aparición en
+marketplaces o catálogos públicos depende de la revisión de cada herramienta, así
+que no se promete hasta que esté aceptada.
+
+- Claude Code: agrega el marketplace con `/plugin marketplace add juanitourquiza/shipframe`, instala con `/plugin install shipframe`, recarga con `/reload-plugins` y usa `/shipframe:code-review`.
+- Codex CLI: instala con `shipframe install --codex`, abre Codex, ejecuta `/skills` y llama skills con `$code-review`, `$plan-expert`, etc.
+- OpenCode: instala con `shipframe install --opencode`; OpenCode carga las skills con su herramienta nativa `skill` desde `~/.config/opencode/skills` y también puede ver `~/.agents/skills`/`~/.claude/skills`.
 
 ### Memoria persistente opcional con Engram
 

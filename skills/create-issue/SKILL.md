@@ -1,6 +1,6 @@
 ---
 name: create-issue
-description: Acts as an issue triager to gather all required information for a bug or issue, creates a ticket in ClickUp, and then creates an issue in GitHub natively using the templates.
+description: Triage a bug or issue, collect required details, create a ClickUp ticket, and open a GitHub issue from templates.
 argument-hint: '[--title "<issue title>" | --description "<initial issue description>"]'
 allowed-tools: Bash AskUserQuestion mcp__clickup__clickup_get_workspace_hierarchy mcp__clickup__clickup_create_task mcp__github__issue_write
 effort: medium

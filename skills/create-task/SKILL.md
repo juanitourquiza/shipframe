@@ -1,6 +1,6 @@
 ---
 name: create-task
-description: Creates a ClickUp task from raw input (client message, rough idea, or transcribed audio) by classifying it into one of 5 task types ([US], [BUG], [IMP], [TASK], [SPIKE]), filling out the standardized template, and submitting it to ClickUp.
+description: Create a ClickUp task from raw input by classifying it as US, BUG, IMP, TASK, or SPIKE and filling the template.
 argument-hint: '[--input "<raw description>" | --type <US|BUG|IMP|TASK|SPIKE>]'
 allowed-tools: Read Bash AskUserQuestion mcp__clickup__clickup_get_workspace_hierarchy mcp__clickup__clickup_create_task
 effort: medium

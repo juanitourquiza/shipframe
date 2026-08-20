@@ -1,6 +1,6 @@
 ---
 name: bug-diagnosis
-description: Build a tight reproduction loop for bugs and performance regressions before changing code. Use when the user says "diagnose"/"debug this", or reports something broken/throwing/failing/slow.
+description: Diagnose bugs, regressions, failing tests, or slow behavior by building a reproduction loop before code changes.
 ---
 
 # Bug Diagnosis

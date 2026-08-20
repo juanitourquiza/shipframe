@@ -12,7 +12,7 @@ ShipFrame is an AI coding workflow toolkit for teams that plan, prove, and ship 
 
 ## Repo structure
 
-- `skills/<name>/SKILL.md` — installable skills. Keep this flat; the installer symlinks each direct child of `skills/`.
+- `skills/<name>/SKILL.md` — installable skills. Keep this flat; the installer symlinks each direct child into host skill directories (`~/.agents/skills`, `~/.codex/skills`, `~/.config/opencode/skills`).
 - `agents/*.md` — Claude/OpenCode-oriented agents.
 - `codex/dev-workflow.md` — Codex routing workflow inlined into `~/.codex/AGENTS.md` by the installer.
 - `templates/` — PR, issue, ClickUp, and wiki templates.

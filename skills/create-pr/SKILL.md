@@ -1,6 +1,6 @@
 ---
 name: create-pr
-description: Creates a GitHub Pull Request or GitLab Merge Request (always as Draft) with a fully auto-populated standardized template. Infers the base branch, derives the description from the diff and commits, detects shared code impact, tags stakeholders from CODEOWNERS, and builds a concrete test plan from the changes. Uses gh for GitHub and glab for GitLab, preserving GitHub MCP fallback for GitHub PRs. Designed to run without human input when called by an agent, or with a confirmation step when invoked directly.
+description: Create a Draft GitHub PR or GitLab MR from git diff, commits, CODEOWNERS, and the ShipFrame PR template.
 argument-hint: '[--base <branch>] [--ticket-id <id>] [--provider <auto|github|gitlab>] [--auto]'
 allowed-tools: Bash AskUserQuestion mcp__github__create_pull_request mcp__github__list_branches
 effort: low

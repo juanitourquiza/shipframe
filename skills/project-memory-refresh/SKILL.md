@@ -1,6 +1,6 @@
 ---
 name: project-memory-refresh
-description: Refreshes project context before work by reading memory, AGENTS/WIKI files, and current repo state. Use at the start of non-trivial tasks or when prior decisions may matter.
+description: Refresh project context from memory, WIKI/AGENTS files, git state, and repo conventions before work.
 allowed-tools: Read Glob Grep Bash
 effort: low
 ---
