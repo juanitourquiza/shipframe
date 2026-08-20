@@ -192,14 +192,16 @@ shipframe install --all
 
 | Tool | Skills | Orchestration |
 |---|---|---|
-| Claude Code | plugin marketplace/local plugin | agents + hooks |
-| OpenCode | symlinked skills | converted agents |
-| Codex CLI | symlinked skills | routing table in `~/.codex/AGENTS.md` |
+| Claude Code | plugin marketplace / plugin namespace | agents + hooks |
+| Codex CLI | Agent Skills via `/skills` | routing table in `~/.codex/AGENTS.md` |
+| OpenCode | native skill discovery | converted agents |
 
 ### Use ShipFrame from skills picker
 
-ShipFrame is packaged so skills are discoverable after install, while public
-marketplace/catalog visibility depends on each host review process.
+ShipFrame supports each tool's native discovery model: Claude Code plugin
+marketplaces, Codex Agent Skills via `/skills`, and OpenCode native skill
+discovery. Install locally, use directly, and keep model/config choices
+user-owned.
 
 #### Claude Code
 
@@ -455,9 +457,10 @@ proyecto van dentro de cada repo usando `shipframe.profile.md`,
 
 ### Usar ShipFrame desde el skills picker
 
-ShipFrame queda discoverable localmente después de instalarlo. La aparición en
-marketplaces o catálogos públicos depende de la revisión de cada herramienta, así
-que no se promete hasta que esté aceptada.
+ShipFrame usa el modelo nativo de discovery de cada herramienta: marketplaces
+de plugins en Claude Code, Agent Skills en Codex vía `/skills`, y discovery
+nativo de skills en OpenCode. Instálalo localmente, úsalo directo y mantén
+modelos/configuración bajo control del usuario.
 
 - Claude Code: agrega el marketplace con `/plugin marketplace add juanitourquiza/shipframe`, instala con `/plugin install shipframe`, recarga con `/reload-plugins` y usa `/shipframe:code-review`.
 - Codex CLI: instala con `shipframe install --codex`, abre Codex, ejecuta `/skills` y llama skills con `$code-review`, `$plan-expert`, etc.
