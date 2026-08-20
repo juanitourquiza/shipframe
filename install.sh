@@ -464,7 +464,8 @@ install_opencode() {
   echo "  Model  : ${OPENCODE_MODEL:-inherits OpenCode global/default model}"
   echo "  Source : $SOURCE_DIR"
   write_manifest
-  mapfile -t artifacts < <(collect_skill_artifacts "$HOME/.config/opencode/skills"; find "$HOME/.config/opencode/agents" -maxdepth 1 -name '*.md' -print | sort)
+  local artifacts=() artifact
+  while IFS= read -r artifact; do artifacts+=("$artifact"); done < <(collect_skill_artifacts "$HOME/.config/opencode/skills"; find "$HOME/.config/opencode/agents" -maxdepth 1 -name '*.md' -print | sort)
   record_artifacts opencode "${artifacts[@]}"
   return 0
 }
@@ -501,7 +502,8 @@ install_codex() {
   echo "  Model    : unchanged (Codex config.toml is user-owned)"
   echo "  Source   : $SOURCE_DIR"
   write_manifest
-  mapfile -t artifacts < <(collect_skill_artifacts "$HOME/.codex/skills"; printf '%s\n' "$HOME/.codex/AGENTS.md")
+  local artifacts=() artifact
+  while IFS= read -r artifact; do artifacts+=("$artifact"); done < <(collect_skill_artifacts "$HOME/.codex/skills"; printf '%s\n' "$HOME/.codex/AGENTS.md")
   record_artifacts codex "${artifacts[@]}"
   return 0
 }
