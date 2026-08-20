@@ -1,6 +1,6 @@
 ---
 name: mcp-debugging
-description: Diagnoses MCP connector failures by separating stored connection state from live upstream capability and capturing exact tool evidence.
+description: Diagnose MCP connector failures by separating stored connection state from live upstream tool evidence.
 allowed-tools: Read Glob Grep Bash
 argument-hint: '[--connector <name>]'
 effort: medium

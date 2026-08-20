@@ -1,6 +1,6 @@
 ---
 name: generate-readme
-description: Generate a project README.md following the ShipFrame team-ready standard. Scans the current codebase to detect the tech stack, project purpose, and available commands, then produces a complete, structured README. Use when starting a new project or when a README is missing or outdated.
+description: Generate or refresh a team-ready README by scanning stack, purpose, commands, and project conventions.
 allowed-tools: AskUserQuestion Glob Read Grep Write
 effort: medium
 ---

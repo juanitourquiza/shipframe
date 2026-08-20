@@ -1,6 +1,6 @@
 ---
 name: client-copy-review
-description: Reviews product/client-facing copy for clarity, approval constraints, bilingual consistency, and implementation-safe wording.
+description: Review product copy, i18n, email, and landing text for clarity, approvals, and implementation-safe wording.
 allowed-tools: Read Glob Grep Bash
 argument-hint: '[--language <en|es|both>]'
 effort: medium

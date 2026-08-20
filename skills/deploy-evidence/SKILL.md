@@ -1,6 +1,6 @@
 ---
 name: deploy-evidence
-description: Collects concrete proof that a deploy or release actually reached the intended environment. Use before saying a release, publish, or deploy is done.
+description: Collect concrete deploy or release proof before saying a publish, release, or deployment is complete.
 allowed-tools: Read Glob Grep Bash
 argument-hint: '[--environment <name>] [--url <url>]'
 effort: medium

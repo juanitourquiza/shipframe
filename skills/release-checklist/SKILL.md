@@ -1,6 +1,6 @@
 ---
 name: release-checklist
-description: Builds a project-aware release checklist before merge, deploy, or publication. Use when preparing any frontend, backend, library, or docs release.
+description: Build a project-aware release checklist before merge, deploy, publication, or versioned release.
 allowed-tools: Read Glob Grep Bash
 argument-hint: '[--target <frontend|backend|full-stack|library|docs>]'
 effort: medium

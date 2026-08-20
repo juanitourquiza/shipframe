@@ -1,6 +1,6 @@
 ---
 name: planning-features
-description: End-to-end feature planning. Runs feature-discovery to gather and document all requirements, then automatically hands off the resulting ClickUp ticket to plan-expert to break it into actionable subtasks. Use when starting work on any new feature from scratch.
+description: Run feature discovery and plan-expert together for a new feature, producing ticket and subtask structure.
 allowed-tools: AskUserQuestion mcp__clickup__clickup_get_task mcp__clickup__clickup_create_task mcp__clickup__clickup_get_workspace_hierarchy TaskCreate TaskUpdate Skill
 effort: high
 ---

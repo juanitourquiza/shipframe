@@ -1,6 +1,6 @@
 ---
 name: wiki-forge
-description: Converts any collection of documents into an interconnected LLM knowledge wiki following the Karpathy LLM Wiki pattern. Ingests transcripts, reports, PDFs, articles, and notes — transforming them into markdown pages with wikilinks, YAML frontmatter, and a navigable index. Supports SETUP, INGEST, LINT, and MERGE operations.
+description: Convert documents into an interconnected LLM wiki using the Karpathy wiki pattern and project conventions.
 allowed-tools: Read Write Edit Glob Bash AskUserQuestion
 effort: high
 ---

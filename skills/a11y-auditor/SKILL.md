@@ -1,6 +1,6 @@
 ---
 name: a11y-auditor
-description: Audits code, components, or screenshots for accessibility barriers following WCAG 2.2 (Levels A, AA, AAA). Detects the environment automatically and runs only the relevant checks — Web (HTML, React, Next.js, Tailwind) or Mobile (React Native, Expo, Swift, Kotlin).
+description: Audit code, components, or screenshots for WCAG 2.2 accessibility barriers across web and mobile projects.
 argument-hint: '[--level <A|AA|AAA>]'
 allowed-tools: Read Grep Glob Bash
 effort: high

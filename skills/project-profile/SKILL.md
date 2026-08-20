@@ -1,6 +1,6 @@
 ---
 name: project-profile
-description: Reads and applies project-specific workflow rules without hardcoding them into ShipFrame core. Use before releases, deploys, project onboarding, or when a repo has custom conventions.
+description: Read project-specific workflow rules before releases, deploys, onboarding, or custom repository conventions.
 allowed-tools: Read Glob Grep Bash
 effort: low
 ---

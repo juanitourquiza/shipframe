@@ -1,6 +1,6 @@
 ---
 name: frontend-release
-description: Prepares and verifies frontend releases with project-aware build, route smoke, assets, i18n, and version checks.
+description: Verify frontend releases with project-aware build, route smoke checks, assets, i18n, and version validation.
 allowed-tools: Read Glob Grep Bash
 argument-hint: '[--app <name>] [--environment <name>]'
 effort: medium

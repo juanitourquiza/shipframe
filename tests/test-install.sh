@@ -45,7 +45,7 @@ snapshot() {
   mkdir -p "$(dirname "$out")"
   {
     [ -f "$HOME/.codex/AGENTS.md" ] && shasum -a 256 "$HOME/.codex/AGENTS.md" || true
-    find "$HOME/.codex/skills" "$HOME/.config/opencode/skills" "$HOME/.config/opencode/agents" -maxdepth 1 \( -type l -o -type f \) -print 2>/dev/null | sort | while read -r p; do
+    find "$HOME/.agents/skills" "$HOME/.codex/skills" "$HOME/.config/opencode/skills" "$HOME/.config/opencode/agents" -maxdepth 1 \( -type l -o -type f \) -print 2>/dev/null | sort | while read -r p; do
       if [ -L "$p" ]; then printf 'L %s -> %s\n' "$p" "$(readlink "$p")"; else printf 'F %s ' "$p"; shasum -a 256 "$p"; fi
     done
   } > "$out"
@@ -60,6 +60,7 @@ bash -n "$ROOT/install.sh"
 "$ROOT/install.sh" --all --opencode-model anthropic/claude-sonnet-4-5 >/tmp/shipframe-install-1.log
 assert_file "$HOME/.codex/AGENTS.md"
 grep -q 'shipframe-block-version: 1' "$HOME/.codex/AGENTS.md"
+assert_link "$HOME/.agents/skills/code-review"
 assert_link "$HOME/.codex/skills/code-review"
 assert_link "$HOME/.config/opencode/skills/code-review"
 count_agents="$(find "$HOME/.config/opencode/agents" -maxdepth 1 -name '*.md' | wc -l | tr -d ' ')"
@@ -79,13 +80,15 @@ diff -u "$TMP/s1" "$TMP/s2"
 "$ROOT/install.sh" --opencode </dev/null >/tmp/shipframe-opencode-nontty.log
 ! grep -R 'claude-opus-4-6\|claude-sonnet-4-6' "$HOME/.config/opencode/agents"
 
-# Repair a real directory that blocks skill symlink.
-rm "$HOME/.codex/skills/code-review"
-mkdir "$HOME/.codex/skills/code-review"
+# Repair real directories that block Codex skill symlinks in both supported layouts.
+rm "$HOME/.agents/skills/code-review" "$HOME/.codex/skills/code-review"
+mkdir "$HOME/.agents/skills/code-review" "$HOME/.codex/skills/code-review"
 "$ROOT/install.sh" --repair --codex --yes >/tmp/shipframe-repair.log
+assert_link "$HOME/.agents/skills/code-review"
 assert_link "$HOME/.codex/skills/code-review"
 
 "$ROOT/install.sh" --uninstall --all --yes >/tmp/shipframe-uninstall.log
+[ ! -L "$HOME/.agents/skills/code-review" ]
 [ ! -L "$HOME/.codex/skills/code-review" ]
 [ ! -L "$HOME/.config/opencode/skills/code-review" ]
 [ ! -f "$HOME/.config/opencode/agents/orchestrator-agent.md" ]

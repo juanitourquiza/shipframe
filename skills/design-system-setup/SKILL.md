@@ -1,6 +1,6 @@
 ---
 name: design-system-setup
-description: End-to-end design system setup. Runs design-expert to extract and document all design information, then runs design-system-docs to audit or plan the Storybook implementation, and finally uses plan-expert to create a parent ClickUp ticket with all execution subtasks. Use when starting or improving the design system in a project.
+description: Set up design-system documentation by running design-expert, design-system-docs, and planning execution subtasks.
 allowed-tools: Glob Read Grep Write Bash AskUserQuestion mcp__clickup__clickup_get_workspace_hierarchy mcp__clickup__clickup_get_task mcp__clickup__clickup_create_task TaskCreate TaskUpdate
 effort: high
 ---

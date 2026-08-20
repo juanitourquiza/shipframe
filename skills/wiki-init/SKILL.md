@@ -1,6 +1,6 @@
 ---
 name: wiki-init
-description: Initializes a new wiki vault from scratch for any project. Creates the folder structure, CLAUDE.md, wiki-conventions.md, sync-config.md, and runs an initial wiki-forge to create the first documentation. Use when starting a new vault.
+description: Initialize a new project wiki vault with WIKI.md, index, conventions, sync config, and starter structure.
 allowed-tools: Read Glob Write Edit Bash AskUserQuestion
 effort: high
 ---
