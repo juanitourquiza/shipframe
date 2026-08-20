@@ -5,7 +5,7 @@ description: >
   requires both discovery and technical planning. Coordinates the full planning
   lifecycle by sequentially delegating to feature-discovery-agent then
   plan-expert-agent. Do not invoke directly.
-model: claude-opus-4-6
+model: opus
 color: yellow
 effort: high
 tools:

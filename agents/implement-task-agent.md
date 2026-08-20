@@ -4,7 +4,7 @@ description: >
   Sub-agent: invoked only by the orchestrator-agent to execute a specific subtask from
   plan to Pull Request. Reads project context, writes production-ready code, runs
   code-review and a11y-auditor, commits, and opens a PR via create-pr. Do not invoke directly.
-model: claude-opus-4-6
+model: opus
 color: red
 effort: high
 tools:

@@ -5,7 +5,7 @@ description: >
   bug with a failing test, isolates the root cause, applies a minimal patch, and
   verifies all tests pass. Scoped strictly to the broken behavior — no refactors,
   no opportunistic cleanup. Do not invoke directly.
-model: claude-opus-4-6
+model: opus
 color: cyan
 effort: medium
 tools:

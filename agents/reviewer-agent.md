@@ -6,7 +6,7 @@ description: >
   an extended OWASP security scan. Only flags issues — never modifies code. Returns a
   verdict (approve_pr | block_pr) and a findings list to the orchestrator.
   Do not invoke directly.
-model: claude-opus-4-6
+model: opus
 color: yellow
 effort: medium
 tools:
