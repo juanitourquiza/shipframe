@@ -235,6 +235,23 @@ Codex uses the open Agent Skills layout at `~/.agents/skills/<name>/SKILL.md`.
 ShipFrame also writes compatibility symlinks to `~/.codex/skills` for existing
 setups, and keeps the workflow block in `~/.codex/AGENTS.md`.
 
+#### OpenAI/Codex skills-only plugin MVP
+
+ShipFrame can also be packaged as a curated OpenAI/Codex skills-only plugin for
+manual submission and local validation. The source of truth remains `skills/`;
+the build script copies only the public MVP subset into a temporary bundle and
+does not include MCP servers, apps, Claude hooks, or OpenCode/Claude agents.
+
+```bash
+python3 scripts/build-openai-plugin.py
+python3 ~/.codex/skills/.system/plugin-creator/scripts/validate_plugin.py dist/openai-plugin/shipframe
+```
+
+The generated upload artifact is `dist/openai-plugin/shipframe-openai-plugin.zip`.
+Use `docs/openai-plugin-submission.md` for paste-ready listing copy, starter
+prompts, positive/negative reviewer test cases, and the manual submission
+checklist.
+
 #### OpenCode
 
 ```bash
@@ -341,6 +358,7 @@ shipframe/
 ├── project-packs/          # Optional project profile starters
 ├── wiki/                   # Project wiki vault
 ├── raw/                    # Wiki source staging
+├── scripts/                # Build helpers, including OpenAI plugin packaging
 ├── .claude-plugin/         # Claude plugin metadata
 └── install.sh              # Multi-tool installer
 ```
@@ -464,6 +482,7 @@ modelos/configuración bajo control del usuario.
 
 - Claude Code: agrega el marketplace con `/plugin marketplace add juanitourquiza/shipframe`, instala con `/plugin install shipframe`, recarga con `/reload-plugins` y usa `/shipframe:code-review`.
 - Codex CLI: instala con `shipframe install --codex`, abre Codex, ejecuta `/skills` y llama skills con `$code-review`, `$plan-expert`, etc.
+- OpenAI/Codex plugin: genera el MVP skills-only con `python3 scripts/build-openai-plugin.py`; el ZIP queda en `dist/openai-plugin/shipframe-openai-plugin.zip` y el packet de submission está en `docs/openai-plugin-submission.md`.
 - OpenCode: instala con `shipframe install --opencode`; OpenCode carga las skills con su herramienta nativa `skill` desde `~/.config/opencode/skills` y también puede ver `~/.agents/skills`/`~/.claude/skills`.
 
 ### Memoria persistente opcional con Engram
