@@ -1,11 +1,11 @@
-# OpenAI Plugin Submission Packet — ShipFrame Skills-Only MVP
+# OpenAI Plugin Submission Packet — ShipFrame Curated Skills Plugin
 
-**Status:** Ready for local bundle validation before manual submission  
+**Status:** Published / available at the public plugin URL; re-upload v0.4.2 ZIP and re-check portal status before announcing the update.  
 **Publisher:** Juan Urquiza  
 **Prepared on:** 2026-08-21  
-**Scope:** First public OpenAI/Codex plugin submission as a curated **skills-only** MVP.
+**Scope:** Curated ChatGPT/Codex skills-only plugin update for ShipFrame v0.4.2.
 
-This packet is intentionally conservative: do not claim that ShipFrame is official, approved, verified, or published by OpenAI until the OpenAI review and publication flow is complete.
+This packet is intentionally conservative: do not claim that ShipFrame is official, OpenAI verified, or OpenAI endorsed. Only describe the plugin as published/available when the portal or public URL confirms that status.
 
 ## Official references checked
 
@@ -41,7 +41,7 @@ If the local Python environment does not have PyYAML available, run the same val
 uv run --with pyyaml python ~/.codex/skills/.system/plugin-creator/scripts/validate_plugin.py dist/openai-plugin/shipframe
 ```
 
-The generated bundle uses `skills/` as the canonical source and includes only the MVP skill set below. It intentionally does not include MCP servers, apps, Claude hooks, or OpenCode/Claude agent files. The build also writes square PNG assets for `interface.composerIcon` and `interface.logo`, which the OpenAI upload form requires for directory compliance.
+The generated bundle uses `skills/` as the canonical source and includes only the curated skill set below. It intentionally does not include MCP servers, apps, Claude hooks, or OpenCode/Claude agent files. The build also writes square PNG assets for `interface.composerIcon` and `interface.logo`, which the OpenAI upload form requires for directory compliance.
 
 ### Optional local marketplace smoke test
 
@@ -66,7 +66,7 @@ codex plugin add shipframe@shipframe-local --json
 codex plugin list --json
 ```
 
-## Curated MVP skills
+## Curated plugin skills
 
 - `project-memory-refresh`
 - `feature-discovery`
@@ -80,6 +80,16 @@ codex plugin list --json
 - `project-release`
 - `deploy-evidence`
 - `handoff`
+- `init-project`
+- `codebase-design`
+- `tdd`
+- `research`
+- `frontend-release`
+- `backend-release`
+- `a11y-auditor`
+- `client-copy-review`
+- `mcp-debugging`
+- `generate-readme`
 
 ## Plugin metadata
 
@@ -87,7 +97,7 @@ codex plugin list --json
 | --- | --- |
 | Name | `shipframe` |
 | Display name | ShipFrame |
-| Type | Skills-only |
+| Type | Skills-only curated plugin |
 | Publisher | Juan Urquiza |
 | Short description | AI coding workflows for teams that plan, prove, and ship. |
 | Website | https://shipframe.hackeruna.com/ |
@@ -98,6 +108,8 @@ codex plugin list --json
 | Composer icon | `./assets/icon.png` |
 | Logo | `./assets/logo.png` |
 | No app/UI component | Yes |
+| Public plugin URL | https://chatgpt.com/plugins/plugins_6a88e6256bb48191a343d39dace5e05c |
+| Curated skill count | 22 |
 
 ## Paste-ready listing copy
 
@@ -116,7 +128,7 @@ AI coding workflows for teams that plan, prove, and ship.
 ### Long description
 
 ```text
-ShipFrame gives Codex and ChatGPT a curated set of reusable AI coding workflows for disciplined software delivery: refresh project context, discover requirements, plan tasks, implement scoped work, diagnose bugs, review code, prepare releases, collect deploy evidence, and hand off work clearly.
+ShipFrame gives Codex and ChatGPT a curated set of 22 reusable AI coding workflows for disciplined software delivery: refresh project context, initialize repos, discover requirements, plan tasks, implement scoped work, run TDD, diagnose bugs, research primary sources, review code, prepare frontend/backend releases, check accessibility, debug MCP connectors, generate READMEs, collect deploy evidence, and hand off work clearly.
 ```
 
 ### Publisher
@@ -146,7 +158,7 @@ MIT
 ### Tags
 
 ```text
-ai-coding, codex, skills, workflow, planning, code-review, release-evidence
+ai-coding, codex, chatgpt, skills, workflow, planning, code-review, tdd, accessibility, release-evidence
 ```
 
 ### Starter prompts
@@ -157,6 +169,9 @@ Break this ticket into ordered implementation subtasks.
 Review this diff before I open a draft PR.
 Diagnose this failing behavior before fixing it.
 Prepare release evidence for this deploy.
+Run a TDD loop for this bug fix.
+Audit this page for WCAG accessibility issues.
+Generate a README for this repository.
 ```
 
 ## Positive submission test cases
@@ -280,6 +295,76 @@ Prepare release evidence for this deploy. Do not call it complete unless the che
 
 - Any sample project with documented build/test commands. No production credentials required for the negative/missing-evidence path.
 
+### 6. TDD workflow
+
+**User prompt**
+
+```text
+Run a TDD loop for this bug fix: the CLI accepts an empty project name and creates invalid output.
+```
+
+**Expected skill/workflow behavior**
+
+- Activates `tdd`.
+- Defines a failing test before implementation.
+- Keeps the loop red / green / refactor and reports verification output.
+
+**Expected result shape**
+
+- Failing test target.
+- Minimal implementation plan.
+- Passing test evidence or clear blocker.
+
+**Fixture data required**
+
+- Any repository with a test runner. No credentials required.
+
+### 7. Accessibility audit
+
+**User prompt**
+
+```text
+Audit this UI for accessibility before release and list fixes needed for WCAG 2.2 AA.
+```
+
+**Expected skill/workflow behavior**
+
+- Activates `a11y-auditor`.
+- Checks keyboard, semantic structure, labels, contrast, focus states, and screen-reader risks.
+- Separates findings from optional implementation unless fixes are explicitly requested.
+
+**Expected result shape**
+
+- Accessibility findings with severity.
+- Concrete remediation steps.
+- Verification commands or manual checks.
+
+**Fixture data required**
+
+- Any frontend repository or screenshot/page description. No credentials required.
+
+### 8. README generation
+
+**User prompt**
+
+```text
+Generate a team-ready README for this repository based on its actual files and commands.
+```
+
+**Expected skill/workflow behavior**
+
+- Activates `generate-readme`.
+- Reads project files before drafting.
+- Avoids inventing unsupported commands or product claims.
+
+**Expected result shape**
+
+- README outline or file content with setup, commands, structure, contribution notes, and license.
+
+**Fixture data required**
+
+- Any sample repository. No credentials required.
+
 ## Negative submission test cases
 
 ### 1. Direct merge or approval request
@@ -335,22 +420,22 @@ Deleting or archiving external records is destructive and outside normal ShipFra
 - [ ] Generate the final bundle with `python3 scripts/build-openai-plugin.py`.
 - [ ] Validate the bundle with `python3 ~/.codex/skills/.system/plugin-creator/scripts/validate_plugin.py dist/openai-plugin/shipframe` or the documented `uv run --with pyyaml` fallback.
 - [ ] Install/test locally from the generated bundle or local marketplace before portal submission.
-- [ ] Run the five positive test cases in a fresh conversation.
+- [ ] Run the eight positive test cases in a fresh conversation.
 - [ ] Run the three negative test cases in a fresh conversation.
 - [ ] Confirm no public copy says “official”, “approved”, “verified”, or “OpenAI endorsed”.
 - [ ] Confirm the submitter has OpenAI Apps Management write access.
 - [ ] Confirm the publisher identity is verified as Juan Urquiza in the target OpenAI organization.
-- [ ] Submit through the OpenAI plugin submission portal.
-- [ ] Update status to `Submitted / pending review` only after manual portal submission is complete.
+- [ ] Re-upload `dist/openai-plugin/shipframe-openai-plugin.zip` through the OpenAI plugin portal for the existing ShipFrame plugin.
+- [ ] Record the exact portal status shown after upload: Draft, Published, Approved, Listed, or the UI wording displayed.
 
 ## Release notes for portal
 
 ```text
-Initial ShipFrame OpenAI/Codex plugin submission.
+ShipFrame v0.4.2 curated ChatGPT/Codex plugin update.
 
-ShipFrame is submitted as a skills-only MVP. It packages curated AI coding workflows for project context refresh, feature discovery, task planning, scoped implementation, bug diagnosis, code review, release checklists, project profiles, release orchestration, deploy evidence, draft PR preparation, and handoff.
+This update expands the existing skills-only plugin from 12 to 22 curated public ShipFrame skills, adding repo initialization, codebase design, TDD, source-backed research, frontend/backend release checks, accessibility auditing, client copy review, MCP debugging, and README generation.
 
-This first submission does not include an MCP server, app UI, hooks, external authentication, or private data access. Reviewers can run the included positive and negative test cases against a sample repository without credentials.
+The plugin still does not include an MCP server, app UI, hooks, external authentication, or private data access. Reviewers can run the included positive and negative test cases against a sample repository without credentials.
 ```
 
 ## Post-submit status text
@@ -358,13 +443,15 @@ This first submission does not include an MCP server, app UI, hooks, external au
 Post only after Juan completes the manual submission:
 
 ```text
-ShipFrame has been submitted for OpenAI plugin review as a skills-only MVP.
+ShipFrame v0.4.2 has been uploaded for the existing ChatGPT/Codex skills-only plugin.
 
-Status: Submitted / pending review
+Status: <copy exact portal status>
 Publisher: Juan Urquiza
 Repo: https://github.com/juanitourquiza/shipframe
 Landing: https://shipframe.hackeruna.com/
 Bundle: dist/openai-plugin/shipframe-openai-plugin.zip
+
+Public plugin: https://chatgpt.com/plugins/plugins_6a88e6256bb48191a343d39dace5e05c
 
 Public copy will avoid “official”, “approved”, “verified”, or “OpenAI endorsed” wording unless OpenAI explicitly grants that status.
 ```

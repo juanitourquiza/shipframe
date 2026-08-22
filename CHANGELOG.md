@@ -2,6 +2,16 @@
 
 ## Unreleased
 
+## v0.4.2 — 2026-08-21
+
+### Added
+- Expanded the curated OpenAI/Codex plugin bundle from 12 to 22 public ShipFrame skills.
+- Added TDD, research, accessibility, frontend/backend release, MCP debugging, README generation, and codebase design workflows to the plugin distribution.
+
+### Changed
+- Updated OpenAI/Codex plugin metadata and docs to describe the curated ChatGPT/Codex plugin separately from the full GitHub/Homebrew toolkit.
+
+
 ## v0.4.1 — 2026-08-20
 
 ### Added

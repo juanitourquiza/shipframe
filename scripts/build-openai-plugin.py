@@ -18,7 +18,7 @@ WEBSITE = "https://shipframe.hackeruna.com/"
 REPOSITORY = "https://github.com/juanitourquiza/shipframe"
 LICENSE = "MIT"
 ICON_SIZE = 512
-MVP_SKILLS = [
+CURATED_SKILLS = [
     "project-memory-refresh",
     "feature-discovery",
     "plan-expert",
@@ -31,12 +31,22 @@ MVP_SKILLS = [
     "project-release",
     "deploy-evidence",
     "handoff",
+    "init-project",
+    "codebase-design",
+    "tdd",
+    "research",
+    "frontend-release",
+    "backend-release",
+    "a11y-auditor",
+    "client-copy-review",
+    "mcp-debugging",
+    "generate-readme",
 ]
 
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
-        description="Build ShipFrame's OpenAI/Codex skills-only plugin MVP."
+        description="Build ShipFrame's curated OpenAI/Codex skills-only plugin."
     )
     parser.add_argument(
         "--output-dir",
@@ -89,12 +99,13 @@ def manifest(version: str) -> dict[str, object]:
             "longDescription": (
                 "ShipFrame packages team-ready AI coding workflows for Codex and ChatGPT: "
                 "refresh project context, discover requirements, plan implementation work, "
-                "diagnose bugs, review diffs, prepare releases, collect deploy evidence, "
-                "and create handoffs without adding an MCP server."
+                "diagnose bugs, run TDD and accessibility workflows, review diffs, "
+                "prepare frontend/backend releases, collect deploy evidence, "
+                "generate READMEs, and create handoffs without adding an MCP server."
             ),
             "developerName": PUBLISHER,
             "category": "Productivity",
-            "capabilities": ["Skills", "Code review", "Planning", "Release evidence"],
+            "capabilities": ["Skills", "Code review", "Planning", "TDD", "Accessibility", "Release evidence"],
             "websiteURL": WEBSITE,
             "composerIcon": "./assets/icon.png",
             "logo": "./assets/logo.png",
@@ -102,6 +113,7 @@ def manifest(version: str) -> dict[str, object]:
                 "Plan this feature before implementation.",
                 "Review this diff before I open a PR.",
                 "Prepare release evidence for this deploy.",
+                "Generate a README for this repository.",
             ],
             "brandColor": "#111827",
         },
@@ -183,7 +195,7 @@ def build() -> tuple[Path, Path | None]:
         json.dump(manifest(read_version(root)), fh, indent=2)
         fh.write("\n")
 
-    for skill_name in MVP_SKILLS:
+    for skill_name in CURATED_SKILLS:
         copy_skill(root, bundle_root, skill_name)
 
     write_assets(bundle_root)
@@ -210,7 +222,7 @@ def main() -> None:
     if archive_path is not None:
         print(f"OpenAI plugin archive: {archive_path}")
     print("Bundled skills:")
-    for skill_name in MVP_SKILLS:
+    for skill_name in CURATED_SKILLS:
         print(f"- {skill_name}")
 
 
