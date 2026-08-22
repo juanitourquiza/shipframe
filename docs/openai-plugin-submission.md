@@ -1,6 +1,6 @@
 # OpenAI Plugin Submission Packet — ShipFrame Curated Skills Plugin
 
-**Status:** Published / available at the public plugin URL; re-upload v0.4.2 ZIP and re-check portal status before announcing the update.  
+**Status:** Published / available at the public plugin URL. ShipFrame v0.4.2 update confirmed by Juan on 2026-08-22.  
 **Publisher:** Juan Urquiza  
 **Prepared on:** 2026-08-21  
 **Scope:** Curated ChatGPT/Codex skills-only plugin update for ShipFrame v0.4.2.
@@ -425,8 +425,8 @@ Deleting or archiving external records is destructive and outside normal ShipFra
 - [ ] Confirm no public copy says “official”, “approved”, “verified”, or “OpenAI endorsed”.
 - [ ] Confirm the submitter has OpenAI Apps Management write access.
 - [ ] Confirm the publisher identity is verified as Juan Urquiza in the target OpenAI organization.
-- [ ] Re-upload `dist/openai-plugin/shipframe-openai-plugin.zip` through the OpenAI plugin portal for the existing ShipFrame plugin.
-- [ ] Record the exact portal status shown after upload: Draft, Published, Approved, Listed, or the UI wording displayed.
+- [x] Re-upload `dist/openai-plugin/shipframe-openai-plugin.zip` through the OpenAI plugin portal for the existing ShipFrame plugin.
+- [x] Record the exact portal status shown after upload: published / available at the public plugin URL, per Juan confirmation.
 
 ## Release notes for portal
 
@@ -445,7 +445,7 @@ Post only after Juan completes the manual submission:
 ```text
 ShipFrame v0.4.2 has been uploaded for the existing ChatGPT/Codex skills-only plugin.
 
-Status: <copy exact portal status>
+Status: Published / available at the public plugin URL
 Publisher: Juan Urquiza
 Repo: https://github.com/juanitourquiza/shipframe
 Landing: https://shipframe.hackeruna.com/
