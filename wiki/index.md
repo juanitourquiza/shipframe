@@ -21,6 +21,7 @@ Master catalog of all wiki pages. Mandatory entry point for any query with `/wik
 | Page | Summary | Answers |
 | ---- | ------- | ------- |
 | `../codex/dev-workflow.md` | Codex routing table and lifecycle. | Which skill sequence handles each intent? |
+| `../scripts/build-openai-plugin.py` | Builds the curated OpenAI/Codex skills-only plugin MVP bundle from canonical skills. | How is the OpenAI submission bundle generated? Which skills are included? |
 | `../templates/pull_request_template.md` | PR/MR body skeleton used by `create-pr`. | What should generated PRs include? |
 
 ## Integrations
@@ -30,6 +31,7 @@ Master catalog of all wiki pages. Mandatory entry point for any query with `/wik
 | `../hooks/hooks.json` | Claude plugin-managed hooks. | Which Claude hook events are installed by the plugin? |
 | `../.claude-plugin/plugin.json` | Claude plugin package metadata. | What version/name/keywords does the plugin expose? |
 | `../.claude-plugin/marketplace.json` | Marketplace listing metadata. | Which homepage/repository/version are published? |
+| `../docs/openai-plugin-submission.md` | OpenAI plugin submission packet for the skills-only MVP. | What listing copy, prompts, test cases, and checklist should be used for OpenAI submission? |
 
 ## Configuration
 
