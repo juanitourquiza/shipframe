@@ -33,6 +33,7 @@ assert manifest["skills"] == "./skills/"
 assert manifest["interface"]["developerName"] == "Juan Urquiza"
 assert manifest["interface"]["composerIcon"] == "./assets/icon.png"
 assert manifest["interface"]["logo"] == "./assets/logo.png"
+assert len(manifest["interface"]["defaultPrompt"]) <= 3
 assert "mcpServers" not in manifest
 assert "apps" not in manifest
 assert png_dimensions(sys.argv[2]) == (512, 512)

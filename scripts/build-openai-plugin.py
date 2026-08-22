@@ -113,7 +113,6 @@ def manifest(version: str) -> dict[str, object]:
                 "Plan this feature before implementation.",
                 "Review this diff before I open a PR.",
                 "Prepare release evidence for this deploy.",
-                "Generate a README for this repository.",
             ],
             "brandColor": "#111827",
         },
