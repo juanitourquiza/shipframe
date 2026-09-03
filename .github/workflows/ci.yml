@@ -20,3 +20,5 @@ jobs:
         run: brew install shellcheck
       - name: Run installer tests
         run: ./tests/test-install.sh
+      - name: Build OpenAI/Codex plugin bundle
+        run: ./tests/test-openai-plugin-build.sh

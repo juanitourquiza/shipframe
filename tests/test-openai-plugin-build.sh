@@ -28,7 +28,7 @@ def png_dimensions(path: str) -> tuple[int, int]:
 
 manifest = json.loads(Path(sys.argv[1]).read_text(encoding="utf-8"))
 assert manifest["name"] == "shipframe"
-assert manifest["version"] == "0.4.2"
+assert manifest["version"] == "0.4.3"
 assert manifest["skills"] == "./skills/"
 assert manifest["interface"]["developerName"] == "Juan Urquiza"
 assert manifest["interface"]["composerIcon"] == "./assets/icon.png"
@@ -52,6 +52,7 @@ expected_skills=(
   project-profile
   project-release
   deploy-evidence
+  evidence-audit
   handoff
   init-project
   codebase-design
@@ -94,5 +95,5 @@ JSON
   HOME="$tmp_dir/home" CODEX_HOME="$tmp_dir/codex" codex plugin marketplace add "$market_root" --json >/tmp/shipframe-openai-marketplace-add.json
   HOME="$tmp_dir/home" CODEX_HOME="$tmp_dir/codex" codex plugin list --available --json | grep 'shipframe@shipframe-local' >/dev/null
   HOME="$tmp_dir/home" CODEX_HOME="$tmp_dir/codex" codex plugin add shipframe@shipframe-local --json >/tmp/shipframe-openai-plugin-add.json
-  [[ -f "$tmp_dir/codex/plugins/cache/shipframe-local/shipframe/0.4.2/.codex-plugin/plugin.json" ]]
+  [[ -f "$tmp_dir/codex/plugins/cache/shipframe-local/shipframe/0.4.3/.codex-plugin/plugin.json" ]]
 fi

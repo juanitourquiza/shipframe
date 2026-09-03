@@ -34,6 +34,7 @@ If missing, run `wiki-init` before anything else. If present, read `WIKI.md` bef
 | `refactor` | Improve structure, no behavior change | `project-memory-refresh` → `codebase-design` → `plan-expert` → `implement-task` → `code-review` → `create-pr` |
 | `bug` | Broken behavior, regression, failing test, or performance issue | `project-memory-refresh` → `bug-diagnosis` → `implement-task` → `code-review` → `create-pr` |
 | `release` | Merge, deploy, publish, version, or smoke request | `project-profile` → `project-release` → `deploy-evidence` |
+| `evidence_audit` | Audit a report, handoff, PR body, or release note for unsupported claims | `project-memory-refresh` → `evidence-audit` |
 | `research` | Docs/API/version/source investigation | `project-memory-refresh` → `research` |
 | `design_system` | Set up or document design system | `project-memory-refresh` → `design-system-setup` |
 | `accessibility_audit` | WCAG/a11y review | `project-memory-refresh` → `a11y-auditor` → `implement-task` if fixes are requested |
