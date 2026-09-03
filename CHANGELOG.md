@@ -2,6 +2,17 @@
 
 ## Unreleased
 
+## v0.4.3 — 2026-09-03
+
+### Added
+- Added `evidence-audit` to classify delivery claims as verified, partially verified, or unverified.
+- Added the OpenAI/Codex plugin build test to CI so curated bundle drift is caught automatically.
+
+### Changed
+- Expanded the curated ChatGPT/Codex plugin bundle from 22 to 23 public ShipFrame skills.
+- Updated release documentation to emphasize evidence-honest claims.
+
+
 ## v0.4.2 — 2026-08-21
 
 ### Added

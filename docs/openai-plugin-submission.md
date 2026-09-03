@@ -1,9 +1,9 @@
 # OpenAI Plugin Submission Packet — ShipFrame Curated Skills Plugin
 
-**Status:** Published / available at the public plugin URL. ShipFrame v0.4.2 update confirmed by Juan on 2026-08-22.  
+**Status:** Draft v0.4.3 update packet. Existing public plugin URL was previously available for v0.4.2; do not claim the v0.4.3 upload until portal evidence confirms it.<br>
 **Publisher:** Juan Urquiza  
-**Prepared on:** 2026-08-21  
-**Scope:** Curated ChatGPT/Codex skills-only plugin update for ShipFrame v0.4.2.
+**Prepared on:** 2026-09-03<br>
+**Scope:** Curated ChatGPT/Codex skills-only plugin update for ShipFrame v0.4.3.
 
 This packet is intentionally conservative: do not claim that ShipFrame is official, OpenAI verified, or OpenAI endorsed. Only describe the plugin as published/available when the portal or public URL confirms that status.
 
@@ -79,6 +79,7 @@ codex plugin list --json
 - `project-profile`
 - `project-release`
 - `deploy-evidence`
+- `evidence-audit`
 - `handoff`
 - `init-project`
 - `codebase-design`
@@ -109,7 +110,7 @@ codex plugin list --json
 | Logo | `./assets/logo.png` |
 | No app/UI component | Yes |
 | Public plugin URL | https://chatgpt.com/plugins/plugins_6a88e6256bb48191a343d39dace5e05c |
-| Curated skill count | 22 |
+| Curated skill count | 23 |
 
 ## Paste-ready listing copy
 
@@ -431,9 +432,9 @@ Deleting or archiving external records is destructive and outside normal ShipFra
 ## Release notes for portal
 
 ```text
-ShipFrame v0.4.2 curated ChatGPT/Codex plugin update.
+ShipFrame v0.4.3 curated ChatGPT/Codex plugin update.
 
-This update expands the existing skills-only plugin from 12 to 22 curated public ShipFrame skills, adding repo initialization, codebase design, TDD, source-backed research, frontend/backend release checks, accessibility auditing, client copy review, MCP debugging, and README generation.
+This update expands the existing skills-only plugin from 22 to 23 curated public ShipFrame skills by adding `evidence-audit`, a workflow for classifying delivery claims as verified, partially verified, or unverified before publishing reports or handoffs.
 
 The plugin still does not include an MCP server, app UI, hooks, external authentication, or private data access. Reviewers can run the included positive and negative test cases against a sample repository without credentials.
 ```
@@ -443,7 +444,7 @@ The plugin still does not include an MCP server, app UI, hooks, external authent
 Post only after Juan completes the manual submission:
 
 ```text
-ShipFrame v0.4.2 has been uploaded for the existing ChatGPT/Codex skills-only plugin.
+ShipFrame v0.4.3 has been uploaded for the existing ChatGPT/Codex skills-only plugin.
 
 Status: Published / available at the public plugin URL
 Publisher: Juan Urquiza

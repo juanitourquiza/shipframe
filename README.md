@@ -71,6 +71,7 @@ https://shipframe.hackeruna.com/
 | `frontend-release` | Verifies frontend builds, routes, i18n, chunks, and smoke checks. |
 | `backend-release` | Verifies API/backend tests, migrations, queues, integrations, and endpoint smoke. |
 | `deploy-evidence` | Collects concrete proof before saying a deploy/release is done. |
+| `evidence-audit` | Audits reports, handoffs, and release notes for unsupported delivery claims. |
 
 ### Integration and product skills
 
@@ -238,7 +239,7 @@ setups, and keeps the workflow block in `~/.codex/AGENTS.md`.
 #### ChatGPT/Codex curated plugin
 
 ShipFrame is also available as a curated ChatGPT/Codex skills-only plugin with
-22 public workflows selected from the full toolkit. The source of truth remains
+23 public workflows selected from the full toolkit. The source of truth remains
 `skills/`; the build script copies the curated plugin subset into a temporary
 bundle and does not include MCP servers, apps, Claude hooks, or OpenCode/Claude
 agents.
@@ -343,6 +344,7 @@ The Codex agent classifies each request and runs the matching skills in order:
 | `refactor` | `project-memory-refresh` → `codebase-design` → `plan-expert` → `implement-task` → `code-review` → `create-pr` |
 | `bug` | `project-memory-refresh` → `bug-diagnosis` → `implement-task` → `code-review` → `create-pr` |
 | `release` | `project-profile` → `project-release` → `deploy-evidence` |
+| `evidence_audit` | `project-memory-refresh` → `evidence-audit` |
 | `research` | `project-memory-refresh` → `research` |
 | `design_system` | `project-memory-refresh` → `design-system-setup` |
 | `accessibility_audit` | `project-memory-refresh` → `a11y-auditor` → `implement-task` if fixes are requested |
@@ -489,7 +491,7 @@ modelos/configuración bajo control del usuario.
 
 - Claude Code: agrega el marketplace con `/plugin marketplace add juanitourquiza/shipframe`, instala con `/plugin install shipframe`, recarga con `/reload-plugins` y usa `/shipframe:code-review`.
 - Codex CLI: instala con `shipframe install --codex`, abre Codex, ejecuta `/skills` y llama skills con `$code-review`, `$plan-expert`, etc.
-- ChatGPT/Codex plugin: abre el plugin público en https://chatgpt.com/plugins/plugins_6a88e6256bb48191a343d39dace5e05c o genera el bundle curado de 22 skills con `python3 scripts/build-openai-plugin.py`; el ZIP queda en `dist/openai-plugin/shipframe-openai-plugin.zip` y el packet de submission está en `docs/openai-plugin-submission.md`.
+- ChatGPT/Codex plugin: abre el plugin público en https://chatgpt.com/plugins/plugins_6a88e6256bb48191a343d39dace5e05c o genera el bundle curado de 23 skills con `python3 scripts/build-openai-plugin.py`; el ZIP queda en `dist/openai-plugin/shipframe-openai-plugin.zip` y el packet de submission está en `docs/openai-plugin-submission.md`.
 - OpenCode: instala con `shipframe install --opencode`; OpenCode carga las skills con su herramienta nativa `skill` desde `~/.config/opencode/skills` y también puede ver `~/.agents/skills`/`~/.claude/skills`.
 
 ### Memoria persistente opcional con Engram
