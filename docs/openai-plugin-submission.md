@@ -1,9 +1,9 @@
 # OpenAI Plugin Submission Packet — ShipFrame Curated Skills Plugin
 
-**Status:** Draft v0.4.3 update packet. Existing public plugin URL was previously available for v0.4.2; do not claim the v0.4.3 upload until portal evidence confirms it.<br>
+**Status:** Draft v0.4.4 update packet. Existing public plugin URL was previously available for v0.4.2; do not claim the v0.4.4 upload until portal evidence confirms it.<br>
 **Publisher:** Juan Urquiza  
-**Prepared on:** 2026-09-03<br>
-**Scope:** Curated ChatGPT/Codex skills-only plugin update for ShipFrame v0.4.3.
+**Prepared on:** 2026-09-08<br>
+**Scope:** Curated ChatGPT/Codex skills-only plugin update for ShipFrame v0.4.4.
 
 This packet is intentionally conservative: do not claim that ShipFrame is official, OpenAI verified, or OpenAI endorsed. Only describe the plugin as published/available when the portal or public URL confirms that status.
 
@@ -80,6 +80,7 @@ codex plugin list --json
 - `project-release`
 - `deploy-evidence`
 - `evidence-audit`
+- `proof-runner`
 - `handoff`
 - `init-project`
 - `codebase-design`
@@ -110,7 +111,7 @@ codex plugin list --json
 | Logo | `./assets/logo.png` |
 | No app/UI component | Yes |
 | Public plugin URL | https://chatgpt.com/plugins/plugins_6a88e6256bb48191a343d39dace5e05c |
-| Curated skill count | 23 |
+| Curated skill count | 24 |
 
 ## Paste-ready listing copy
 
@@ -432,9 +433,9 @@ Deleting or archiving external records is destructive and outside normal ShipFra
 ## Release notes for portal
 
 ```text
-ShipFrame v0.4.3 curated ChatGPT/Codex plugin update.
+ShipFrame v0.4.4 curated ChatGPT/Codex plugin update.
 
-This update expands the existing skills-only plugin from 22 to 23 curated public ShipFrame skills by adding `evidence-audit`, a workflow for classifying delivery claims as verified, partially verified, or unverified before publishing reports or handoffs.
+This update expands the existing skills-only plugin from 23 to 24 curated public ShipFrame skills by adding `proof-runner`, an optional workflow for running explicit `Verify:` commands from plans/checklists and reporting only exit-0 proof before saying steps are done.
 
 The plugin still does not include an MCP server, app UI, hooks, external authentication, or private data access. Reviewers can run the included positive and negative test cases against a sample repository without credentials.
 ```
@@ -444,7 +445,7 @@ The plugin still does not include an MCP server, app UI, hooks, external authent
 Post only after Juan completes the manual submission:
 
 ```text
-ShipFrame v0.4.3 has been uploaded for the existing ChatGPT/Codex skills-only plugin.
+ShipFrame v0.4.4 has been uploaded for the existing ChatGPT/Codex skills-only plugin.
 
 Status: Published / available at the public plugin URL
 Publisher: Juan Urquiza

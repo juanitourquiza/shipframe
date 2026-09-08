@@ -72,6 +72,7 @@ https://shipframe.hackeruna.com/
 | `backend-release` | Verifies API/backend tests, migrations, queues, integrations, and endpoint smoke. |
 | `deploy-evidence` | Collects concrete proof before saying a deploy/release is done. |
 | `evidence-audit` | Audits reports, handoffs, and release notes for unsupported delivery claims. |
+| `proof-runner` | Optionally runs explicit `Verify:` commands from checklists before claiming steps are done. |
 
 ### Integration and product skills
 
@@ -239,7 +240,7 @@ setups, and keeps the workflow block in `~/.codex/AGENTS.md`.
 #### ChatGPT/Codex curated plugin
 
 ShipFrame is also available as a curated ChatGPT/Codex skills-only plugin with
-23 public workflows selected from the full toolkit. The source of truth remains
+24 public workflows selected from the full toolkit. The source of truth remains
 `skills/`; the build script copies the curated plugin subset into a temporary
 bundle and does not include MCP servers, apps, Claude hooks, or OpenCode/Claude
 agents.
@@ -385,6 +386,7 @@ Skills are intentionally kept flat under `skills/<name>/SKILL.md` because the in
 5. Use `implement-task` only after scope is clear.
 6. Run `code-review` before commit/PR/MR.
 7. For releases, run `project-release` and require `deploy-evidence` before saying the release is complete.
+8. For high-risk changes, releases, or client work, optionally run `proof-runner` on checklists that include `Verify:` commands before saying individual steps are done.
 
 ## Documentation maintenance
 
@@ -441,6 +443,7 @@ cd ~/tools/shipframe
 5. Usa `implement-task` solo cuando el alcance esté definido.
 6. Ejecuta `code-review` antes de commit y PR/MR.
 7. Para releases, ejecuta `project-release` y exige `deploy-evidence` antes de declarar que el deploy está completo.
+8. Para cambios de alto riesgo, releases o trabajo de cliente, usa opcionalmente `proof-runner` sobre checklists con comandos `Verify:` antes de decir que pasos individuales están listos.
 
 ### Mantenimiento de documentación
 
@@ -491,7 +494,7 @@ modelos/configuración bajo control del usuario.
 
 - Claude Code: agrega el marketplace con `/plugin marketplace add juanitourquiza/shipframe`, instala con `/plugin install shipframe`, recarga con `/reload-plugins` y usa `/shipframe:code-review`.
 - Codex CLI: instala con `shipframe install --codex`, abre Codex, ejecuta `/skills` y llama skills con `$code-review`, `$plan-expert`, etc.
-- ChatGPT/Codex plugin: abre el plugin público en https://chatgpt.com/plugins/plugins_6a88e6256bb48191a343d39dace5e05c o genera el bundle curado de 23 skills con `python3 scripts/build-openai-plugin.py`; el ZIP queda en `dist/openai-plugin/shipframe-openai-plugin.zip` y el packet de submission está en `docs/openai-plugin-submission.md`.
+- ChatGPT/Codex plugin: abre el plugin público en https://chatgpt.com/plugins/plugins_6a88e6256bb48191a343d39dace5e05c o genera el bundle curado de 24 skills con `python3 scripts/build-openai-plugin.py`; el ZIP queda en `dist/openai-plugin/shipframe-openai-plugin.zip` y el packet de submission está en `docs/openai-plugin-submission.md`.
 - OpenCode: instala con `shipframe install --opencode`; OpenCode carga las skills con su herramienta nativa `skill` desde `~/.config/opencode/skills` y también puede ver `~/.agents/skills`/`~/.claude/skills`.
 
 ### Memoria persistente opcional con Engram

@@ -31,6 +31,7 @@ CURATED_SKILLS = [
     "project-release",
     "deploy-evidence",
     "evidence-audit",
+    "proof-runner",
     "handoff",
     "init-project",
     "codebase-design",
@@ -101,19 +102,19 @@ def manifest(version: str) -> dict[str, object]:
                 "ShipFrame packages team-ready AI coding workflows for Codex and ChatGPT: "
                 "refresh project context, discover requirements, plan implementation work, "
                 "diagnose bugs, run TDD and accessibility workflows, review diffs, "
-                "prepare frontend/backend releases, collect deploy evidence, "
+                "prepare frontend/backend releases, collect deploy evidence, run explicit proof commands, "
                 "generate READMEs, and create handoffs without adding an MCP server."
             ),
             "developerName": PUBLISHER,
             "category": "Productivity",
-            "capabilities": ["Skills", "Code review", "Planning", "TDD", "Accessibility", "Release evidence", "Evidence audit"],
+            "capabilities": ["Skills", "Code review", "Planning", "TDD", "Accessibility", "Release evidence", "Evidence audit", "Proof runner"],
             "websiteURL": WEBSITE,
             "composerIcon": "./assets/icon.png",
             "logo": "./assets/logo.png",
             "defaultPrompt": [
                 "Plan this feature before implementation.",
                 "Review this diff before I open a PR.",
-                "Audit this release report for unsupported claims.",
+                "Run the Verify commands in this checklist before saying done.",
             ],
             "brandColor": "#111827",
         },

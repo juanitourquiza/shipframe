@@ -270,7 +270,7 @@ PY
   local skill_count agent_count
   skill_count="$(find skills -mindepth 2 -maxdepth 2 -name SKILL.md | wc -l | tr -d ' ')"
   agent_count="$(find agents -maxdepth 1 -name '*.md' | wc -l | tr -d ' ')"
-  [ "$skill_count" = "34" ] && report_ok "skill count is 34" || report_warn "skill count is $skill_count (docs/tests may need update)"
+  [ "$skill_count" = "35" ] && report_ok "skill count is 35" || report_warn "skill count is $skill_count (docs/tests may need update)"
   [ "$agent_count" = "14" ] && report_ok "agent count is 14" || report_warn "agent count is $agent_count (docs/tests may need update)"
   node <<'JS' && report_ok "README skill catalog covers installed skills" || report_err "README missing skills from skills/*"
 const fs=require('fs'); const path=require('path');

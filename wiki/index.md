@@ -15,6 +15,7 @@ Master catalog of all wiki pages. Mandatory entry point for any query with `/wik
 | `../install.sh` | Multi-tool installer for Claude Code, OpenCode, and Codex with doctor/repair/uninstall flows. | How are artifacts installed? How are managed files repaired or removed? |
 | `../skills/` | Flat installable skill catalog. | Which skills are linked into Codex/OpenCode? |
 | `../skills/evidence-audit/SKILL.md` | Evidence-honesty workflow for report, handoff, PR, and release-note claims. | How should delivery claims be classified as verified, partially verified, or unverified? |
+| `../skills/proof-runner/SKILL.md` | Optional command proof workflow for checklist items with `Verify:` commands. | Which planned steps were actually proven by exit-0 command evidence? |
 | `../agents/` | Claude-shaped agents converted for OpenCode. | Which agents exist? How is the orchestrator represented? |
 
 ## Flows

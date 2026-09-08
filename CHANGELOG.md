@@ -2,6 +2,16 @@
 
 ## Unreleased
 
+## v0.4.4 — 2026-09-08
+
+### Added
+- Added optional `proof-runner` skill for running explicit `Verify:` commands from plans/checklists and reporting only exit-0 proof.
+
+### Changed
+- Expanded the curated ChatGPT/Codex plugin bundle from 23 to 24 public ShipFrame skills.
+- Documented proof-running as an optional high-risk change/release/client-work guardrail alongside evidence audits and deploy evidence.
+
+
 ## v0.4.3 — 2026-09-03
 
 ### Added
