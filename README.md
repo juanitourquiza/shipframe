@@ -149,6 +149,21 @@ If your Homebrew version requires tap trust, run the exact trust command it
 prints (for example, `brew trust --formula juanitourquiza/shipframe/shipframe`)
 and then re-run `brew install shipframe`.
 
+### Optional: concise agent responses with Caveman
+
+ShipFrame keeps the base workflow focused on planning, verification, review, and
+release evidence. If you also want shorter internal agent responses, install the
+Caveman skill separately:
+
+```bash
+npx skills add JuliusBrussee/caveman
+```
+
+Caveman is opt-in and is not installed by the ShipFrame installer or Homebrew
+formula. Activate it with `/caveman` when you want concise responses, and switch
+back with `normal mode` for release evidence, customer copy, security work, or
+any step where fuller wording is safer.
+
 ### Local clone
 
 ```bash
