@@ -61,8 +61,25 @@ SH
 chmod +x "$source_repo/install.sh"
 mkdir -p "$TMP/home-source" "$TMP/state-source"
 run_action "$TMP/home-source" "$TMP/state-source" "$source_repo" start-workflow.sh
-grep "DOCTOR_STATUS='passed'" "$TMP/state-source/latest.env" >/dev/null
+grep "SHIPFRAME_CHECK_LABEL='ShipFrame source doctor'" "$TMP/state-source/latest.env" >/dev/null
+grep "SHIPFRAME_CHECK_STATUS='passed'" "$TMP/state-source/latest.env" >/dev/null
 grep "doctor ok" "$TMP/state-source/doctor.log" >/dev/null
+
+# Non-ShipFrame repos with global ShipFrame skills show installed state and do not run repo doctor.
+global_home="$TMP/home-global"
+mkdir -p "$global_home/.agents/skills/implement-task" \
+  "$global_home/.agents/skills/code-review" \
+  "$global_home/.agents/skills/project-memory-refresh" \
+  "$global_home/.agents/skills/deploy-evidence" \
+  "$TMP/state-global"
+run_action "$global_home" "$TMP/state-global" "$plain_repo" start-workflow.sh
+grep "plain-repo" "$TMP/state-global/latest.env" >/dev/null
+grep "SHIPFRAME_CHECK_LABEL='ShipFrame install'" "$TMP/state-global/latest.env" >/dev/null
+grep "SHIPFRAME_CHECK_STATUS='detected'" "$TMP/state-global/latest.env" >/dev/null
+if grep "DOCTOR_COMMAND='./install.sh --doctor --repo-only'" "$TMP/state-global/latest.env" >/dev/null; then
+  echo "unexpected repo doctor command for global install" >&2
+  exit 1
+fi
 
 # Checklist action opens the checklist pane and does not run doctor.
 mkdir -p "$TMP/state-checklist"

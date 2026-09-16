@@ -16,9 +16,9 @@ BANNER
 
 printf '\nRepository: %s\n' "${REPO:-not detected}"
 printf 'Status: %s\n' "${STATUS:-unknown}"
-printf 'Doctor: %s\n' "${DOCTOR_STATUS:-skipped}"
+printf '%s: %s\n' "${SHIPFRAME_CHECK_LABEL:-ShipFrame install}" "${SHIPFRAME_CHECK_STATUS:-skipped}"
 if [ "${DOCTOR_COMMAND:-}" ]; then
-  printf 'Doctor command: %s\n' "$DOCTOR_COMMAND"
+  printf 'Check command: %s\n' "$DOCTOR_COMMAND"
 fi
 
 case "${STATUS:-}" in
@@ -43,16 +43,16 @@ Expected non-destructive checks:
 MSG
     ;;
   *)
-    if [ "${DOCTOR_STATUS:-}" = "failed" ]; then
+    if [ "${SHIPFRAME_CHECK_STATUS:-}" = "failed" ]; then
       cat <<MSG
 
 ShipFrame repo doctor failed. Review the read-only log:
 ${DOCTOR_LOG:-}
 MSG
-    elif [ "${DOCTOR_STATUS:-}" = "passed" ]; then
+    elif [ "${SHIPFRAME_CHECK_STATUS:-}" = "passed" ]; then
       cat <<MSG
 
-ShipFrame repo doctor passed. Log:
+ShipFrame source doctor passed. Log:
 ${DOCTOR_LOG:-}
 MSG
     fi

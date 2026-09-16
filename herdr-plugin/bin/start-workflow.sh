@@ -7,7 +7,8 @@ cwd="$(context_cwd)"
 repo=""
 status="ready"
 doctor_command=""
-doctor_status="skipped"
+shipframe_check_label="ShipFrame install"
+shipframe_check_status="skipped"
 doctor_log="$(state_dir)/doctor.log"
 
 if repo="$(find_repo "$cwd" 2>/dev/null)"; then
@@ -18,12 +19,14 @@ fi
 
 if [ "$status" = "ready" ] && repo_has_shipframe_source "$repo"; then
   doctor_command="./install.sh --doctor --repo-only"
+  shipframe_check_label="ShipFrame source doctor"
   (
     cd "$repo"
     ./install.sh --doctor --repo-only
-  ) >"$doctor_log" 2>&1 && doctor_status="passed" || doctor_status="failed"
+  ) >"$doctor_log" 2>&1 && shipframe_check_status="passed" || shipframe_check_status="failed"
 elif [ "$status" = "ready" ] && shipframe_installed; then
-  doctor_status="installed"
+  shipframe_check_label="ShipFrame install"
+  shipframe_check_status="detected"
 elif [ "$status" = "ready" ]; then
   status="shipframe_missing"
 fi
@@ -34,7 +37,8 @@ write_state \
   "REPO=$repo" \
   "STATUS=$status" \
   "DOCTOR_COMMAND=$doctor_command" \
-  "DOCTOR_STATUS=$doctor_status" \
+  "SHIPFRAME_CHECK_LABEL=$shipframe_check_label" \
+  "SHIPFRAME_CHECK_STATUS=$shipframe_check_status" \
   "DOCTOR_LOG=$doctor_log"
 
 if ! open_plugin_pane workflow; then
