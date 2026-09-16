@@ -22,5 +22,7 @@ jobs:
         run: ./tests/test-install.sh
       - name: Validate proof-runner skill
         run: ./tests/test-proof-runner.sh
+      - name: Validate Herdr plugin MVP
+        run: ./tests/test-herdr-plugin.sh
       - name: Build OpenAI/Codex plugin bundle
         run: ./tests/test-openai-plugin-build.sh

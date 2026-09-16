@@ -24,6 +24,7 @@ Master catalog of all wiki pages. Mandatory entry point for any query with `/wik
 | ---- | ------- | ------- |
 | `../codex/dev-workflow.md` | Codex routing table and lifecycle. | Which skill sequence handles each intent? |
 | `../scripts/build-openai-plugin.py` | Builds the curated OpenAI/Codex skills-only plugin MVP bundle from canonical skills. | How is the OpenAI submission bundle generated? Which skills are included? |
+| `../herdr-plugin/` | Optional local Herdr plugin MVP that opens ShipFrame workflow/checklist panes. | How does Herdr launch ShipFrame process guidance without replacing ShipFrame? |
 | `../templates/pull_request_template.md` | PR/MR body skeleton used by `create-pr`. | What should generated PRs include? |
 
 ## Integrations
