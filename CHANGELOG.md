@@ -2,6 +2,15 @@
 
 ## Unreleased
 
+## v0.4.5 — 2026-09-16
+
+### Added
+- Published the Herdr local workflow plugin as an official ShipFrame surface with GitHub subdirectory install docs.
+- Added the `herdr-plugin` marketplace/repository topic for Herdr discovery.
+
+### Changed
+- Clarified that Homebrew installs the base ShipFrame toolkit, while Herdr integration is installed separately with `herdr plugin install`.
+
 ## v0.4.4 — 2026-09-08
 
 ### Added

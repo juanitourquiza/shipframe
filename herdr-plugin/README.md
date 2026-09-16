@@ -32,8 +32,10 @@ If you only want the checklist:
 herdr plugin action invoke shipframe.workflow.open-checklist
 ```
 
-For future GitHub distribution, publish this plugin directory in a public repository or subdirectory with the `herdr-plugin` topic, then install with:
+Install the published ShipFrame Herdr plugin from the GitHub subdirectory:
 
 ```bash
-herdr plugin install owner/repo[/subdir]
+herdr plugin install juanitourquiza/shipframe/herdr-plugin --yes
 ```
+
+Homebrew installs the base ShipFrame toolkit only; it does not install this Herdr plugin.

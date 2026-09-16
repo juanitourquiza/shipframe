@@ -255,13 +255,20 @@ setups, and keeps the workflow block in `~/.codex/AGENTS.md`.
 
 #### Herdr local workflow plugin
 
-ShipFrame also includes an optional local Herdr plugin MVP in `herdr-plugin/`.
-It keeps Herdr as the workspace/pane surface and ShipFrame as the delivery
-process layer. The plugin adds a **Start ShipFrame workflow** action that
-detects the active repo, runs the read-only ShipFrame repo doctor when the
-active repo is this ShipFrame checkout, and opens a pane with ShipFrame prompts
-for Codex, Claude Code, or OpenCode. It never merges, deploys, or edits global
-configuration.
+ShipFrame also includes an optional Herdr plugin in `herdr-plugin/`. It keeps
+Herdr as the workspace/pane surface and ShipFrame as the delivery process layer.
+The plugin adds a **Start ShipFrame workflow** action that detects the active
+repo, runs the read-only ShipFrame repo doctor when the active repo is this
+ShipFrame checkout, and opens a pane with ShipFrame prompts for Codex, Claude
+Code, or OpenCode. It never merges, deploys, or edits global configuration.
+
+Install the Herdr integration separately:
+
+```bash
+herdr plugin install juanitourquiza/shipframe/herdr-plugin --yes
+```
+
+For local development of the plugin, link the subdirectory from a checkout:
 
 ```bash
 herdr plugin link ./herdr-plugin
@@ -269,8 +276,8 @@ herdr plugin action list --plugin shipframe.workflow
 herdr plugin action invoke shipframe.workflow.start-workflow
 ```
 
-For future GitHub distribution, publish the plugin directory with the
-`herdr-plugin` topic and install it with `herdr plugin install owner/repo[/subdir]`.
+Homebrew does not install the Herdr plugin. `brew install shipframe` installs
+the base ShipFrame toolkit and the `shipframe` wrapper; use the `herdr plugin install` command for the Herdr surface.
 
 #### ChatGPT/Codex curated plugin
 
@@ -535,12 +542,20 @@ modelos/configuración bajo control del usuario.
 
 #### Plugin local para Herdr
 
-ShipFrame también incluye un MVP opcional de plugin Herdr en `herdr-plugin/`.
-Herdr sigue siendo la superficie para workspaces/panes y ShipFrame aporta el
-proceso de entrega. La acción **Start ShipFrame workflow** detecta el repo
-activo, corre el doctor read-only cuando el repo activo es este checkout de
-ShipFrame y abre un pane con prompts ShipFrame para Codex, Claude Code u
-OpenCode. No hace merge, deploy ni cambios de configuración global.
+ShipFrame también incluye un plugin Herdr opcional en `herdr-plugin/`. Herdr
+sigue siendo la superficie para workspaces/panes y ShipFrame aporta el proceso
+de entrega. La acción **Start ShipFrame workflow** detecta el repo activo, corre
+el doctor read-only cuando el repo activo es este checkout de ShipFrame y abre
+un pane con prompts ShipFrame para Codex, Claude Code u OpenCode. No hace
+merge, deploy ni cambios de configuración global.
+
+Instala la integración Herdr por separado:
+
+```bash
+herdr plugin install juanitourquiza/shipframe/herdr-plugin --yes
+```
+
+Para desarrollo local del plugin, enlaza el subdirectorio desde un checkout:
 
 ```bash
 herdr plugin link ./herdr-plugin
@@ -548,8 +563,9 @@ herdr plugin action list --plugin shipframe.workflow
 herdr plugin action invoke shipframe.workflow.start-workflow
 ```
 
-Para publicación futura en GitHub, publica el directorio del plugin con el topic
-`herdr-plugin` e instálalo con `herdr plugin install owner/repo[/subdir]`.
+Homebrew no instala el plugin Herdr. `brew install shipframe` instala el toolkit
+base de ShipFrame y el wrapper `shipframe`; usa el comando `herdr plugin install` para la
+superficie Herdr.
 
 ### Memoria persistente opcional con Engram
 
