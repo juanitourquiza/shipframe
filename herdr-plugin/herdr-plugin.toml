@@ -1,0 +1,30 @@
+id = "shipframe.workflow"
+name = "ShipFrame Workflow"
+version = "0.1.0"
+min_herdr_version = "0.9.0"
+description = "Open a Herdr workspace pane with ShipFrame delivery workflow guidance."
+platforms = ["linux", "macos"]
+
+[[actions]]
+id = "start-workflow"
+title = "Start ShipFrame workflow"
+contexts = ["workspace", "pane"]
+command = ["sh", "bin/start-workflow.sh"]
+
+[[actions]]
+id = "open-checklist"
+title = "Open ShipFrame checklist"
+contexts = ["workspace", "pane"]
+command = ["sh", "bin/open-checklist.sh"]
+
+[[panes]]
+id = "workflow"
+title = "ShipFrame workflow"
+placement = "split"
+command = ["sh", "bin/workflow-pane.sh"]
+
+[[panes]]
+id = "checklist"
+title = "ShipFrame checklist"
+placement = "overlay"
+command = ["sh", "bin/checklist-pane.sh"]
