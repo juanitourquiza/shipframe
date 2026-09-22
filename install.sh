@@ -34,15 +34,12 @@ Actions:
   --doctor       Read-only diagnostics. Use --repo-only for CI-safe repo checks.
   --repair       Repair ShipFrame-owned artifacts. Dry-run unless --yes is passed.
   --uninstall    Remove ShipFrame-owned artifacts. Dry-run unless --yes is passed.
-  --sync-docs     Sync an optional project Live Docs manifest.
 
 Options:
   --repo-only                         Only validate the ShipFrame repository.
   --yes                               Apply --repair/--uninstall changes.
   --purge                             With --uninstall, remove ShipFrame cache/state too.
   --opencode-model provider/model     Explicit OpenCode model override for converted agents.
-  --project-dir DIR                   Project containing .shipframe/context-packages.txt.
-  --dry-run                           Show Live Docs actions without side effects.
   -h, --help                          Show this help.
 
 Examples:
@@ -50,11 +47,10 @@ Examples:
   ./install.sh --doctor --repo-only
   ./install.sh --repair --opencode --yes
   ./install.sh --uninstall --all --yes --purge
-  ./install.sh --sync-docs --project-dir /path/to/project --dry-run
 
-Optional memory:
-  ShipFrame checks whether Engram is installed and prints setup guidance.
-  It never installs or configures Engram automatically.
+Optional integrations:
+  ShipFrame checks whether Engram and Context MCP are installed and prints setup guidance.
+  It never installs external tools or edits third-party agent configuration automatically.
 USAGE
 }
 
@@ -73,7 +69,7 @@ while [ "$#" -gt 0 ]; do
     --doctor|--check) ACTION="doctor" ;;
     --repair) ACTION="repair" ;;
     --uninstall) ACTION="uninstall" ;;
-    --sync-docs) ACTION="sync-docs" ;;
+    --sync-docs) ACTION="sync-docs" ;; # legacy advanced: hidden from help
     --claude) TARGET="claude" ;;
     --opencode) TARGET="opencode" ;;
     --codex) TARGET="codex" ;;
@@ -105,6 +101,7 @@ if [ "$ACTION" = "sync-docs" ]; then
   SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
   args=("--project-dir" "$PROJECT_DIR")
   [ "$DRY_RUN" = true ] && args+=("--dry-run")
+  echo "Note: --sync-docs is a legacy advanced command. Recommended Live Docs setup now uses optional Context MCP; run ./install.sh --doctor for guidance." >&2
   exec "$SCRIPT_DIR/scripts/sync-context-docs.sh" "${args[@]}"
 fi
 
@@ -260,6 +257,54 @@ report_warn(){ printf '⚠ %s\n' "$1"; status_counts_warn=$((status_counts_warn+
 report_err(){ printf '✗ %s\n' "$1"; status_counts_err=$((status_counts_err+1)); }
 command_exists(){ command -v "$1" >/dev/null 2>&1; }
 
+print_context_mcp_guidance() {
+  local indent="${1:-  }"
+  echo "${indent}Install: npm install -g @neuledge/context"
+  echo "${indent}Setup  : run the matching optional command when you want Context MCP enabled:"
+  case "$TARGET" in
+    claude) echo "${indent}         claude mcp add context -- context serve" ;;
+    codex) echo "${indent}         codex mcp add context -- context serve" ;;
+    opencode) echo "${indent}         add { \"mcp\": { \"context\": { \"command\": [\"context\", \"serve\"], \"enabled\": true, \"type\": \"local\" } } } to ~/.config/opencode/opencode.json" ;;
+    all|"")
+      echo "${indent}         claude mcp add context -- context serve"
+      echo "${indent}         codex mcp add context -- context serve"
+      echo "${indent}         OpenCode: add command [\"context\", \"serve\"] under mcp.context in ~/.config/opencode/opencode.json"
+      ;;
+  esac
+  echo "${indent}Note   : ShipFrame does not run npm install or edit MCP/client config automatically."
+}
+
+check_context_mcp() {
+  local mode="${1:-install}" context_bin context_version
+  if [ "$mode" = "install" ]; then
+    echo ""
+    echo "Optional Live Docs (Context MCP):"
+    if command_exists context; then
+      context_bin="$(command -v context)"
+      context_version="$(context --version 2>/dev/null || context version 2>/dev/null || true)"
+      echo "  Context MCP: detected at $context_bin"
+      [ -n "$context_version" ] && echo "  Version: $context_version"
+    else
+      echo "  Context MCP: not detected"
+    fi
+    print_context_mcp_guidance "  "
+    return 0
+  fi
+
+  if command_exists context; then
+    context_bin="$(command -v context)"
+    context_version="$(context --version 2>/dev/null || context version 2>/dev/null || true)"
+    if [ -n "$context_version" ]; then
+      report_ok "Context MCP binary: $context_bin ($context_version)"
+    else
+      report_ok "Context MCP binary: $context_bin"
+    fi
+  else
+    report_warn "Context MCP optional binary missing (install: npm install -g @neuledge/context)"
+  fi
+  print_context_mcp_guidance "  "
+}
+
 repo_doctor() {
   resolve_source_dir
   cd "$SOURCE_DIR"
@@ -319,6 +364,7 @@ const missing=intents.filter(i=>!rm.includes('`'+i+'`'));
 if (missing.length) { console.error(missing.join('\n')); process.exit(1); }
 JS
   [ -s wiki/index.md ] && ! grep -q '\*(empty — filled by `/wiki-forge`)\*' wiki/index.md && report_ok "wiki/index.md populated" || report_warn "wiki/index.md still has placeholders (run wiki-forge/wiki-sync)"
+  check_context_mcp doctor
   echo "Doctor summary: $status_counts_ok ok, $status_counts_warn warnings, $status_counts_err errors"
   [ "$status_counts_err" -eq 0 ]
 }
@@ -354,6 +400,7 @@ environment_doctor() {
     codex|all) doctor_bin codex "Codex" ;;
   esac
   doctor_bin node "Node.js"; doctor_bin git "Git"; doctor_bin engram "Engram"
+  check_context_mcp doctor
   case "$TARGET" in
     opencode|all) check_symlink_dir "$HOME/.config/opencode/skills" "$SOURCE_DIR/skills" "OpenCode skills" ;;
   esac
@@ -622,6 +669,7 @@ case "$ACTION" in
       *) echo "Missing target. Use --claude, --opencode, --codex, or --all." >&2; exit 2 ;;
     esac
     check_engram_memory
+    check_context_mcp install
     ;;
   *) echo "Invalid action: $ACTION" >&2; exit 2 ;;
 esac

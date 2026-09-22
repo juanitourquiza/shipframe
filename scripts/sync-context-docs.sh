@@ -8,7 +8,7 @@ Usage: sync-context-docs.sh [--project-dir DIR] [--dry-run]
 Reads DIR/.shipframe/context-packages.txt. Each non-comment line must be:
   <registry>/<package>@<exact-version>
 
-The command never installs Neuledge. Install it explicitly with:
+The command never installs Context MCP. Install it explicitly with:
   npm install -g @neuledge/context
 USAGE
 }
@@ -55,12 +55,16 @@ fi
 
 if [ "$DRY_RUN" = true ]; then
   echo "Dry run: would sync ${#entries[@]} package(s) from $MANIFEST"
-  printf '  context install %s\n' "${entries[@]}"
+  for entry in "${entries[@]}"; do
+    package_ref="${entry%@*}"
+    version="${entry##*@}"
+    printf '  context install %s %s\n' "$package_ref" "$version"
+  done
   exit 0
 fi
 
 if ! command -v context >/dev/null 2>&1; then
-  echo "Neuledge Context is not installed. Install it explicitly with: npm install -g @neuledge/context" >&2
+  echo "Context MCP is not installed. Install it explicitly with: npm install -g @neuledge/context" >&2
   exit 1
 fi
 

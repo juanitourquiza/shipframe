@@ -440,15 +440,26 @@ affects installer behavior, user-facing commands, workflow routing, public skill
 behavior, release process, or project conventions, update the README and any
 related repo documentation in the same commit/release.
 
-### Optional Live Docs
+### Optional Live Docs with Context MCP
 
-The optional `live-docs` skill consults documentation compatible with dependency versions before changes that use external APIs. It works with official sources without Neuledge, or with the optional `project-packs/live-docs/` setup. It never installs tools or changes MCP configuration automatically.
+The optional `live-docs` skill consults documentation compatible with dependency versions before changes that use external APIs. ShipFrame recommends Context MCP for local, versioned library docs, but ShipFrame works normally without it and never installs tools or changes MCP configuration automatically.
 
-Preview an explicit project manifest with:
+Enable Context only when you want the extra Live Docs provider:
 
 ```bash
-./install.sh --sync-docs --project-dir /path/to/project --dry-run
+npm install -g @neuledge/context
+claude mcp add context -- context serve
+codex mcp add context -- context serve
+# OpenCode: add command ["context", "serve"] under mcp.context in ~/.config/opencode/opencode.json
 ```
+
+Validate the optional setup with:
+
+```bash
+./install.sh --doctor
+```
+
+Advanced legacy note: `./install.sh --sync-docs` still exists for older explicit manifests, but it is no longer the recommended setup path.
 
 ## Español
 
@@ -489,15 +500,26 @@ cd ~/tools/shipframe
 ./install.sh --opencode
 ```
 
-### Live Docs opcional
+### Live Docs opcional con Context MCP
 
-La skill `live-docs` consulta documentación compatible con la versión de las dependencias antes de cambios que utilicen APIs externas. Puedes usar fuentes oficiales sin Neuledge o configurar el pack opcional `project-packs/live-docs/`. No instala herramientas ni modifica la configuración MCP automáticamente.
+La skill `live-docs` consulta documentación compatible con la versión de las dependencias antes de cambios que utilicen APIs externas. ShipFrame recomienda Context MCP para docs locales y versionadas, pero ShipFrame funciona normalmente sin Context y nunca instala herramientas ni modifica configuración MCP automáticamente.
 
-Para sincronizar un manifest explícito:
+Activa Context solo cuando quieras ese proveedor adicional de Live Docs:
 
 ```bash
-./install.sh --sync-docs --project-dir /ruta/al/proyecto --dry-run
+npm install -g @neuledge/context
+claude mcp add context -- context serve
+codex mcp add context -- context serve
+# OpenCode: agrega command ["context", "serve"] bajo mcp.context en ~/.config/opencode/opencode.json
 ```
+
+Valida la configuración opcional con:
+
+```bash
+./install.sh --doctor
+```
+
+Nota legacy avanzada: `./install.sh --sync-docs` sigue existiendo para manifests explícitos antiguos, pero ya no es el camino recomendado.
 
 ### Flujo recomendado
 

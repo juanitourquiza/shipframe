@@ -67,14 +67,27 @@ count_agents="$(find "$HOME/.config/opencode/agents" -maxdepth 1 -name '*.md' | 
 [ "$count_agents" = "14" ] || { echo "Expected 14 OpenCode agents, got $count_agents" >&2; exit 1; }
 grep -q 'model: anthropic/claude-sonnet-4-5' "$HOME/.config/opencode/agents/orchestrator-agent.md"
 grep -q 'shipframe-generated: opencode-agent-v1' "$HOME/.config/opencode/agents/orchestrator-agent.md"
+grep -q 'Optional Live Docs (Context MCP):' /tmp/shipframe-install-1.log
+grep -q 'Context MCP:' /tmp/shipframe-install-1.log
+grep -q 'npm install -g @neuledge/context' /tmp/shipframe-install-1.log
+grep -q 'claude mcp add context -- context serve' /tmp/shipframe-install-1.log
+grep -q 'codex mcp add context -- context serve' /tmp/shipframe-install-1.log
+grep -q 'OpenCode: add command' /tmp/shipframe-install-1.log
 
 snapshot "$TMP/s1"
 "$ROOT/install.sh" --all --opencode-model anthropic/claude-sonnet-4-5 >/tmp/shipframe-install-2.log
 snapshot "$TMP/s2"
 diff -u "$TMP/s1" "$TMP/s2"
 
-"$ROOT/install.sh" --doctor --codex
-"$ROOT/install.sh" --doctor --opencode
+"$ROOT/install.sh" --doctor --codex >/tmp/shipframe-doctor-codex.log
+grep -q 'Context MCP' /tmp/shipframe-doctor-codex.log
+grep -q 'codex mcp add context -- context serve' /tmp/shipframe-doctor-codex.log
+"$ROOT/install.sh" --doctor --opencode >/tmp/shipframe-doctor-opencode.log
+grep -q 'Context MCP' /tmp/shipframe-doctor-opencode.log
+grep -q 'opencode/opencode.json' /tmp/shipframe-doctor-opencode.log
+
+"$ROOT/install.sh" --help >/tmp/shipframe-help.log
+! grep -q -- '--sync-docs' /tmp/shipframe-help.log
 
 # Non-TTY OpenCode install without model must not prompt or hardcode Claude-only model IDs.
 "$ROOT/install.sh" --opencode </dev/null >/tmp/shipframe-opencode-nontty.log

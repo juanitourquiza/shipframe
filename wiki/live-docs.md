@@ -10,19 +10,27 @@
 - Record source, dependency version, documentation revision, and gaps.
 - Documentation never replaces tests or review.
 
-## Neuledge pack
+## Context MCP
 
-`project-packs/live-docs/` provides an optional local Neuledge Context setup for Claude Code, Codex CLI, and OpenCode. Install Neuledge explicitly, copy the manifest into the consuming project, and run:
+ShipFrame recommends optional Context MCP for local, versioned documentation. ShipFrame works without Context, and installer/doctor commands never install it or edit Claude Code, Codex CLI, or OpenCode configuration automatically.
+
+Recommended manual setup:
 
 ```bash
-./install.sh --sync-docs --project-dir /absolute/path/to/project --dry-run
+npm install -g @neuledge/context
+claude mcp add context -- context serve
+codex mcp add context -- context serve
+# OpenCode: add command ["context", "serve"] under mcp.context in ~/.config/opencode/opencode.json
 ```
 
-The command does not install Neuledge or modify client MCP configuration. Cached packages stay outside Git. Without Neuledge, use official documentation directly.
+`./install.sh --doctor` reports whether the `context` binary is available and prints target-specific guidance.
+
+## Legacy manifest sync
+
+`project-packs/live-docs/` still documents the older `.shipframe/context-packages.txt` / `--sync-docs` flow for private projects that already use explicit manifests. It is advanced legacy support, not the recommended path for new installs.
 
 ## Troubleshooting
 
-- Missing manifest: no-op by design.
-- Missing `context`: install `@neuledge/context` explicitly, then rerun without `--dry-run`.
+- Missing Context: optional warning only; install with `npm install -g @neuledge/context` if you want it.
 - Version unavailable: choose an available compatible package and document the gap.
 - Network unavailable: use an already installed local package or report that documentation could not be verified.
