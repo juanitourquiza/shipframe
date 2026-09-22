@@ -1,0 +1,4 @@
+# Exact documentation packages for this project.
+# Format: registry/package@version
+# npm/react@19.0.0
+# npm/next@15.0.4

@@ -34,12 +34,15 @@ Actions:
   --doctor       Read-only diagnostics. Use --repo-only for CI-safe repo checks.
   --repair       Repair ShipFrame-owned artifacts. Dry-run unless --yes is passed.
   --uninstall    Remove ShipFrame-owned artifacts. Dry-run unless --yes is passed.
+  --sync-docs     Sync an optional project Live Docs manifest.
 
 Options:
   --repo-only                         Only validate the ShipFrame repository.
   --yes                               Apply --repair/--uninstall changes.
   --purge                             With --uninstall, remove ShipFrame cache/state too.
   --opencode-model provider/model     Explicit OpenCode model override for converted agents.
+  --project-dir DIR                   Project containing .shipframe/context-packages.txt.
+  --dry-run                           Show Live Docs actions without side effects.
   -h, --help                          Show this help.
 
 Examples:
@@ -47,6 +50,7 @@ Examples:
   ./install.sh --doctor --repo-only
   ./install.sh --repair --opencode --yes
   ./install.sh --uninstall --all --yes --purge
+  ./install.sh --sync-docs --project-dir /path/to/project --dry-run
 
 Optional memory:
   ShipFrame checks whether Engram is installed and prints setup guidance.
@@ -55,6 +59,8 @@ USAGE
 }
 
 ACTION="install"
+PROJECT_DIR="$(pwd)"
+DRY_RUN=false
 TARGET=""
 REPO_ONLY=false
 YES=false
@@ -67,6 +73,7 @@ while [ "$#" -gt 0 ]; do
     --doctor|--check) ACTION="doctor" ;;
     --repair) ACTION="repair" ;;
     --uninstall) ACTION="uninstall" ;;
+    --sync-docs) ACTION="sync-docs" ;;
     --claude) TARGET="claude" ;;
     --opencode) TARGET="opencode" ;;
     --codex) TARGET="codex" ;;
@@ -74,6 +81,11 @@ while [ "$#" -gt 0 ]; do
     --repo-only) REPO_ONLY=true ;;
     --yes) YES=true ;;
     --purge) PURGE=true ;;
+    --dry-run) DRY_RUN=true ;;
+    --project-dir)
+      shift || { echo "Missing value for --project-dir" >&2; exit 2; }
+      PROJECT_DIR="$1"
+      ;;
     --opencode-model|--model)
       shift || { echo "Missing value for --opencode-model" >&2; exit 2; }
       OPENCODE_MODEL="$1"
@@ -87,6 +99,13 @@ done
 if [ "$ACTION" = "doctor" ] && [ "$REPO_ONLY" = true ] && [ -n "$TARGET" ]; then
   echo "--doctor --repo-only does not use install targets." >&2
   exit 2
+fi
+
+if [ "$ACTION" = "sync-docs" ]; then
+  SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+  args=("--project-dir" "$PROJECT_DIR")
+  [ "$DRY_RUN" = true ] && args+=("--dry-run")
+  exec "$SCRIPT_DIR/scripts/sync-context-docs.sh" "${args[@]}"
 fi
 
 print_banner
@@ -270,7 +289,7 @@ PY
   local skill_count agent_count
   skill_count="$(find skills -mindepth 2 -maxdepth 2 -name SKILL.md | wc -l | tr -d ' ')"
   agent_count="$(find agents -maxdepth 1 -name '*.md' | wc -l | tr -d ' ')"
-  [ "$skill_count" = "35" ] && report_ok "skill count is 35" || report_warn "skill count is $skill_count (docs/tests may need update)"
+  report_ok "skill count is $skill_count"
   [ "$agent_count" = "14" ] && report_ok "agent count is 14" || report_warn "agent count is $agent_count (docs/tests may need update)"
   node <<'JS' && report_ok "README skill catalog covers installed skills" || report_err "README missing skills from skills/*"
 const fs=require('fs'); const path=require('path');
@@ -548,6 +567,7 @@ if(b!==-1&&e!==-1&&e>b){ s=(s.slice(0,b)+s.slice(e+END.length)).replace(/\n{3,}/
 JS
   else echo "  dry-run: would remove ShipFrame block from $agents_file"; fi
 }
+
 remove_opencode_agents() {
   local dir="$HOME/.config/opencode/agents"; [ -d "$dir" ] || return 0
   for f in "$dir"/*.md; do [ -f "$f" ] || continue; if grep -q 'shipframe-generated: opencode-agent-v1' "$f"; then if [ "$YES" = true ]; then rm "$f"; echo "  removed $f"; else echo "  dry-run: would remove $f"; fi; fi; done

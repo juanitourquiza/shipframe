@@ -390,3 +390,8 @@ Passing `--base` explicitly prevents `create-pr` from re-inferring the target an
 - Never use `git add .` or `git commit --no-verify`.
 - If the task turns out to be significantly larger than estimated after reading the codebase, stop and surface it:
   > "After reading the codebase, this task is larger than the ticket suggests. Here is what I found: <summary>. Should I proceed, split the work, or adjust the scope?"
+
+
+## External API documentation
+
+When the task changes an external library, SDK, framework, or provider API, load the optional `live-docs` skill first when available. Resolve the dependency version from the affected module, record the documentation source/version, and continue with tests when documentation is unavailable.
