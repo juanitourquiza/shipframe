@@ -2,7 +2,7 @@
 
 **ShipFrame** is a practical AI coding workflow toolkit for teams that plan, prove, and ship software changes with discipline.
 
-It provides reusable skills, agent workflows, templates, and project profiles for Claude Code, Codex CLI, and OpenCode. The core workflow is generic enough for any software team, while project-specific behavior lives in opt-in profiles.
+It provides reusable skills, agent workflows, templates, and project profiles for Claude Code, Codex CLI, and OpenCode. The optional `live-docs` workflow consults version-compatible external library documentation before API-dependent changes, without requiring a paid documentation service. The core workflow is generic enough for any software team, while project-specific behavior lives in opt-in profiles.
 
 > Tagline: **AI coding workflows for teams that plan, prove, and ship.**
 
@@ -49,6 +49,7 @@ https://shipframe.hackeruna.com/
 | `create-issue` | Triage flow for bugs/issues. |
 | `create-pr` | Opens a draft PR/MR with a populated template from git context. |
 | `generate-readme` | Generates a team-ready README by scanning the current codebase. |
+| `live-docs` | Consults version-compatible external library documentation before API-dependent changes. |
 
 ### Engineering discipline skills
 
@@ -119,6 +120,8 @@ Profiles can define:
 - integration-specific verification.
 
 Starter packs live in `project-packs/`:
+
+- `project-packs/live-docs/` — optional version-compatible documentation lookup with Neuledge or official sources.
 
 - `project-packs/angular/`
 - `project-packs/laravel/`
@@ -437,6 +440,16 @@ affects installer behavior, user-facing commands, workflow routing, public skill
 behavior, release process, or project conventions, update the README and any
 related repo documentation in the same commit/release.
 
+### Optional Live Docs
+
+The optional `live-docs` skill consults documentation compatible with dependency versions before changes that use external APIs. It works with official sources without Neuledge, or with the optional `project-packs/live-docs/` setup. It never installs tools or changes MCP configuration automatically.
+
+Preview an explicit project manifest with:
+
+```bash
+./install.sh --sync-docs --project-dir /path/to/project --dry-run
+```
+
 ## Español
 
 ShipFrame es un toolkit práctico de flujos de trabajo con IA para equipos que planifican, prueban y publican cambios de software con disciplina. Mantiene un núcleo genérico para cualquier equipo y deja las reglas específicas de cada proyecto en perfiles opcionales.
@@ -474,6 +487,16 @@ cd ~/tools/shipframe
 ./install.sh --codex
 ./install.sh --claude
 ./install.sh --opencode
+```
+
+### Live Docs opcional
+
+La skill `live-docs` consulta documentación compatible con la versión de las dependencias antes de cambios que utilicen APIs externas. Puedes usar fuentes oficiales sin Neuledge o configurar el pack opcional `project-packs/live-docs/`. No instala herramientas ni modifica la configuración MCP automáticamente.
+
+Para sincronizar un manifest explícito:
+
+```bash
+./install.sh --sync-docs --project-dir /ruta/al/proyecto --dry-run
 ```
 
 ### Flujo recomendado

@@ -38,6 +38,8 @@ Master catalog of all wiki pages. Mandatory entry point for any query with `/wik
 
 ## Configuration
 
+| `live-docs.md` | Optional version-compatible external documentation workflow and Neuledge pack. | How are dependency docs selected and synchronized? |
+
 | Page | Summary | Answers |
 | ---- | ------- | ------- |
 | `../project-packs/` | Optional starter profile notes for specific stacks/projects. | What project-specific behavior should stay outside core? |
