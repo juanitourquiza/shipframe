@@ -79,22 +79,22 @@ new_feature:
 
 quick_task:
   when: Well-defined task with no scope ambiguity. ClickUp ticket ID often provided.
-  sequence: project-memory-refresh → plan-expert-agent → implement-task-agent → reviewer-agent → create-pr
+  sequence: project-memory-refresh → plan-expert-agent → quality-assurance-agent (non-trivial code only; otherwise TDD skill) → implement-task-agent → reviewer-agent → create-pr
   first_hop: project-memory-refresh
 
 implementation:
   when: Plan already exists; user wants code written immediately.
-  sequence: project-memory-refresh → implement-task-agent → reviewer-agent → create-pr
+  sequence: project-memory-refresh → quality-assurance-agent (non-trivial code only; otherwise TDD skill) → implement-task-agent → reviewer-agent → create-pr
   first_hop: project-memory-refresh
 
 refactor:
   when: Improving existing code structure without changing behavior.
-  sequence: project-memory-refresh → codebase-design → plan-expert-agent → implement-task-agent → reviewer-agent → create-pr
+  sequence: project-memory-refresh → codebase-design → plan-expert-agent → quality-assurance-agent (non-trivial code only; otherwise TDD skill) → implement-task-agent → reviewer-agent → create-pr
   first_hop: project-memory-refresh
 
 bug:
   when: User reports broken behavior, an error, a failing check, a regression, or slow behavior.
-  sequence: project-memory-refresh → bug-diagnosis → implement-task-agent → reviewer-agent → create-pr
+  sequence: project-memory-refresh → bug-diagnosis → quality-assurance-agent (non-trivial code only; otherwise TDD skill) → implement-task-agent → reviewer-agent → create-pr
   first_hop: project-memory-refresh
 
 release:

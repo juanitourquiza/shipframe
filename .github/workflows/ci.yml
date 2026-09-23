@@ -20,6 +20,8 @@ jobs:
         run: brew install shellcheck
       - name: Run installer tests
         run: ./tests/test-install.sh
+      - name: Test orchestrator mutation guard
+        run: node --test tests/test-orchestrator-guard.js
       - name: Validate context docs sync script
         run: ./tests/test-sync-context-docs.sh
       - name: ShellCheck shell scripts

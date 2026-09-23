@@ -10,6 +10,15 @@
 - Hardened installer preflight, target handling, legacy settings backup, and converted-agent tool parsing.
 - Added missing installer regression coverage to CI and corrected the wiki index table.
 
+## v0.4.6 — 2026-09-22
+
+### Added
+- Recommended optional Context MCP for Live Docs and added target-specific setup guidance for Claude Code, Codex CLI, and OpenCode.
+
+### Changed
+- Kept installation and doctor non-blocking when Context MCP is absent; no package installation or client configuration changes occur automatically.
+- Preserved `--sync-docs` as labeled legacy/advanced compatibility.
+
 ## v0.4.5 — 2026-09-16
 
 ### Added
