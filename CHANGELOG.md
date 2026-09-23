@@ -2,7 +2,7 @@
 
 ## Unreleased
 
-## v0.4.7 — unreleased
+## v0.4.7 — 2026-09-23
 
 ### Fixed
 - Aligned Claude plugin and marketplace metadata for the next release without rewriting the existing v0.4.6 tag.
