@@ -40,6 +40,7 @@ Options:
   --yes                               Apply --repair/--uninstall changes.
   --purge                             With --uninstall, remove ShipFrame cache/state too.
   --opencode-model provider/model     Explicit OpenCode model override for converted agents.
+  --dry-run                           Legacy --sync-docs compatibility option only.
   -h, --help                          Show this help.
 
 Examples:
@@ -105,6 +106,11 @@ if [ "$ACTION" = "sync-docs" ]; then
   exec "$SCRIPT_DIR/scripts/sync-context-docs.sh" "${args[@]}"
 fi
 
+if ! command -v node >/dev/null 2>&1; then
+  echo "Error: Node.js is required by ShipFrame installer. Install Node.js 18+ and retry." >&2
+  exit 1
+fi
+
 print_banner
 
 prompt_choice() {
@@ -152,8 +158,7 @@ PLUGIN_CACHE="${XDG_DATA_HOME:-$HOME/.local/share}/shipframe"
 STATE_DIR="${XDG_STATE_HOME:-$HOME/.local/state}/shipframe"
 MANIFEST_FILE="$STATE_DIR/install-state.json"
 SOURCE_DIR=""
-_HTTPS_REWRITE_ADDED=false
-trap cleanup_https_fallback EXIT
+_USE_HTTPS_FALLBACK=false
 
 resolve_source_dir() {
   [ -n "$SOURCE_DIR" ] && return
@@ -163,9 +168,11 @@ resolve_source_dir() {
     return
   fi
   if [ -d "$PLUGIN_CACHE/.git" ]; then
+    command -v git >/dev/null 2>&1 || { echo "Error: Git is required to update the ShipFrame cache." >&2; exit 1; }
     echo "Updating plugin cache at $PLUGIN_CACHE..."
     git -C "$PLUGIN_CACHE" pull --ff-only --quiet
   else
+    command -v git >/dev/null 2>&1 || { echo "Error: Git is required to download ShipFrame." >&2; exit 1; }
     echo "Cloning plugin into $PLUGIN_CACHE..."
     mkdir -p "$(dirname "$PLUGIN_CACHE")"
     git clone --quiet "$PLUGIN_REPO" "$PLUGIN_CACHE"
@@ -182,32 +189,13 @@ ensure_https_fallback() {
     echo "SSH not available — HTTPS rewrite already configured, continuing."
     return
   fi
-  echo "SSH not available — configuring git to use HTTPS for github.com..."
-  git config --global url."https://github.com/".insteadOf "git@github.com:"
-  _HTTPS_REWRITE_ADDED=true
-}
-cleanup_https_fallback() {
-  if [ "${_HTTPS_REWRITE_ADDED:-false}" = true ]; then
-    echo "Cleaning up temporary HTTPS rewrite..."
-    git config --global --unset url."https://github.com/".insteadOf || true
-    _HTTPS_REWRITE_ADDED=false
-  fi
+  echo "SSH not available — using an invocation-scoped HTTPS rewrite for GitHub."
+  _USE_HTTPS_FALLBACK=true
 }
 
-sha_file() {
-  if command -v shasum >/dev/null 2>&1; then shasum -a 256 "$1" | awk '{print $1}'; else sha256sum "$1" | awk '{print $1}'; fi
-}
 plugin_version() {
   resolve_source_dir
   node -e "const fs=require('fs'); const p='$SOURCE_DIR/.claude-plugin/plugin.json'; console.log(JSON.parse(fs.readFileSync(p,'utf8')).version)" 2>/dev/null || echo unknown
-}
-atomic_write_json() {
-  local file="$1"; shift
-  mkdir -p "$(dirname "$file")"
-  local tmp; tmp="$(mktemp "${file}.tmp.XXXXXX")"
-  "$@" > "$tmp"
-  node -e "JSON.parse(require('fs').readFileSync(process.argv[1],'utf8'))" "$tmp"
-  mv "$tmp" "$file"
 }
 write_manifest() {
   resolve_source_dir
@@ -264,11 +252,11 @@ print_context_mcp_guidance() {
   case "$TARGET" in
     claude) echo "${indent}         claude mcp add context -- context serve" ;;
     codex) echo "${indent}         codex mcp add context -- context serve" ;;
-    opencode) echo "${indent}         add { \"mcp\": { \"context\": { \"command\": [\"context\", \"serve\"], \"enabled\": true, \"type\": \"local\" } } } to ~/.config/opencode/opencode.json" ;;
+    opencode) echo "${indent}         add { \"mcp\": { \"servers\": { \"context\": { \"type\": \"local\", \"command\": [\"context\", \"serve\"] } } } } to ~/.config/opencode/opencode.json" ;;
     all|"")
       echo "${indent}         claude mcp add context -- context serve"
       echo "${indent}         codex mcp add context -- context serve"
-      echo "${indent}         OpenCode: add command [\"context\", \"serve\"] under mcp.context in ~/.config/opencode/opencode.json"
+      echo "${indent}         OpenCode: add command [\"context\", \"serve\"] under mcp.servers.context in ~/.config/opencode/opencode.json"
       ;;
   esac
   echo "${indent}Note   : ShipFrame does not run npm install or edit MCP/client config automatically."
@@ -448,16 +436,25 @@ if (s.hooks && !Object.keys(s.hooks).length) delete s.hooks;
 process.stdout.write(JSON.stringify(s,null,2)+'\n');
 JS
   node -e "JSON.parse(require('fs').readFileSync(process.argv[1],'utf8'))" "$tmp"
-  if [ "$YES" = true ]; then mv "$tmp" "$settings_file"; else rm "$tmp"; echo "dry-run: would remove exact legacy ShipFrame hooks from $settings_file"; fi
+  if [ "$YES" = true ]; then
+    local backup
+    backup="${settings_file}.shipframe-backup-$(date +%Y%m%d%H%M%S)"
+    cp -p "$settings_file" "$backup"
+    mv "$tmp" "$settings_file"
+    echo "Backed up original Claude settings to $backup"
+  else rm "$tmp"; echo "dry-run: would remove exact legacy ShipFrame hooks from $settings_file"; fi
 }
 
 install_claude_code() {
   ensure_https_fallback
   echo "Adding marketplace source..."
-  claude plugin marketplace add juanitourquiza/shipframe
+  if [ "$_USE_HTTPS_FALLBACK" = true ]; then
+    GIT_CONFIG_COUNT=1 GIT_CONFIG_KEY_0='url.https://github.com/.insteadOf' GIT_CONFIG_VALUE_0='git@github.com:' claude plugin marketplace add juanitourquiza/shipframe
+  else
+    claude plugin marketplace add juanitourquiza/shipframe
+  fi
   echo "Installing shipframe plugin..."
   claude plugin install shipframe
-  cleanup_https_fallback
   echo "Claude Code install complete."
   echo "  Plugin : shipframe"
   echo "  Hooks  : plugin-managed hooks/hooks.json"
@@ -529,7 +526,7 @@ const WRITE_TOOLS=new Set(['Write','Edit','NotebookEdit','MultiEdit']);
 const BASH_TOOLS=new Set(['Bash']);
 function parseFrontmatter(text){ if(!text.startsWith('---\n')) return {fm:{},body:text}; const end=text.indexOf('\n---',4); if(end===-1) return {fm:{},body:text}; return {fm:parseYamlSubset(text.slice(4,end)), body:text.slice(end+4).replace(/^\n/,'')}; }
 function parseYamlSubset(raw){ const lines=raw.split('\n'), out={}; let i=0; while(i<lines.length){ const line=lines[i]; if(!line.trim()||line.trim().startsWith('#')){i++;continue;} const m=line.match(/^([a-zA-Z_][\w-]*)\s*:\s*(.*)$/); if(!m){i++;continue;} const key=m[1], rest=m[2]; if(rest==='>'||rest==='|'){ const buf=[]; i++; while(i<lines.length&&(lines[i].startsWith('  ')||lines[i]==='')){buf.push(lines[i].replace(/^  /,'')); i++;} out[key]=buf.join(rest==='>'?' ':'\n').trim(); continue;} if(rest===''){ const items=[]; let j=i+1; while(j<lines.length&&/^\s*-\s+/.test(lines[j])){items.push(lines[j].replace(/^\s*-\s+/, '').trim()); j++;} if(items.length){out[key]=items; i=j; continue;} out[key]=''; i++; continue;} out[key]=rest.replace(/^["']|["']$/g,''); i++; } return out; }
-function build(name,fm){ const lines=['---','# shipframe-generated: opencode-agent-v1']; const mode=name===PRIMARY_AGENT?'primary':'subagent'; if(fm.description){lines.push(`description: ${JSON.stringify(String(fm.description).replace(/\s+/g,' ').trim())}`);} lines.push(`mode: ${mode}`); if(modelOverride) lines.push(`model: ${modelOverride}`); const tools=Array.isArray(fm.tools)?fm.tools:[]; const canWrite=tools.some(t=>WRITE_TOOLS.has(t)); const canBash=tools.some(t=>BASH_TOOLS.has(t)); lines.push('permission:'); lines.push(`  edit: ${canWrite ? 'allow' : 'deny'}`); lines.push(`  bash: ${canBash ? 'allow' : 'ask'}`); lines.push(`  webfetch: ask`); lines.push('---'); return lines.join('\n'); }
+function build(name,fm){ const lines=['---','# shipframe-generated: opencode-agent-v1']; const mode=name===PRIMARY_AGENT?'primary':'subagent'; if(fm.description){lines.push(`description: ${JSON.stringify(String(fm.description).replace(/\s+/g,' ').trim())}`);} lines.push(`mode: ${mode}`); if(modelOverride) lines.push(`model: ${modelOverride}`); const tools=Array.isArray(fm.tools)?fm.tools:(typeof fm.tools==='string'?fm.tools.split(',').map(t=>t.trim()).filter(Boolean):[]); const canWrite=tools.some(t=>WRITE_TOOLS.has(t)); const canBash=tools.some(t=>BASH_TOOLS.has(t)); lines.push('permission:'); lines.push(`  edit: ${canWrite ? 'allow' : 'deny'}`); lines.push(`  bash: ${canBash ? 'allow' : 'ask'}`); lines.push(`  webfetch: ask`); lines.push('---'); return lines.join('\n'); }
 const files=fs.readdirSync(srcDir).filter(f=>f.endsWith('.md')).sort(); let converted=0;
 for(const file of files){ const text=fs.readFileSync(path.join(srcDir,file),'utf8'); const {fm,body}=parseFrontmatter(text); const name=String(fm.name||path.basename(file,'.md')).trim(); const dst=path.join(dstDir,`${name}.md`); if(fs.existsSync(dst)){ const cur=fs.readFileSync(dst,'utf8'); if(!cur.includes('shipframe-generated: opencode-agent-v1')){ console.log(`  skip ${name} (unmanaged file exists)`); continue; } } fs.writeFileSync(dst, `${build(name,fm)}\n\n${body}`); console.log(`  convert ${name} (${name===PRIMARY_AGENT?'primary':'subagent'})`); converted++; }
 console.log(`  Converted : ${converted}`);
@@ -662,10 +659,16 @@ case "$ACTION" in
   uninstall) run_uninstall; exit $? ;;
   install)
     case "$TARGET" in
-      claude) install_claude_code ;;
-      opencode) install_opencode ;;
-      codex) install_codex ;;
-      all) install_claude_code; echo ""; install_opencode; echo ""; install_codex ;;
+      claude|opencode|codex)
+        case "$TARGET" in claude) needed=claude;; opencode) needed=opencode;; codex) needed=codex;; esac
+        if ! command_exists "$needed"; then echo "Error: $needed CLI is required for --$TARGET. Install it or choose an available target." >&2; exit 1; fi
+        case "$TARGET" in claude) install_claude_code;; opencode) install_opencode;; codex) install_codex;; esac ;;
+      all)
+        missing=0
+        if command_exists claude; then install_claude_code; else echo "⚠ Skipping Claude Code: claude CLI not found."; missing=$((missing+1)); fi
+        if command_exists opencode; then echo ""; install_opencode; else echo "⚠ Skipping OpenCode: opencode CLI not found."; missing=$((missing+1)); fi
+        if command_exists codex; then echo ""; install_codex; else echo "⚠ Skipping Codex: codex CLI not found."; missing=$((missing+1)); fi
+        if [ "$missing" -gt 0 ]; then echo "Partial install: $missing requested target(s) were unavailable; install their CLI and rerun." >&2; exit 1; fi ;;
       *) echo "Missing target. Use --claude, --opencode, --codex, or --all." >&2; exit 2 ;;
     esac
     check_engram_memory

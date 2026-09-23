@@ -10,7 +10,7 @@ ShipFrame recommends Context MCP as the optional local provider for Live Docs. S
 npm install -g @neuledge/context
 claude mcp add context -- context serve
 codex mcp add context -- context serve
-# OpenCode: add command ["context", "serve"] under mcp.context in ~/.config/opencode/opencode.json
+# OpenCode v2: add command ["context", "serve"] under mcp.servers.context in ~/.config/opencode/opencode.json
 ```
 
 Run `./install.sh --doctor` to see read-only detection and target-specific guidance.

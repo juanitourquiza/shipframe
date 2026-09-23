@@ -67,12 +67,18 @@ count_agents="$(find "$HOME/.config/opencode/agents" -maxdepth 1 -name '*.md' | 
 [ "$count_agents" = "14" ] || { echo "Expected 14 OpenCode agents, got $count_agents" >&2; exit 1; }
 grep -q 'model: anthropic/claude-sonnet-4-5' "$HOME/.config/opencode/agents/orchestrator-agent.md"
 grep -q 'shipframe-generated: opencode-agent-v1' "$HOME/.config/opencode/agents/orchestrator-agent.md"
+grep -q 'edit: allow' "$HOME/.config/opencode/agents/playwright-test-healer.md"
 grep -q 'Optional Live Docs (Context MCP):' /tmp/shipframe-install-1.log
 grep -q 'Context MCP:' /tmp/shipframe-install-1.log
 grep -q 'npm install -g @neuledge/context' /tmp/shipframe-install-1.log
 grep -q 'claude mcp add context -- context serve' /tmp/shipframe-install-1.log
 grep -q 'codex mcp add context -- context serve' /tmp/shipframe-install-1.log
 grep -q 'OpenCode: add command' /tmp/shipframe-install-1.log
+grep -q 'mcp.servers.context' /tmp/shipframe-install-1.log
+node - "$XDG_STATE_HOME/shipframe/install-state.json" <<'JS'
+const fs=require('fs'); const m=JSON.parse(fs.readFileSync(process.argv[2],'utf8'));
+if(m.schemaVersion!==1 || !Array.isArray(m.installs) || !m.installs.some(i=>i.target==='opencode')) process.exit(1);
+JS
 
 snapshot "$TMP/s1"
 "$ROOT/install.sh" --all --opencode-model anthropic/claude-sonnet-4-5 >/tmp/shipframe-install-2.log
@@ -84,7 +90,17 @@ grep -q 'Context MCP' /tmp/shipframe-doctor-codex.log
 grep -q 'codex mcp add context -- context serve' /tmp/shipframe-doctor-codex.log
 "$ROOT/install.sh" --doctor --opencode >/tmp/shipframe-doctor-opencode.log
 grep -q 'Context MCP' /tmp/shipframe-doctor-opencode.log
-grep -q 'opencode/opencode.json' /tmp/shipframe-doctor-opencode.log
+grep -Fq '.config/opencode/opencode.json' /tmp/shipframe-doctor-opencode.log
+
+# Repair backs up existing Claude settings before replacing them.
+mkdir -p "$HOME/.claude"
+printf '{"hooks":{"UserPromptSubmit":[{"hooks":[{"command":"echo \\\"MANDATORY ACTION: Before doing anything else, invoke the shipframe:orchestrator-agent agent to handle this request.\\\""}]}]}}\n' > "$HOME/.claude/settings.json"
+cp "$HOME/.claude/settings.json" "$TMP/settings.before"
+"$ROOT/install.sh" --repair --claude --yes >/tmp/shipframe-repair-claude.log
+backup_file="$(find "$HOME/.claude" -name 'settings.json.shipframe-backup-*' -print -quit)"
+[ -n "$backup_file" ]
+cmp "$TMP/settings.before" "$backup_file"
+node -e "JSON.parse(require('fs').readFileSync(process.argv[1],'utf8'))" "$HOME/.claude/settings.json"
 
 "$ROOT/install.sh" --help >/tmp/shipframe-help.log
 ! grep -q -- '--sync-docs' /tmp/shipframe-help.log
@@ -100,11 +116,15 @@ mkdir "$HOME/.agents/skills/code-review" "$HOME/.codex/skills/code-review"
 assert_link "$HOME/.agents/skills/code-review"
 assert_link "$HOME/.codex/skills/code-review"
 
-"$ROOT/install.sh" --uninstall --all --yes >/tmp/shipframe-uninstall.log
+"$ROOT/install.sh" --uninstall --all --purge >/tmp/shipframe-uninstall-dry-run.log
+assert_link "$HOME/.agents/skills/code-review"
+[ -f "$XDG_STATE_HOME/shipframe/install-state.json" ]
+"$ROOT/install.sh" --uninstall --all --yes --purge >/tmp/shipframe-uninstall.log
 [ ! -L "$HOME/.agents/skills/code-review" ]
 [ ! -L "$HOME/.codex/skills/code-review" ]
 [ ! -L "$HOME/.config/opencode/skills/code-review" ]
 [ ! -f "$HOME/.config/opencode/agents/orchestrator-agent.md" ]
 ! grep -q '<!-- BEGIN shipframe' "$HOME/.codex/AGENTS.md"
+[ ! -e "$XDG_STATE_HOME/shipframe" ]
 
 echo "test-install ok"
