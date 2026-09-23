@@ -15,7 +15,7 @@ manifest="$bundle/.codex-plugin/plugin.json"
 [[ -f "$bundle/assets/icon.png" ]]
 [[ -f "$bundle/assets/logo.png" ]]
 
-python3 - "$manifest" "$bundle/assets/icon.png" "$bundle/assets/logo.png" <<'PY'
+python3 - "$manifest" "$bundle/assets/icon.png" "$bundle/assets/logo.png" "$repo_root/.claude-plugin/plugin.json" <<'PY'
 import json
 import struct
 import sys
@@ -27,8 +27,9 @@ def png_dimensions(path: str) -> tuple[int, int]:
     return struct.unpack(">II", data[16:24])
 
 manifest = json.loads(Path(sys.argv[1]).read_text(encoding="utf-8"))
+source_version = json.loads(Path(sys.argv[4]).read_text(encoding="utf-8"))["version"]
 assert manifest["name"] == "shipframe"
-assert manifest["version"] == "0.4.5"
+assert manifest["version"] == source_version
 assert manifest["skills"] == "./skills/"
 assert manifest["interface"]["developerName"] == "Juan Urquiza"
 assert manifest["interface"]["composerIcon"] == "./assets/icon.png"
@@ -96,5 +97,6 @@ JSON
   HOME="$tmp_dir/home" CODEX_HOME="$tmp_dir/codex" codex plugin marketplace add "$market_root" --json >/tmp/shipframe-openai-marketplace-add.json
   HOME="$tmp_dir/home" CODEX_HOME="$tmp_dir/codex" codex plugin list --available --json | grep 'shipframe@shipframe-local' >/dev/null
   HOME="$tmp_dir/home" CODEX_HOME="$tmp_dir/codex" codex plugin add shipframe@shipframe-local --json >/tmp/shipframe-openai-plugin-add.json
-  [[ -f "$tmp_dir/codex/plugins/cache/shipframe-local/shipframe/0.4.5/.codex-plugin/plugin.json" ]]
+  plugin_version="$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["version"])' "$repo_root/.claude-plugin/plugin.json")"
+  [[ -f "$tmp_dir/codex/plugins/cache/shipframe-local/shipframe/$plugin_version/.codex-plugin/plugin.json" ]]
 fi

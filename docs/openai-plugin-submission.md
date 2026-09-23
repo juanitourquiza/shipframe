@@ -1,6 +1,6 @@
 # OpenAI Plugin Submission Packet — ShipFrame Curated Skills Plugin
 
-**Status:** Draft v0.4.4 update packet. Existing public plugin URL was previously available for v0.4.2; do not claim the v0.4.4 upload until portal evidence confirms it.<br>
+**Status:** Historical draft v0.4.4 packet (prepared 2026-09-08); not release metadata or evidence of a current portal submission. Existing public plugin URL was previously available for v0.4.2; do not claim a later upload until portal evidence confirms it.<br>
 **Publisher:** Juan Urquiza  
 **Prepared on:** 2026-09-08<br>
 **Scope:** Curated ChatGPT/Codex skills-only plugin update for ShipFrame v0.4.4.

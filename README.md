@@ -348,7 +348,8 @@ project where you run the command:
   skills from `~/.agents/skills` and `~/.claude/skills` if those locations are
   populated. Converted agents inherit the user's OpenCode model by default;
   pass `--opencode-model provider/model` only when an explicit override is
-  needed.
+  needed. Third-party MCP servers and their tools remain host configuration;
+  the converter does not install or translate Claude-specific MCP integrations.
 
 Run `shipframe install ...` once per user/machine. Then add project-specific
 rules inside each repository with `shipframe.profile.md`,
@@ -450,7 +451,7 @@ Enable Context only when you want the extra Live Docs provider:
 npm install -g @neuledge/context
 claude mcp add context -- context serve
 codex mcp add context -- context serve
-# OpenCode: add command ["context", "serve"] under mcp.context in ~/.config/opencode/opencode.json
+# OpenCode v2: add command ["context", "serve"] under mcp.servers.context in ~/.config/opencode/opencode.json
 ```
 
 Validate the optional setup with:
@@ -510,7 +511,7 @@ Activa Context solo cuando quieras ese proveedor adicional de Live Docs:
 npm install -g @neuledge/context
 claude mcp add context -- context serve
 codex mcp add context -- context serve
-# OpenCode: agrega command ["context", "serve"] bajo mcp.context en ~/.config/opencode/opencode.json
+# OpenCode v2: agrega command ["context", "serve"] bajo mcp.servers.context en ~/.config/opencode/opencode.json
 ```
 
 Valida la configuración opcional con:
@@ -566,7 +567,9 @@ desde donde corres el comando:
   bloque administrado en `~/.codex/AGENTS.md`.
 - OpenCode: enlaza skills en `~/.config/opencode/skills` y escribe agentes
   convertidos en `~/.config/opencode/agents`; también puede descubrir skills
-  compatibles desde `~/.agents/skills` y `~/.claude/skills`.
+  compatibles desde `~/.agents/skills` y `~/.claude/skills`. Los servidores y
+  herramientas MCP de terceros se configuran en OpenCode; el conversor no los
+  instala ni traduce integraciones específicas de Claude.
 
 Ejecuta `shipframe install ...` una vez por usuario/máquina. Las reglas por
 proyecto van dentro de cada repo usando `shipframe.profile.md`,

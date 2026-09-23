@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+## v0.4.7 — unreleased
+
+### Fixed
+- Aligned Claude plugin and marketplace metadata for the next release without rewriting the existing v0.4.6 tag.
+- Updated OpenCode MCP setup guidance for the v2 `mcp.servers` configuration shape.
+- Hardened installer preflight, target handling, legacy settings backup, and converted-agent tool parsing.
+- Added missing installer regression coverage to CI and corrected the wiki index table.
+
 ## v0.4.5 — 2026-09-16
 
 ### Added

@@ -20,6 +20,10 @@ jobs:
         run: brew install shellcheck
       - name: Run installer tests
         run: ./tests/test-install.sh
+      - name: Validate context docs sync script
+        run: ./tests/test-sync-context-docs.sh
+      - name: ShellCheck shell scripts
+        run: find . -type f -name '*.sh' -not -path './.git/*' -print0 | xargs -0 shellcheck --severity=warning
       - name: Validate proof-runner skill
         run: ./tests/test-proof-runner.sh
       - name: Validate Herdr plugin MVP

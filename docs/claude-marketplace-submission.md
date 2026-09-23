@@ -1,6 +1,6 @@
-# Claude Marketplace Submission Packet — ShipFrame v0.4.1
+# Historical Claude Marketplace Submission Packet — ShipFrame v0.4.1
 
-**Status:** Ready for submission  
+**Status:** Historical snapshot prepared 2026-08-21; verify package contents and current marketplace requirements before reuse. This is not evidence of submission or acceptance.
 **Owner:** Juan Urquiza  
 **Prepared on:** 2026-08-21  
 **Scope:** Manual submission packet for Claude Code community marketplace review.
