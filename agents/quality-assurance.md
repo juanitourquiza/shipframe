@@ -1,10 +1,9 @@
 ---
 name: quality-assurance-agent
 description: >
-  Sub-agent: invoked only by the orchestrator-agent after plan-expert-agent confirms
-  subtasks. Writes failing tests (TDD red phase) that define expected behavior before
-  implementation begins, posts a test summary to the task tracker per subtask, and
-  returns a test manifest to the orchestrator. Does NOT write production code.
+  QA specialist: invoked after a confirmed plan for non-trivial code changes. Writes
+  failing tests (TDD red phase) where host capabilities permit, and returns a test
+  manifest. Does NOT write production code or require a task tracker.
   Do not invoke directly.
 model: sonnet
 color: blue
@@ -35,14 +34,14 @@ skills:
 ```yaml
 purpose: Write failing tests (TDD red phase) that define expected behavior before implementation begins.
 authority: Can read the codebase and create/modify test files only.
-activation: Sub-agent — ONLY activated by the orchestrator-agent.
+activation: After planning, for non-trivial code changes when this agent is available. Otherwise use the TDD skill.
 ```
 
 ---
 
 ## Activation
 
-This agent is a **specialized sub-agent** and can **only** be activated through delegation. It triggers when:
+This agent is a **specialized QA agent** activated by the orchestrator after planning when:
 - The Orchestrator has a confirmed subtask plan from `plan-expert-agent` and the intent requires test coverage before implementation.
 
 ---
@@ -51,7 +50,7 @@ This agent is a **specialized sub-agent** and can **only** be activated through 
 
 Every invocation from the orchestrator includes:
 - `SUBTASK_LIST` — ordered list of confirmed subtasks from `plan-expert-agent`
-- `TICKET_ID` — parent task tracker ticket ID
+  - `TICKET_ID` — optional parent task tracker ticket ID
 
 ---
 
@@ -69,9 +68,7 @@ Every invocation from the orchestrator includes:
       phpunit.xml, go test files (*_test.go), *.spec.ts, *.test.ts
     - Check AGENTS.md for a declared testing framework
     - Check package.json scripts for a "test" command
-  If no test suite is found:
-    - Post tracker comment: "[QA] TDD skipped — no test suite detected in this project"
-    - Return immediately with skipped: true
+  If no test suite is found, return immediately with skipped: true. Tracker integration is optional.
   Store detected framework and test directories as TEST_CONTEXT for use in later steps.
 
 3_calibrate: |
@@ -96,8 +93,8 @@ Every invocation from the orchestrator includes:
   Do not expand scope — only review the new test files.
 
 7_comment_tracker: |
-  For each subtask in scope, post one comment using the Tracker Comment Format below.
-  Check for an existing QA comment before posting to avoid duplicates.
+  If a tracker is available and a ticket ID was provided, post one concise comment per subtask.
+  Otherwise include the QA summary in the local return manifest; do not block on tracker setup.
 
 8_return: |
   Return the test manifest and confirmation that all tests are red to the Orchestrator.
@@ -157,7 +154,7 @@ skip_tdd_for:
 
 when_skipping:
   - Do not write any test files
-  - Post tracker comment: "[QA] Tests not applicable — <reason>"
+  - Return a manifest stating "Tests not applicable — <reason>"; tracker comment is optional.
   - Return immediately with skipped: true
 ```
 

@@ -36,6 +36,8 @@ https://shipframe.hackeruna.com/
 
 ### Core workflow skills
 
+For non-trivial code changes, run the QA agent after planning when the host supports it; otherwise use the `tdd` skill. QA does not require ClickUp: without tracker access, it returns a local test manifest.
+
 | Skill | What it does |
 |---|---|
 | `init-project` | Scans a repo and creates project context for future agents. |
