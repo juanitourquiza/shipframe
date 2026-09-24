@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Build the curated ShipFrame OpenAI/Codex skills-only plugin bundle."""
+"""Build ShipFrame's curated OpenAI/Codex plugin bundle."""
 
 from __future__ import annotations
 
@@ -103,11 +103,12 @@ def manifest(version: str) -> dict[str, object]:
                 "refresh project context, discover requirements, plan implementation work, "
                 "diagnose bugs, run TDD and accessibility workflows, review diffs, "
                 "prepare frontend/backend releases, collect deploy evidence, run explicit proof commands, "
-                "generate READMEs, and create handoffs without adding an MCP server."
+                "generate READMEs, and create handoffs. The Codex CLI bundle also includes an "
+                "advisory prompt fast-path hook, which runs only after the user reviews and trusts it."
             ),
             "developerName": PUBLISHER,
             "category": "Productivity",
-            "capabilities": ["Skills", "Code review", "Planning", "TDD", "Accessibility", "Release evidence", "Evidence audit", "Proof runner"],
+            "capabilities": ["Skills", "Prompt routing", "Code review", "Planning", "TDD", "Accessibility", "Release evidence", "Evidence audit", "Proof runner"],
             "websiteURL": WEBSITE,
             "composerIcon": "./assets/icon.png",
             "logo": "./assets/logo.png",
@@ -192,12 +193,17 @@ def build() -> tuple[Path, Path | None]:
 
     (bundle_root / ".codex-plugin").mkdir(parents=True)
     (bundle_root / "skills").mkdir()
+    (bundle_root / "hooks").mkdir()
     with (bundle_root / ".codex-plugin" / "plugin.json").open("w", encoding="utf-8") as fh:
         json.dump(manifest(read_version(root)), fh, indent=2)
         fh.write("\n")
 
     for skill_name in CURATED_SKILLS:
         copy_skill(root, bundle_root, skill_name)
+
+    for hook_file in ("codex-prompt-router.cjs", "prompt-router-core.cjs"):
+        shutil.copy2(root / "hooks" / hook_file, bundle_root / "hooks" / hook_file)
+    shutil.copy2(root / "hooks" / "codex-hooks.json", bundle_root / "hooks" / "hooks.json")
 
     write_assets(bundle_root)
 

@@ -22,6 +22,8 @@ jobs:
         run: ./tests/test-install.sh
       - name: Test orchestrator mutation guard
         run: node --test tests/test-orchestrator-guard.js
+      - name: Test cross-host prompt fast path
+        run: node --test tests/test-prompt-router.js
       - name: Validate context docs sync script
         run: ./tests/test-sync-context-docs.sh
       - name: ShellCheck shell scripts

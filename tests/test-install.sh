@@ -48,6 +48,7 @@ snapshot() {
     find "$HOME/.agents/skills" "$HOME/.codex/skills" "$HOME/.config/opencode/skills" "$HOME/.config/opencode/agents" -maxdepth 1 \( -type l -o -type f \) -print 2>/dev/null | sort | while read -r p; do
       if [ -L "$p" ]; then printf 'L %s -> %s\n' "$p" "$(readlink "$p")"; else printf 'F %s ' "$p"; shasum -a 256 "$p"; fi
     done
+    [ -L "$HOME/.config/opencode/plugins/shipframe-prompt-router" ] && printf 'L %s -> %s\n' "$HOME/.config/opencode/plugins/shipframe-prompt-router" "$(readlink "$HOME/.config/opencode/plugins/shipframe-prompt-router")"
   } > "$out"
 }
 
@@ -58,11 +59,13 @@ bash -n "$ROOT/install.sh"
 "$ROOT/install.sh" --doctor --repo-only
 
 "$ROOT/install.sh" --all --opencode-model anthropic/claude-sonnet-4-5 >/tmp/shipframe-install-1.log
+grep -q 'plugins/shipframe-prompt-router' /tmp/shipframe-install-1.log
 assert_file "$HOME/.codex/AGENTS.md"
 grep -q 'shipframe-block-version: 1' "$HOME/.codex/AGENTS.md"
 assert_link "$HOME/.agents/skills/code-review"
 assert_link "$HOME/.codex/skills/code-review"
 assert_link "$HOME/.config/opencode/skills/code-review"
+assert_link "$HOME/.config/opencode/plugins/shipframe-prompt-router"
 count_agents="$(find "$HOME/.config/opencode/agents" -maxdepth 1 -name '*.md' | wc -l | tr -d ' ')"
 [ "$count_agents" = "14" ] || { echo "Expected 14 OpenCode agents, got $count_agents" >&2; exit 1; }
 grep -q 'model: anthropic/claude-sonnet-4-5' "$HOME/.config/opencode/agents/orchestrator-agent.md"
@@ -123,6 +126,7 @@ assert_link "$HOME/.agents/skills/code-review"
 [ ! -L "$HOME/.agents/skills/code-review" ]
 [ ! -L "$HOME/.codex/skills/code-review" ]
 [ ! -L "$HOME/.config/opencode/skills/code-review" ]
+[ ! -L "$HOME/.config/opencode/plugins/shipframe-prompt-router" ]
 [ ! -f "$HOME/.config/opencode/agents/orchestrator-agent.md" ]
 ! grep -q '<!-- BEGIN shipframe' "$HOME/.codex/AGENTS.md"
 [ ! -e "$XDG_STATE_HOME/shipframe" ]

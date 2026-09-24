@@ -23,7 +23,7 @@ Master catalog of all wiki pages. Mandatory entry point for any query with `/wik
 | Page | Summary | Answers |
 | ---- | ------- | ------- |
 | `../codex/dev-workflow.md` | Codex routing table and lifecycle. | Which skill sequence handles each intent? |
-| `../scripts/build-openai-plugin.py` | Builds the curated OpenAI/Codex skills-only plugin MVP bundle from canonical skills. | How is the OpenAI submission bundle generated? Which skills are included? |
+| `../scripts/build-openai-plugin.py` | Builds the curated OpenAI/Codex plugin bundle with curated skills and a Codex CLI prompt hook. | How is the OpenAI submission bundle generated? Which hooks are included? |
 | `../herdr-plugin/` | Optional local Herdr plugin MVP that opens ShipFrame workflow/checklist panes. | How does Herdr launch ShipFrame process guidance without replacing ShipFrame? |
 | `../templates/pull_request_template.md` | PR/MR body skeleton used by `create-pr`. | What should generated PRs include? |
 
@@ -31,10 +31,12 @@ Master catalog of all wiki pages. Mandatory entry point for any query with `/wik
 
 | Page | Summary | Answers |
 | ---- | ------- | ------- |
-| `../hooks/hooks.json` | Claude plugin-managed hooks. | Which Claude hook events are installed by the plugin? |
+| `../hooks/hooks.json` | Claude plugin-managed hooks, including advisory prompt routing. | Which Claude hook events are installed by the plugin? |
+| `../hooks/prompt-router-core.cjs` | Shared bypass/suggest/route classifier and host-neutral guidance. | How does the cross-host fast path classify a prompt? |
+| `../opencode/index.ts` | OpenCode v2 ephemeral-context plugin adapter. | How does OpenCode receive routing guidance without mutating prompt history? |
 | `../.claude-plugin/plugin.json` | Claude plugin package metadata. | What version/name/keywords does the plugin expose? |
 | `../.claude-plugin/marketplace.json` | Marketplace listing metadata. | Which homepage/repository/version are published? |
-| `../docs/openai-plugin-submission.md` | OpenAI plugin submission packet for the skills-only MVP. | What listing copy, prompts, test cases, and checklist should be used for OpenAI submission? |
+| `../docs/openai-plugin-submission.md` | Historical submission packet; current bundle also includes advisory Codex CLI hooks. | What claims are valid for the current local plugin bundle vs the historical submission? |
 
 ## Configuration
 

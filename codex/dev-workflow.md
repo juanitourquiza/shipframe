@@ -5,7 +5,15 @@
 
 ## Core rule
 
-For every non-trivial request, before acting:
+ShipFrame's optional Codex `UserPromptSubmit` hook classifies prompts as `bypass`,
+`suggest`, or `route`. The hook is advisory: it adds context for `suggest` and
+`route`, emits nothing for `bypass`, never blocks a prompt, and never overrides
+the user's explicit instruction. Codex only runs plugin hooks after the user
+reviews and trusts them. When the hook is unavailable or untrusted, use this
+workflow as a judgment-based fallback; ordinary questions, greetings, trivial
+requests, and explicit skill invocations do not need an orchestrator hop.
+
+For non-trivial workflow work, before acting:
 
 1. Classify the intent (see Routing Table).
 2. Refresh project context when prior decisions or repo conventions may matter.

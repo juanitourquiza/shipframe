@@ -5,7 +5,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "echo 'MANDATORY ACTION: Before doing anything else, invoke the shipframe:orchestrator-agent agent to handle this request.'"
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/hooks/claude-prompt-router.cjs\""
           }
         ]
       }

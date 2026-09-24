@@ -14,6 +14,9 @@ manifest="$bundle/.codex-plugin/plugin.json"
 [[ -f "$tmp_dir/shipframe-openai-plugin.zip" ]]
 [[ -f "$bundle/assets/icon.png" ]]
 [[ -f "$bundle/assets/logo.png" ]]
+[[ -f "$bundle/hooks/hooks.json" ]]
+[[ -f "$bundle/hooks/codex-prompt-router.cjs" ]]
+[[ -f "$bundle/hooks/prompt-router-core.cjs" ]]
 
 python3 - "$manifest" "$bundle/assets/icon.png" "$bundle/assets/logo.png" "$repo_root/.claude-plugin/plugin.json" <<'PY'
 import json
@@ -39,6 +42,9 @@ assert "mcpServers" not in manifest
 assert "apps" not in manifest
 assert png_dimensions(sys.argv[2]) == (512, 512)
 assert png_dimensions(sys.argv[3]) == (512, 512)
+hooks = json.loads((Path(sys.argv[1]).parent.parent / "hooks" / "hooks.json").read_text(encoding="utf-8"))
+assert "UserPromptSubmit" in hooks["hooks"]
+assert "${PLUGIN_ROOT}" in hooks["hooks"]["UserPromptSubmit"][0]["hooks"][0]["command"]
 PY
 
 expected_skills=(
