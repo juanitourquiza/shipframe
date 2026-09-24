@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+## v0.4.8 — 2026-09-23
+
+### Added
+- Added an advisory cross-host prompt fast path for Claude Code, Codex CLI, and OpenCode, with bypass, suggest, and route outcomes.
+- Added explicit opt-in host adapters; Codex requires trusted hooks and OpenCode plugin registration remains user-controlled.
+
+
 ## v0.4.7 — 2026-09-23
 
 ### Fixed
