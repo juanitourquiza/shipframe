@@ -300,6 +300,14 @@ repo_doctor() {
   bash -n install.sh && report_ok "install.sh syntax" || report_err "install.sh syntax (run: bash -n install.sh)"
   if command_exists shellcheck; then shellcheck install.sh && report_ok "shellcheck install.sh" || report_err "shellcheck install.sh"; else report_warn "shellcheck not installed (run: brew install shellcheck)"; fi
   node -e "JSON.parse(require('fs').readFileSync('.claude-plugin/plugin.json','utf8')); JSON.parse(require('fs').readFileSync('.claude-plugin/marketplace.json','utf8'))" && report_ok "plugin JSON parses" || report_err "plugin JSON parses"
+  node <<'JS' && report_ok "Claude, Codex, and OpenCode prompt-router adapters" || report_err "prompt-router adapter files or hook events are invalid"
+const fs=require('fs');
+const claude=JSON.parse(fs.readFileSync('hooks/hooks.json','utf8'));
+const codex=JSON.parse(fs.readFileSync('hooks/codex-hooks.json','utf8'));
+if (!claude.hooks?.UserPromptSubmit?.[0]?.hooks?.[0]?.command?.includes('claude-prompt-router.cjs')) process.exit(1);
+if (!codex.hooks?.UserPromptSubmit?.[0]?.hooks?.[0]?.command?.includes('codex-prompt-router.cjs')) process.exit(1);
+for (const file of ['hooks/prompt-router-core.cjs','hooks/claude-prompt-router.cjs','hooks/codex-prompt-router.cjs','opencode/index.ts','opencode/prompt-router.cjs']) if (!fs.existsSync(file)) process.exit(1);
+JS
   node <<'JS' && report_ok "plugin/marketplace versions match" || report_err "plugin/marketplace versions differ"
 const fs=require('fs');
 const plugin=JSON.parse(fs.readFileSync('.claude-plugin/plugin.json','utf8'));
@@ -532,16 +540,27 @@ for(const file of files){ const text=fs.readFileSync(path.join(srcDir,file),'utf
 console.log(`  Converted : ${converted}`);
 JS
 }
+install_opencode_router() {
+  resolve_source_dir
+  local plugins_dir="$HOME/.config/opencode/plugins" target="$HOME/.config/opencode/plugins/shipframe-prompt-router" desired="$SOURCE_DIR/opencode"
+  mkdir -p "$plugins_dir"
+  if [ -L "$target" ] && [ "$(readlink "$target")" = "$desired" ]; then echo "  ok ShipFrame prompt-router plugin"; return 0; fi
+  if [ -e "$target" ] && [ ! -L "$target" ]; then echo "  skip prompt-router plugin (unmanaged path exists: $target)"; return 0; fi
+  [ ! -L "$target" ] || rm "$target"
+  ln -s "$desired" "$target"
+  echo "  linked ShipFrame prompt-router plugin: $target"
+}
 install_opencode() {
-  install_opencode_skills; echo ""; install_opencode_agents; echo ""
+  install_opencode_skills; echo ""; install_opencode_agents; install_opencode_router; echo ""
   echo "OpenCode install complete."
   echo "  Skills : $HOME/.config/opencode/skills   (symlinks — auto-update via git pull)"
   echo "  Agents : $HOME/.config/opencode/agents   (converted copies — re-run install to update)"
+  echo "  Router : $HOME/.config/opencode/plugins/shipframe-prompt-router (add this path to OpenCode v2's global plugins list to activate)"
   echo "  Model  : ${OPENCODE_MODEL:-inherits OpenCode global/default model}"
   echo "  Source : $SOURCE_DIR"
   write_manifest
   local artifacts=() artifact
-  while IFS= read -r artifact; do artifacts+=("$artifact"); done < <(collect_skill_artifacts "$HOME/.config/opencode/skills"; find "$HOME/.config/opencode/agents" -maxdepth 1 -name '*.md' -print | sort)
+  while IFS= read -r artifact; do artifacts+=("$artifact"); done < <(collect_skill_artifacts "$HOME/.config/opencode/skills"; find "$HOME/.config/opencode/agents" -maxdepth 1 -name '*.md' -print | sort; [ -L "$HOME/.config/opencode/plugins/shipframe-prompt-router" ] && printf '%s\n' "$HOME/.config/opencode/plugins/shipframe-prompt-router")
   record_artifacts opencode "${artifacts[@]}"
   return 0
 }
@@ -616,13 +635,20 @@ remove_opencode_agents() {
   local dir="$HOME/.config/opencode/agents"; [ -d "$dir" ] || return 0
   for f in "$dir"/*.md; do [ -f "$f" ] || continue; if grep -q 'shipframe-generated: opencode-agent-v1' "$f"; then if [ "$YES" = true ]; then rm "$f"; echo "  removed $f"; else echo "  dry-run: would remove $f"; fi; fi; done
 }
+remove_opencode_router() {
+  local target="$HOME/.config/opencode/plugins/shipframe-prompt-router"
+  resolve_source_dir
+  if [ -L "$target" ] && [ "$(readlink "$target")" = "$SOURCE_DIR/opencode" ]; then
+    if [ "$YES" = true ]; then rm "$target"; echo "  removed $target"; else echo "  dry-run: would remove $target"; fi
+  fi
+}
 run_uninstall() {
   case "$TARGET" in
     claude|all)
       echo "Removing Claude legacy hooks and plugin..."; remove_legacy_claude_hooks
       if command_exists claude; then if [ "$YES" = true ]; then claude plugin uninstall shipframe || true; else echo "  dry-run: would run claude plugin uninstall shipframe"; fi; fi ;;
   esac
-  case "$TARGET" in opencode|all) echo "Removing OpenCode artifacts..."; uninstall_symlinked_skills "$HOME/.config/opencode/skills"; remove_opencode_agents ;; esac
+  case "$TARGET" in opencode|all) echo "Removing OpenCode artifacts..."; uninstall_symlinked_skills "$HOME/.config/opencode/skills"; remove_opencode_agents; remove_opencode_router ;; esac
   case "$TARGET" in codex|all) echo "Removing Codex artifacts..."; uninstall_symlinked_skills "$HOME/.agents/skills"; uninstall_symlinked_skills "$HOME/.codex/skills"; remove_codex_block ;; esac
   if [ "$PURGE" = true ]; then
     if [ "$YES" = true ]; then rm -rf "$PLUGIN_CACHE" "$STATE_DIR"; echo "Purged $PLUGIN_CACHE and $STATE_DIR"; else echo "dry-run: would purge $PLUGIN_CACHE and $STATE_DIR"; fi
@@ -630,7 +656,7 @@ run_uninstall() {
 }
 run_repair() {
   case "$TARGET" in claude|all) echo "Repairing Claude settings..."; remove_legacy_claude_hooks ;; esac
-  case "$TARGET" in opencode|all) echo "Repairing OpenCode skills/agents..."; link_skills "$HOME/.config/opencode/skills" repair; install_opencode_agents ;; esac
+  case "$TARGET" in opencode|all) echo "Repairing OpenCode skills/agents..."; link_skills "$HOME/.config/opencode/skills" repair; install_opencode_agents; install_opencode_router ;; esac
   case "$TARGET" in codex|all) echo "Repairing Codex skills/workflow..."; link_skills "$HOME/.agents/skills" repair; link_skills "$HOME/.codex/skills" repair; install_codex_workflow ;; esac
   [ "$YES" = true ] && write_manifest || true
 }

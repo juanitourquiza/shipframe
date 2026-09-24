@@ -215,8 +215,8 @@ shipframe install --all
 | Tool | Skills | Orchestration |
 |---|---|---|
 | Claude Code | plugin marketplace / plugin namespace | agents + hooks |
-| Codex CLI | Agent Skills via `/skills` | routing table in `~/.codex/AGENTS.md` |
-| OpenCode | native skill discovery | converted agents |
+| Codex CLI | Agent Skills via `/skills` | routing table in `~/.codex/AGENTS.md`; optional prompt fast-path hook in the curated plugin (user review/trust required) |
+| OpenCode v2 | native skill discovery | converted agents; optional prompt fast-path plugin |
 
 ### Use ShipFrame from skills picker
 
@@ -255,7 +255,10 @@ $plan-expert
 
 Codex uses the open Agent Skills layout at `~/.agents/skills/<name>/SKILL.md`.
 ShipFrame also writes compatibility symlinks to `~/.codex/skills` for existing
-setups, and keeps the workflow block in `~/.codex/AGENTS.md`.
+setups, and keeps the workflow block in `~/.codex/AGENTS.md`. To use the
+fast path, install the curated ShipFrame plugin and review/trust its
+`UserPromptSubmit` hook in Codex. Until trusted, the workflow block remains the
+fallback.
 
 
 #### Herdr local workflow plugin
@@ -286,11 +289,16 @@ the base ShipFrame toolkit and the `shipframe` wrapper; use the `herdr plugin in
 
 #### ChatGPT/Codex curated plugin
 
-ShipFrame is also available as a curated ChatGPT/Codex skills-only plugin with
+ShipFrame is also available as a curated ChatGPT/Codex plugin with
 24 public workflows selected from the full toolkit. The source of truth remains
 `skills/`; the build script copies the curated plugin subset into a temporary
-bundle and does not include MCP servers, apps, Claude hooks, or OpenCode/Claude
-agents.
+bundle with the curated skills and Codex CLI prompt fast-path hook. It does not
+include MCP servers, apps, Claude hooks, or OpenCode/Claude agents. Codex runs
+its bundled hook only after the user reviews and trusts the current hook
+definition. This code change does not update the existing public plugin; treat
+it as unchanged until a separate submission is confirmed.
+The shared local heuristic covers common English and Spanish prompts; its
+`bypass` / `suggest` / `route` result is a best-effort nudge, never enforcement.
 
 Open the public plugin here: https://chatgpt.com/plugins/plugins_6a88e6256bb48191a343d39dace5e05c
 
@@ -329,6 +337,23 @@ ls ~/.agents/skills/code-review/SKILL.md
 ls ~/.config/opencode/skills/code-review/SKILL.md
 ```
 
+The installer links the OpenCode v2 prompt-router plugin at
+`~/.config/opencode/plugins/shipframe-prompt-router`. To activate it without
+ShipFrame editing your OpenCode configuration, add its absolute path to the
+`plugins` array in `~/.config/opencode/opencode.json` (or your chosen project
+config), then restart OpenCode:
+
+```json
+{"$schema":"https://opencode.ai/config.json","plugins":["/absolute/path/to/.config/opencode/plugins/shipframe-prompt-router"]}
+```
+
+Merge the path into your existing `plugins` list rather than replacing other
+entries. If not activated, skills and converted agents continue to work without
+the hook. The plugin adds ephemeral system context; it does not rewrite or
+persist the user's prompt.
+Before uninstalling ShipFrame, remove its plugin path from the OpenCode
+`plugins` list; the installer deliberately does not edit that user-owned config.
+
 ### Stable versions
 
 Stable ShipFrame releases are tracked with git tags named `vX.Y.Z` (for example,
@@ -345,8 +370,10 @@ project where you run the command:
 - Codex CLI: links skills into `~/.agents/skills` for the current Agent
   Skills layout, also links compatibility copies into `~/.codex/skills`, and
   injects the managed workflow block into `~/.codex/AGENTS.md`.
-- OpenCode: links skills into `~/.config/opencode/skills` and writes converted
-  agents into `~/.config/opencode/agents`. OpenCode also discovers compatible
+- OpenCode: links skills into `~/.config/opencode/skills`, writes converted
+  agents into `~/.config/opencode/agents`, and links the optional v2 prompt
+  router plugin. Adding the plugin path to OpenCode's `plugins` configuration
+  remains a user-controlled activation step. OpenCode also discovers compatible
   skills from `~/.agents/skills` and `~/.claude/skills` if those locations are
   populated. Converted agents inherit the user's OpenCode model by default;
   pass `--opencode-model provider/model` only when an explicit override is

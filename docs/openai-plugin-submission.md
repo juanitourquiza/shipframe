@@ -3,7 +3,7 @@
 **Status:** Historical draft v0.4.4 packet (prepared 2026-09-08); not release metadata or evidence of a current portal submission. Existing public plugin URL was previously available for v0.4.2; do not claim a later upload until portal evidence confirms it.<br>
 **Publisher:** Juan Urquiza  
 **Prepared on:** 2026-09-08<br>
-**Scope:** Curated ChatGPT/Codex skills-only plugin update for ShipFrame v0.4.4.
+**Scope:** Historical v0.4.4 skills-only submission packet. The repository's current local build adds a Codex CLI prompt hook, but this packet is not evidence that the existing portal artifact was updated or that hooks run in ChatGPT web.
 
 This packet is intentionally conservative: do not claim that ShipFrame is official, OpenAI verified, or OpenAI endorsed. Only describe the plugin as published/available when the portal or public URL confirms that status.
 
@@ -41,7 +41,7 @@ If the local Python environment does not have PyYAML available, run the same val
 uv run --with pyyaml python ~/.codex/skills/.system/plugin-creator/scripts/validate_plugin.py dist/openai-plugin/shipframe
 ```
 
-The generated bundle uses `skills/` as the canonical source and includes only the curated skill set below. It intentionally does not include MCP servers, apps, Claude hooks, or OpenCode/Claude agent files. The build also writes square PNG assets for `interface.composerIcon` and `interface.logo`, which the OpenAI upload form requires for directory compliance.
+The historical v0.4.4 submission contained the curated skills only. The repository's current build script also copies `hooks/hooks.json` for the Codex CLI `UserPromptSubmit` hook; Codex discovers that conventional hook path, and the hook remains advisory until user trust. ChatGPT web hook execution is not claimed. The current bundle does not include MCP servers, apps, Claude hooks, or OpenCode/Claude agent files. The build writes square PNG assets for `interface.composerIcon` and `interface.logo`.
 
 ### Optional local marketplace smoke test
 
@@ -437,7 +437,7 @@ ShipFrame v0.4.4 curated ChatGPT/Codex plugin update.
 
 This update expands the existing skills-only plugin from 23 to 24 curated public ShipFrame skills by adding `proof-runner`, an optional workflow for running explicit `Verify:` commands from plans/checklists and reporting only exit-0 proof before saying steps are done.
 
-The plugin still does not include an MCP server, app UI, hooks, external authentication, or private data access. Reviewers can run the included positive and negative test cases against a sample repository without credentials.
+The v0.4.4 bundle did not include an MCP server, app UI, hooks, external authentication, or private data access. Reviewers can run the included positive and negative test cases against a sample repository without credentials.
 ```
 
 ## Post-submit status text
