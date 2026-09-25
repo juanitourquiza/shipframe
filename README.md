@@ -355,22 +355,23 @@ ls ~/.agents/skills/code-review/SKILL.md
 ls ~/.config/opencode/skills/code-review/SKILL.md
 ```
 
-The installer links the OpenCode v2 prompt-router plugin at
-`~/.config/opencode/plugins/shipframe-prompt-router`. To activate it without
-ShipFrame editing your OpenCode configuration, add its absolute path to the
-`plugins` array in `~/.config/opencode/opencode.json` (or your chosen project
-config), then restart OpenCode:
+The installer links the optional OpenCode v2 prompt-router plugin at
+`~/.config/opencode/plugins/shipframe-prompt-router`. OpenCode v2 auto-discovers
+local plugins in this directory. ShipFrame does not edit your OpenCode config;
+the environment doctor reports missing, invalid, or explicitly disabled plugin
+states. To disable it, add a matching negative pattern to the `plugins` array
+in `opencode.json`/`opencode.jsonc`:
 
 ```json
-{"$schema":"https://opencode.ai/config.json","plugins":["/absolute/path/to/.config/opencode/plugins/shipframe-prompt-router"]}
+{"$schema":"https://opencode.ai/config.json","plugins":["-shipframe.prompt-router"]}
 ```
 
-Merge the path into your existing `plugins` list rather than replacing other
-entries. If not activated, skills and converted agents continue to work without
-the hook. The plugin adds ephemeral system context; it does not rewrite or
-persist the user's prompt.
-Before uninstalling ShipFrame, remove its plugin path from the OpenCode
-`plugins` list; the installer deliberately does not edit that user-owned config.
+Restart OpenCode after changing plugin directives. Skills and converted agents
+continue to work if the router is disabled. The plugin adds ephemeral system
+context; it does not rewrite or persist the user's prompt. See the official
+[OpenCode v2 plugin guide](https://opencode.ai/v2/docs/plugins) for discovery
+and enable/disable behavior. Before uninstalling ShipFrame, remove any explicit
+ShipFrame directive from your user-owned config; the installer does not edit it.
 
 ### Stable versions
 
@@ -390,10 +391,11 @@ project where you run the command:
   injects the managed workflow block into `~/.codex/AGENTS.md`.
 - OpenCode: links skills into `~/.config/opencode/skills`, writes converted
   agents into `~/.config/opencode/agents`, and links the optional v2 prompt
-  router plugin. Adding the plugin path to OpenCode's `plugins` configuration
-  remains a user-controlled activation step. OpenCode also discovers compatible
-  skills from `~/.agents/skills` and `~/.claude/skills` if those locations are
-  populated. Converted agents inherit the user's OpenCode model by default;
+  router plugin. OpenCode v2 auto-discovers local plugins in this directory;
+  user-owned `plugins` directives can explicitly disable it, and doctor reports
+  its install/validity/disable state. OpenCode also discovers compatible skills
+  from `~/.agents/skills` and `~/.claude/skills` if those locations are populated.
+  Converted agents inherit the user's OpenCode model by default;
   pass `--opencode-model provider/model` only when an explicit override is
   needed. Third-party MCP servers and their tools remain host configuration;
   the converter does not install or translate Claude-specific MCP integrations.

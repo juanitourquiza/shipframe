@@ -8,7 +8,7 @@ const promptRouter: Plugin.Plugin = {
   id: 'shipframe.prompt-router',
   async setup(ctx) {
     try {
-      await registerPromptRouter(ctx)
+      return await registerPromptRouter(ctx)
     } catch {
       // Optional workflow guidance must not prevent OpenCode from starting.
     }

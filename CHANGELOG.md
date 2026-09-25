@@ -9,9 +9,11 @@
 
 ### Changed
 - Added optional, change-triggered performance checks and migration guidance to release workflows; expanded the curated plugin bundle to 30 selected skills.
+- Updated OpenCode v2 activation guidance and added environment-doctor checks for missing, invalid, or disabled local router plugins.
 
 ### Fixed
 - Made the OpenCode prompt-router plugin load from symlinked install paths (such as the Homebrew Cellar) by importing `@opencode/plugin` as a type only, so OpenCode no longer reports `Plugin failed: .../shipframe-prompt-router`.
+- Return the OpenCode context-hook cleanup callback so unloading the plugin disposes its registration and clears per-session deduplication state.
 
 ## v0.4.8 — 2026-09-23
 

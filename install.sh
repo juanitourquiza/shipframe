@@ -298,6 +298,7 @@ repo_doctor() {
   cd "$SOURCE_DIR"
   status_counts_ok=0; status_counts_warn=0; status_counts_err=0
   bash -n install.sh && report_ok "install.sh syntax" || report_err "install.sh syntax (run: bash -n install.sh)"
+  node --check scripts/opencode-doctor.cjs && report_ok "OpenCode environment doctor syntax" || report_err "OpenCode environment doctor syntax"
   if command_exists shellcheck; then shellcheck install.sh && report_ok "shellcheck install.sh" || report_err "shellcheck install.sh"; else report_warn "shellcheck not installed (run: brew install shellcheck)"; fi
   node -e "JSON.parse(require('fs').readFileSync('.claude-plugin/plugin.json','utf8')); JSON.parse(require('fs').readFileSync('.claude-plugin/marketplace.json','utf8'))" && report_ok "plugin JSON parses" || report_err "plugin JSON parses"
   node <<'JS' && report_ok "Claude, Codex, and OpenCode prompt-router adapters" || report_err "prompt-router adapter files or hook events are invalid"
@@ -309,7 +310,10 @@ if (!codex.hooks?.UserPromptSubmit?.[0]?.hooks?.[0]?.command?.includes('codex-pr
 for (const file of ['hooks/prompt-router-core.cjs','hooks/claude-prompt-router.cjs','hooks/codex-prompt-router.cjs','opencode/index.ts','opencode/prompt-router.cjs']) if (!fs.existsSync(file)) process.exit(1);
 const opencode=fs.readFileSync('opencode/index.ts','utf8');
 if (!/^import\s+type\s+\{\s*Plugin\s*\}\s+from\s+['"]@opencode\/plugin['"]/m.test(opencode)) process.exit(1);
-if (!/export\s+default\s+promptRouter/.test(opencode) || !/async\s+setup\s*\(/.test(opencode)) process.exit(1);
+if (!/export\s+default\s+promptRouter/.test(opencode) || !/async\s+setup\s*\(/.test(opencode) || !/return\s+await\s+registerPromptRouter\(ctx\)/.test(opencode)) process.exit(1);
+const router=fs.readFileSync('opencode/prompt-router.cjs','utf8');
+if (!/registration\?\.dispose\?\./.test(router)) process.exit(1);
+if (!fs.existsSync('scripts/opencode-doctor.cjs')) process.exit(1);
 JS
   node <<'JS' && report_ok "plugin/marketplace versions match" || report_err "plugin/marketplace versions differ"
 const fs=require('fs');
@@ -386,6 +390,24 @@ check_symlink_dir() {
   [ "$unmanaged" -eq 0 ] || report_warn "$label has $unmanaged unmanaged symlink(s)"
 }
 
+check_opencode_router() {
+  local output state message
+  if output="$(node "$SOURCE_DIR/scripts/opencode-doctor.cjs" "$HOME/.config/opencode/plugins/shipframe-prompt-router" "$SOURCE_DIR/opencode" 2>&1)"; then
+    :
+  else
+    : # The checker returns nonzero only for an invalid ShipFrame plugin path.
+  fi
+  IFS='|' read -r state message < <(node -e 'const r=JSON.parse(process.argv[1]); process.stdout.write(`${r.state}|${r.message}\n`)' "$output") || {
+    report_warn "Could not inspect the OpenCode prompt-router plugin state"; return
+  }
+  case "$state" in
+    ready) report_ok "$message" ;;
+    absent|disabled|config-unknown) report_warn "$message" ;;
+    invalid) report_err "$message" ;;
+    *) report_warn "Could not inspect the OpenCode prompt-router plugin state" ;;
+  esac
+}
+
 environment_doctor() {
   resolve_source_dir
   status_counts_ok=0; status_counts_warn=0; status_counts_err=0
@@ -401,7 +423,10 @@ environment_doctor() {
   doctor_bin node "Node.js"; doctor_bin git "Git"; doctor_bin engram "Engram"
   check_context_mcp doctor
   case "$TARGET" in
-    opencode|all) check_symlink_dir "$HOME/.config/opencode/skills" "$SOURCE_DIR/skills" "OpenCode skills" ;;
+    opencode|all)
+      check_symlink_dir "$HOME/.config/opencode/skills" "$SOURCE_DIR/skills" "OpenCode skills"
+      check_opencode_router
+      ;;
   esac
   case "$TARGET" in
     codex|all) check_symlink_dir "$HOME/.agents/skills" "$SOURCE_DIR/skills" "Agent Skills (Codex)"; check_symlink_dir "$HOME/.codex/skills" "$SOURCE_DIR/skills" "Legacy Codex skills" ;;
@@ -558,7 +583,7 @@ install_opencode() {
   echo "OpenCode install complete."
   echo "  Skills : $HOME/.config/opencode/skills   (symlinks — auto-update via git pull)"
   echo "  Agents : $HOME/.config/opencode/agents   (converted copies — re-run install to update)"
-  echo "  Router : $HOME/.config/opencode/plugins/shipframe-prompt-router (add this path to OpenCode v2's global plugins list to activate)"
+  echo "  Router : $HOME/.config/opencode/plugins/shipframe-prompt-router (OpenCode v2 auto-discovers local plugins; doctor checks installed and disabled states)"
   echo "  Model  : ${OPENCODE_MODEL:-inherits OpenCode global/default model}"
   echo "  Source : $SOURCE_DIR"
   write_manifest

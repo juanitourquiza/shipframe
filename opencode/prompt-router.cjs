@@ -2,10 +2,12 @@
 
 const router = require('../hooks/prompt-router-core.cjs');
 
-function registerPromptRouter(ctx) {
+async function registerPromptRouter(ctx) {
   const seenPromptBySession = new Map();
-  return ctx.session.hook('context', (event) => {
+  let active = true;
+  const registration = await ctx.session.hook('context', (event) => {
     try {
+      if (!active) return;
       const sessionID = event.sessionID;
       const userMessage = router.latestUserMessage(event.messages);
       const prompt = userMessage?.text ?? '';
@@ -24,6 +26,14 @@ function registerPromptRouter(ctx) {
       // Advisory hook: fail open and let OpenCode build its original context.
     }
   });
+  return async () => {
+    if (!active) return;
+    active = false;
+    seenPromptBySession.clear();
+    try { await registration?.dispose?.(); } catch {
+      // Hook cleanup is best-effort; never interfere with OpenCode shutdown.
+    }
+  };
 }
 
 module.exports = { registerPromptRouter };
