@@ -1,6 +1,8 @@
 # Changelog
 
-## Unreleased
+## v0.6.0 — 2026-09-25
+
+This consolidated release closes the four-wave roadmap; the intermediate wave labels were planning targets, not separately published artifacts.
 
 ### Added
 - Added scoped security review, end-to-end verification, dependency upgrade, API contract review, incident response, and memory curation skills, with bilingual intent guidance and host limits.
