@@ -1,5 +1,14 @@
 # Changelog
 
+## Unreleased
+
+### Added
+- Added JavaScript, TypeScript, PHP, Node.js, React/Vite, Python, and Rust technology packs; expanded the existing Angular and Laravel packs and added stack-based pack suggestions in `init-project`.
+- Added opt-in, project-aware Context MCP guidance to `init-project` and version-matched documentation steps to `live-docs`.
+
+### Changed
+- Reclassified starter guidance as technology packs (language/runtime vs framework/build) and clarified that Context supplies version-aware reference docs rather than pack workflows.
+
 ## v0.6.0 — 2026-09-25
 
 This consolidated release closes the four-wave roadmap; the intermediate wave labels were planning targets, not separately published artifacts.

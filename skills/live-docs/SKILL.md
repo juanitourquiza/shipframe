@@ -9,7 +9,7 @@ Use this skill before introducing or changing code that depends on an external l
 
 ## Workflow
 
-1. Identify the affected module and resolve the dependency from its lockfile first. Use a manifest only when no lockfile covers it.
+1. Identify the affected module and resolve the exact dependency version from its lockfile first. Use a manifest only when no lockfile covers it.
 2. Prefer local documentation packages that match the resolved dependency version.
 3. Otherwise consult the official, versioned documentation. An `llms.txt` endpoint may help discover official pages, but it is not proof of compatibility by itself.
 4. If no compatible source is available, continue only after stating the gap and avoid presenting an unverified API as confirmed.
@@ -21,7 +21,14 @@ Use this skill before introducing or changing code that depends on an external l
 
 Context MCP (`@neuledge/context`) is the recommended optional local provider for Live Docs. If it is unavailable, ShipFrame and this skill still work by using official documentation directly. Never make ShipFrame, a task, or a release depend on a paid documentation service.
 
-ShipFrame only detects Context and prints manual setup guidance. Do not install Context, modify Claude Code/Codex/OpenCode MCP configuration, or build/download private documentation packages unless the user explicitly asks for that action.
+The installer/doctor only detects Context and prints manual setup guidance. `init-project` may suggest it based on the detected stack, but never installs Context, modifies Claude Code/Codex/OpenCode MCP configuration, or builds/downloads documentation packages unless the user explicitly opts in.
+
+For a project-aware lookup:
+
+- Use the detected stack and the exact package/version resolved from its lockfile; a technology pack supplies workflow checks, not a substitute for reference documentation.
+- If Context is connected, request/query that exact version. A bare package name may resolve to a different installed version; do not silently treat `latest` as compatible.
+- If the requested package/version is absent from Context, use official versioned documentation. Offer `context add` or another package source only as an opt-in setup action.
+- Do not infer that Context is installed or connected from a project manifest. Report the provider as available, unavailable, or unverified based on evidence.
 
 When using Context, restrict the MCP session to the packages needed by the project when the client supports that option. Context downloads or builds documentation packages only after an explicit user action or an already-approved project setup.
 

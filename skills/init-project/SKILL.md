@@ -16,19 +16,20 @@ Scan the current project and detect its full tech stack, then generate an `AGENT
 Search the project root and subdirectories for the following files and patterns. Use Glob and Read tools — do not guess.
 
 **Languages & runtimes**
-- `package.json` → Node.js / JavaScript / TypeScript
+- `package.json` → JavaScript / TypeScript packages; infer Node.js only from runtime markers (`engines.node`, `.nvmrc`, `.node-version`) or server/tooling entry points.
 - `tsconfig.json` → TypeScript
-- `requirements.txt`, `pyproject.toml`, `setup.py`, `Pipfile` → Python
-- `Cargo.toml` → Rust
+- `requirements.txt`, `pyproject.toml`, `setup.py`, `Pipfile`, `.python-version`, `uv.lock`, `poetry.lock`, `Pipfile.lock` → Python
+- `Cargo.toml`, `Cargo.lock`, `rust-toolchain.toml` → Rust
 - `go.mod` → Go
 - `pom.xml`, `build.gradle`, `build.gradle.kts` → Java / Kotlin
 - `*.csproj`, `*.sln` → C# / .NET
 - `Gemfile` → Ruby
-- `composer.json` → PHP
+- `composer.json`, `composer.lock`, `phpunit.xml`, `phpunit.xml.dist` → PHP
 - `pubspec.yaml` → Dart / Flutter
 
 **Frameworks**
-- In `package.json` dependencies/devDependencies: look for `next`, `react`, `vue`, `svelte`, `angular`, `express`, `fastify`, `hono`, `remix`, `astro`, `nuxt`, `gatsby`
+- In `package.json` dependencies/devDependencies: look for `next`, `react`, `vite`, `@angular/core`, `vue`, `svelte`, `express`, `fastify`, `hono`, `remix`, `astro`, `nuxt`, `gatsby`
+- In `composer.json` dependencies: look for `laravel/framework` and other declared PHP frameworks.
 - In Python files: look for `django`, `flask`, `fastapi`, `sqlalchemy`
 - In `Cargo.toml`: look for `axum`, `actix-web`, `rocket`
 - In `go.mod`: look for `gin`, `echo`, `fiber`
@@ -73,8 +74,11 @@ Search the project root and subdirectories for the following files and patterns.
 **Package manager**
 - `pnpm-lock.yaml` → pnpm
 - `yarn.lock` → Yarn
-- `bun.lockb` → Bun
+- `bun.lock`, `bun.lockb` → Bun
 - `package-lock.json` → npm
+- `poetry.lock`, `uv.lock`, `Pipfile.lock` → Python dependency manager/lock
+- `composer.lock` → Composer exact PHP package versions
+- `Cargo.lock` → Cargo exact Rust dependency versions
 
 **Environment & config**
 - `.env`, `.env.example`, `.env.local` → environment variables (list keys only, never values)
@@ -88,6 +92,8 @@ After identifying which files exist, read:
 - `prisma/schema.prisma` or `drizzle.config.*` if present
 - `README.md` if present (first 80 lines)
 - `.env.example` if present (keys only)
+
+For detected ecosystems, inspect relevant lockfile entries to report resolved dependency versions; do not print or read huge lockfiles wholesale when targeted search will do. Runtime versions may instead come from toolchain files, `engines`, CI, or deployment config.
 
 ### 3. Infer project type
 
@@ -140,14 +146,17 @@ Write `AGENTS.md` at the project root with the following structure. Be specific 
 ## Environment Variables
 <!-- List .env keys (no values) and what they're for if inferable -->
 
+## Versioned Documentation
+- For API-dependent changes, resolve package versions from lockfiles and consult matching local/Context documentation or official versioned docs.
+- Context MCP is optional; install/configure it only when the user opts in. Do not edit host configuration or fetch documentation packages automatically.
+
 ## Development Commands
 <!-- Extract from package.json scripts or README -->
 ```
 
 ### 5. Confirm to the user
 
-After writing `AGENTS.md`, report:
-- What stack was detected
-- Where the file was written
-- Any ambiguities or gaps that could not be determined automatically
-- Suggest a matching optional `project-packs/` profile when a supported framework is detected; do not copy a pack or impose its commands without user approval.
+- What stack and exact dependency versions were detected, clearly distinguishing lockfile resolutions from manifest ranges.
+- Where `AGENTS.md` was written and which matching optional technology packs the user can review; do not imply packs were installed/copied or impose their commands.
+- For API-dependent work, how `live-docs` will use the resolved version. Report Context as available only if observed, unavailable only if verified, otherwise unverified; offer setup as opt-in and never edit host configuration or trigger docs downloads without authorization.
+- Any ambiguities or evidence gaps that could not be determined automatically.
