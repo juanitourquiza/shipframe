@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+### Fixed
+- Made the OpenCode prompt-router plugin load from symlinked install paths (such as the Homebrew Cellar) by importing `@opencode/plugin` as a type only, so OpenCode no longer reports `Plugin failed: .../shipframe-prompt-router`.
+
 ## v0.4.8 — 2026-09-23
 
 ### Added
