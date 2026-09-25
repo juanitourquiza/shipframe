@@ -1,0 +1,26 @@
+{
+  "schemaVersion": 1,
+  "intents": {
+    "new_feature": "project-memory-refresh → feature-discovery → plan-expert",
+    "quick_task": "project-memory-refresh → plan-expert → quality-assurance-agent or tdd (non-trivial code only) → implement-task → code-review → create-pr",
+    "implementation": "project-memory-refresh → quality-assurance-agent or tdd (non-trivial code only) → implement-task → code-review → create-pr",
+    "refactor": "project-memory-refresh → codebase-design → plan-expert → implement-task → code-review → create-pr",
+    "bug": "project-memory-refresh → bug-diagnosis → quality-assurance-agent or tdd (non-trivial code only) → implement-task → code-review → create-pr",
+    "release": "project-profile → project-release → deploy-evidence",
+    "evidence_audit": "project-memory-refresh → evidence-audit",
+    "research": "project-memory-refresh → research",
+    "design_system": "project-memory-refresh → design-system-setup",
+    "accessibility_audit": "project-memory-refresh → a11y-auditor → implement-task if fixes are requested",
+    "copy_review": "project-memory-refresh → client-copy-review",
+    "mcp_debugging": "project-memory-refresh → mcp-debugging",
+    "security_review": "project-memory-refresh → security-review",
+    "e2e_test": "project-memory-refresh → e2e-verify",
+    "deps_upgrade": "project-memory-refresh → dependency-upgrade → code-review",
+    "api_change": "project-memory-refresh → api-contract-review",
+    "incident": "project-memory-refresh → incident-response",
+    "memory_curate": "project-memory-refresh → memory-curator",
+    "code_review": "code-review",
+    "handoff": "handoff",
+    "wiki_management": "wiki-query · wiki-sync · wiki-init"
+  }
+}

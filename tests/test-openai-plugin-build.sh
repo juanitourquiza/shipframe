@@ -72,6 +72,12 @@ expected_skills=(
   client-copy-review
   mcp-debugging
   generate-readme
+  security-review
+  e2e-verify
+  dependency-upgrade
+  api-contract-review
+  incident-response
+  memory-curator
 )
 
 actual_count="$(find "$bundle/skills" -mindepth 1 -maxdepth 1 -type d | wc -l | tr -d ' ')"
