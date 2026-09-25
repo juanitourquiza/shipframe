@@ -6,6 +6,8 @@ It provides reusable skills, agent workflows, templates, and project profiles fo
 
 > Tagline: **AI coding workflows for teams that plan, prove, and ship.**
 
+**Current stable release:** [v0.6.0](https://github.com/juanitourquiza/shipframe/releases/tag/v0.6.0), closing the four-wave roadmap with six new workflows, four framework packs, and production/memory guidance. See the [changelog](CHANGELOG.md) for release details.
+
 **Website:** https://shipframe.hackeruna.com/  
 **Repository:** https://github.com/juanitourquiza/shipframe
 
@@ -87,7 +89,7 @@ commands against the repository before adopting them.
 | Skill | What it does |
 |---|---|
 | `project-profile` | Loads repo-specific workflow rules without hardcoding them into core. |
-| `project-release` | Generic release orchestrator for frontend/backend/full-stack/docs/library releases. |
+| `project-release` | Generic release orchestrator with migration/deprecation and rollback guidance; performance checks are conditional. |
 | `release-checklist` | Produces project-aware release gates. |
 | `frontend-release` | Verifies frontend builds, routes, i18n, chunks, and smoke checks. |
 | `backend-release` | Verifies API/backend tests, migrations, queues, integrations, and endpoint smoke. |
@@ -142,11 +144,9 @@ Profiles can define:
 Starter packs live in `project-packs/`:
 
 - `project-packs/live-docs/` — optional version-compatible documentation lookup with Neuledge or official sources.
-
-- `project-packs/angular/`
-- `project-packs/laravel/`
-- `project-packs/mcp/`
-- `project-packs/pulsai-profile/`
+- `project-packs/nextjs/`, `project-packs/nestjs/`, `project-packs/fastapi/`, and `project-packs/go/` — framework-specific starter guidance.
+- `project-packs/angular/`, `project-packs/laravel/`, and `project-packs/mcp/`.
+- `project-packs/pulsai-profile/` — optional example profile, not generic ShipFrame behavior.
 
 The PULSAI profile is intentionally optional: it is useful for PULSAI-style projects but not hardcoded into the public ShipFrame workflow.
 
@@ -307,14 +307,14 @@ the base ShipFrame toolkit and the `shipframe` wrapper; use the `herdr plugin in
 
 #### ChatGPT/Codex curated plugin
 
-ShipFrame is also available as a curated ChatGPT/Codex plugin with
-30 public workflows selected from the full toolkit. The source of truth remains
-`skills/`; the build script copies the curated plugin subset into a temporary
-bundle with the curated skills and Codex CLI prompt fast-path hook. It does not
-include MCP servers, apps, Claude hooks, or OpenCode/Claude agents. Codex runs
-its bundled hook only after the user reviews and trusts the current hook
-definition. This code change does not update the existing public plugin; treat
-it as unchanged until a separate submission is confirmed.
+The repository builds a curated ChatGPT/Codex plugin bundle with 30 selected
+skills from the full toolkit. The source of truth remains `skills/`; the build
+script copies the curated subset into a temporary bundle with the Codex CLI
+prompt fast-path hook. It does not include MCP servers, apps, Claude hooks, or
+OpenCode/Claude agents. Codex runs its bundled hook only after the user reviews
+and trusts the hook definition. The live ChatGPT plugin is an independent
+publication surface: its existing listing still reflects the previously
+submitted 24-skill bundle until a separate plugin update is submitted.
 The shared local heuristic covers common English and Spanish prompts; its
 `bypass` / `suggest` / `route` result is a best-effort nudge, never enforcement.
 
@@ -639,7 +639,7 @@ modelos/configuración bajo control del usuario.
 
 - Claude Code: agrega el marketplace con `/plugin marketplace add juanitourquiza/shipframe`, instala con `/plugin install shipframe`, recarga con `/reload-plugins` y usa `/shipframe:code-review`.
 - Codex CLI: instala con `shipframe install --codex`, abre Codex, ejecuta `/skills` y llama skills con `$code-review`, `$plan-expert`, etc.
-- ChatGPT/Codex plugin: abre el plugin público en https://chatgpt.com/plugins/plugins_6a88e6256bb48191a343d39dace5e05c o genera el bundle curado de 24 skills con `python3 scripts/build-openai-plugin.py`; el ZIP queda en `dist/openai-plugin/shipframe-openai-plugin.zip` y el packet de submission está en `docs/openai-plugin-submission.md`.
+- ChatGPT/Codex plugin: abre el plugin público en https://chatgpt.com/plugins/plugins_6a88e6256bb48191a343d39dace5e05c o genera el bundle local curado de 30 skills con `python3 scripts/build-openai-plugin.py`; el plugin público de ChatGPT es una superficie independiente y conserva la publicación previa de 24 skills hasta que se envíe una actualización; el ZIP queda en `dist/openai-plugin/shipframe-openai-plugin.zip` y el packet de submission está en `docs/openai-plugin-submission.md`.
 - OpenCode: instala con `shipframe install --opencode`; OpenCode carga las skills con su herramienta nativa `skill` desde `~/.config/opencode/skills` y también puede ver `~/.agents/skills`/`~/.claude/skills`.
 
 
