@@ -37,7 +37,22 @@ assert.equal(bun.status, 0, `Could not run Bun: ${bun.stderr}`);
 const smoke = String.raw`
 import plugin from ${JSON.stringify(path.join(root, 'opencode/index.ts'))};
 if (!plugin || typeof plugin.setup !== 'function') throw new Error('Plugin setup is not registered');
-await plugin.setup({ event: { on: async () => {} } });
+let hook;
+let disposeCount = 0;
+const cleanup = await plugin.setup({ session: { hook: async (_name, callback) => {
+  hook = callback;
+  return { dispose: async () => { disposeCount += 1; } };
+} } });
+if (typeof cleanup !== 'function' || typeof hook !== 'function') throw new Error('Plugin did not register a disposable session hook');
+const event = { sessionID: 'smoke', messages: [{ info: { id: 'prompt-1', role: 'user' }, parts: [{ text: 'Review this API contract in my repo' }] }], system: [] };
+hook(event);
+if (event.system.length !== 1) throw new Error('Registered hook did not inject advisory context');
+await cleanup();
+await cleanup();
+if (disposeCount !== 1) throw new Error('Plugin cleanup was not idempotent');
+const afterUnload = { sessionID: 'smoke', messages: [{ info: { id: 'prompt-2', role: 'user' }, parts: [{ text: 'Review this API contract in my repo' }] }], system: [] };
+hook(afterUnload);
+if (afterUnload.system.length !== 0) throw new Error('Disposed hook still mutated context');
 `;
 const result = spawnSync('bun', ['--eval', smoke], { cwd: root, encoding: 'utf8' });
 assert.equal(result.status, 0, `OpenCode adapter failed to load/setup with Bun:\n${result.stderr || result.stdout}`);

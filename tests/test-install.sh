@@ -94,6 +94,13 @@ grep -q 'codex mcp add context -- context serve' /tmp/shipframe-doctor-codex.log
 "$ROOT/install.sh" --doctor --opencode >/tmp/shipframe-doctor-opencode.log
 grep -q 'Context MCP' /tmp/shipframe-doctor-opencode.log
 grep -Fq '.config/opencode/opencode.json' /tmp/shipframe-doctor-opencode.log
+grep -q 'OpenCode prompt-router plugin is installed and passes adapter checks' /tmp/shipframe-doctor-opencode.log
+printf '{"plugins":["-shipframe.*"]}\n' > "$HOME/.config/opencode/opencode.json"
+"$ROOT/install.sh" --doctor --opencode >/tmp/shipframe-doctor-opencode-disabled.log
+grep -q 'OpenCode prompt-router plugin is disabled' /tmp/shipframe-doctor-opencode-disabled.log
+printf '{"plugins":["-shipframe.*","shipframe.prompt-router"]}\n' > "$HOME/.config/opencode/opencode.json"
+"$ROOT/install.sh" --doctor --opencode >/tmp/shipframe-doctor-opencode-enabled.log
+grep -q 'OpenCode prompt-router plugin is installed and passes adapter checks' /tmp/shipframe-doctor-opencode-enabled.log
 
 # Repair backs up existing Claude settings before replacing them.
 mkdir -p "$HOME/.claude"

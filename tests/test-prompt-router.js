@@ -81,7 +81,12 @@ test('Claude and Codex adapters emit only advisory context for routed prompts an
 test('OpenCode context adapter injects guidance once per user message and fails open', async () => {
   let hookName;
   let callback;
-  await registerPromptRouter({ session: { hook: async (name, fn) => { hookName = name; callback = fn; } } });
+  let disposeCount = 0;
+  const cleanup = await registerPromptRouter({ session: { hook: async (name, fn) => {
+    hookName = name;
+    callback = fn;
+    return { dispose: async () => { disposeCount += 1; } };
+  } } });
   assert.equal(hookName, 'context');
 
   const makeEvent = (id, prompt) => ({
@@ -102,4 +107,11 @@ test('OpenCode context adapter injects guidance once per user message and fails 
 
   const malformed = { sessionID: 'session-2', messages: [], system: null };
   assert.doesNotThrow(() => callback(malformed));
+  assert.equal(typeof cleanup, 'function');
+  await cleanup();
+  await cleanup();
+  assert.equal(disposeCount, 1, 'cleanup should be idempotent');
+  const afterCleanup = makeEvent('msg-3', 'Fix this repo');
+  callback(afterCleanup);
+  assert.equal(afterCleanup.system.length, 0, 'disposed hooks must not mutate later contexts');
 });
