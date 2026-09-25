@@ -51,8 +51,8 @@ Master catalog of all wiki pages. Mandatory entry point for any query with `/wik
 
 | Page | Summary | Answers |
 | ---- | ------- | ------- |
-| `live-docs.md` | Optional version-compatible external documentation workflow and Neuledge pack. | How are dependency docs selected and synchronized? |
-| `../project-packs/` | Optional starter profile notes for specific stacks/projects. | What project-specific behavior should stay outside core? |
+| `live-docs.md` | Optional version-compatible external documentation workflow and Context MCP guidance. | How are dependency docs selected, version-matched, and sourced? |
+| `../project-packs/` | Optional language/runtime, framework/build, and project profile guides. | What stack-specific workflow guidance is available? |
 | `sync-config.md` | Wiki sync include/exclude rules. | Which files should wiki sync watch? |
 | `../project-packs/incident-runbook.md` | Starter incident runbook, observability, and alert checklist. | What operational access and response details should a project profile document? |
 | `../docs/roadmap-v0.6.0.md` | Four-wave roadmap and independent release-surface policy. | What closes the v0.6.0 initiative, and what is explicitly out of scope? |

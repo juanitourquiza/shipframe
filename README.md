@@ -6,7 +6,7 @@ It provides reusable skills, agent workflows, templates, and project profiles fo
 
 > Tagline: **AI coding workflows for teams that plan, prove, and ship.**
 
-**Current stable release:** [v0.6.0](https://github.com/juanitourquiza/shipframe/releases/tag/v0.6.0), closing the four-wave roadmap with six new workflows, four framework packs, and production/memory guidance. See the [changelog](CHANGELOG.md) for release details.
+**Current stable release:** [v0.6.0](https://github.com/juanitourquiza/shipframe/releases/tag/v0.6.0), closing the four-wave roadmap with six new workflows, four technology packs, and production/memory guidance. See the [changelog](CHANGELOG.md) for release details; additional optional packs on `main` are unreleased relative to that tag.
 
 **Website:** https://shipframe.hackeruna.com/  
 **Repository:** https://github.com/juanitourquiza/shipframe
@@ -42,7 +42,7 @@ For non-trivial code changes, run the QA agent after planning when the host supp
 
 | Skill | What it does |
 |---|---|
-| `init-project` | Scans a repo and creates project context for future agents. |
+| `init-project` | Scans a repo, records detected stack context, and suggests matching optional technology packs. |
 | `project-memory-refresh` | Reads WIKI/AGENTS/git state before non-trivial work. |
 | `feature-discovery` | Gathers requirements through structured questioning. |
 | `plan-expert` | Breaks work into ordered, actionable subtasks. |
@@ -61,13 +61,24 @@ For non-trivial code changes, run the QA agent after planning when the host supp
 | `incident-response` | Starts with operational access checks, then coordinates evidence-led response. |
 | `memory-curator` | Curates verified, durable project memory while excluding sensitive data. |
 
-### Optional framework packs
+### Optional technology packs
 
-Framework packs are starter guidance, not automatic configuration. Review the
-commands against the repository before adopting them.
+Technology packs are starter guidance, not automatic configuration or bundled
+library documentation. `init-project` suggests matching packs from the detected
+stack; review their checks against the repository before adopting them. Use the
+shared `live-docs` workflow for version-matched external documentation.
 
 | Pack | Focus |
 |---|---|
+| `project-packs/angular/` | Angular architecture, CLI/build output, browser routes, and release checks. |
+| `project-packs/javascript/` | Browser vs Node.js runtime, modules, async behavior, and package scripts. |
+| `project-packs/typescript/` | Compiler configuration, module resolution, type checks, and declaration compatibility. |
+| `project-packs/php/` | PHP runtime, Composer, autoloading, static analysis, and test tooling. |
+| `project-packs/laravel/` | Laravel routes, middleware, Eloquent, migrations, queues, and endpoint smoke. |
+| `project-packs/nodejs/` | Node.js runtime/version, ESM/CommonJS, server lifecycle, and process/resource checks. |
+| `project-packs/react-vite/` | React UI behavior, Vite build/configuration, browser smoke, and exposed environment values. |
+| `project-packs/python/` | Python/runtime and dependency lock, packaging, typing, tests, and async/resource checks. |
+| `project-packs/rust/` | Rust toolchain/Cargo, formatting, Clippy, tests, features, ownership, and unsafe boundaries. |
 | `project-packs/nextjs/` | Next.js routing, server/client boundaries, caching, and runtime smoke. |
 | `project-packs/nestjs/` | NestJS transports, guards, validation, migrations, and health checks. |
 | `project-packs/fastapi/` | FastAPI/Pydantic contracts, async boundaries, lifespan, and ASGI smoke. |
@@ -141,12 +152,20 @@ Profiles can define:
 - client copy constraints;
 - integration-specific verification.
 
-Starter packs live in `project-packs/`:
+Technology and project packs live in `project-packs/`:
 
 - `project-packs/live-docs/` — optional version-compatible documentation lookup with Neuledge or official sources.
-- `project-packs/nextjs/`, `project-packs/nestjs/`, `project-packs/fastapi/`, and `project-packs/go/` — framework-specific starter guidance.
-- `project-packs/angular/`, `project-packs/laravel/`, and `project-packs/mcp/`.
+- Language/runtime packs: `javascript/`, `typescript/`, `php/`, `nodejs/`, `python/`, `rust/`, and `go/`.
+- Framework/build packs: `angular/`, `laravel/`, `react-vite/`, `nextjs/`, `nestjs/`, and `fastapi/`.
+- `project-packs/mcp/` — MCP integration guidance.
 - `project-packs/pulsai-profile/` — optional example profile, not generic ShipFrame behavior.
+
+`init-project` suggests relevant packs after detecting a project's stack; it does
+not copy a pack, install Context, download docs, or edit a host's MCP config.
+Context is the optional documentation provider used by `live-docs`, not a pack
+for any one framework. For API-dependent changes, resolve the dependency version
+from the lockfile and consult matching docs through Context when connected, or
+official versioned docs otherwise.
 
 The PULSAI profile is intentionally optional: it is useful for PULSAI-style projects but not hardcoded into the public ShipFrame workflow.
 

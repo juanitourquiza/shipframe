@@ -36,6 +36,8 @@ jobs:
         run: find . -type f -name '*.sh' -not -path './.git/*' -print0 | xargs -0 shellcheck --severity=warning
       - name: Validate proof-runner skill
         run: ./tests/test-proof-runner.sh
+      - name: Validate technology pack catalog and Context guidance
+        run: ./tests/test-project-packs.sh
       - name: Validate Herdr plugin MVP
         run: ./tests/test-herdr-plugin.sh
       - name: Build OpenAI/Codex plugin bundle
