@@ -37,8 +37,8 @@ If missing, run `wiki-init` before anything else. If present, read `WIKI.md` bef
 | Intent | When | Skill sequence |
 |---|---|---|
 | `new_feature` | New product feature or unclear scope | `project-memory-refresh` → `feature-discovery` → `plan-expert` |
-| `quick_task` | Well-defined code task; QA only for non-trivial changes | `project-memory-refresh` → `plan-expert` → `quality-assurance-agent` or `tdd` → `implement-task` → `code-review` → `create-pr` |
-| `implementation` | Confirmed plan exists; QA only for non-trivial code changes | `project-memory-refresh` → `quality-assurance-agent` or `tdd` → `implement-task` → `code-review` → `create-pr` |
+| `quick_task` | Well-defined code task; QA only for non-trivial changes | `project-memory-refresh` → `plan-expert` → `quality-assurance-agent` or `tdd` (non-trivial code only) → `implement-task` → `code-review` → `create-pr` |
+| `implementation` | Confirmed plan exists; QA only for non-trivial code changes | `project-memory-refresh` → `quality-assurance-agent` or `tdd` (non-trivial code only) → `implement-task` → `code-review` → `create-pr` |
 
 | `refactor` | Improve structure, no behavior change | `project-memory-refresh` → `codebase-design` → `plan-expert` → `implement-task` → `code-review` → `create-pr` |
 | `bug` | Broken behavior, regression, failing test, or performance issue | `project-memory-refresh` → `bug-diagnosis` → `quality-assurance-agent` or `tdd` (non-trivial code only) → `implement-task` → `code-review` → `create-pr` |
@@ -49,6 +49,12 @@ If missing, run `wiki-init` before anything else. If present, read `WIKI.md` bef
 | `accessibility_audit` | WCAG/a11y review | `project-memory-refresh` → `a11y-auditor` → `implement-task` if fixes are requested |
 | `copy_review` | Product/client-facing copy, i18n, email, landing copy | `project-memory-refresh` → `client-copy-review` |
 | `mcp_debugging` | MCP connector/tool/session/token failure | `project-memory-refresh` → `mcp-debugging` |
+| `security_review` | Security assessment of code, dependencies, or boundaries | `project-memory-refresh` → `security-review` |
+| `e2e_test` | Verify an end-to-end user journey | `project-memory-refresh` → `e2e-verify` |
+| `deps_upgrade` | Upgrade or migrate dependencies safely | `project-memory-refresh` → `dependency-upgrade` → `code-review` |
+| `api_change` | Review a public API/schema contract change | `project-memory-refresh` → `api-contract-review` |
+| `incident` | Respond to production outage or degradation | `project-memory-refresh` → `incident-response` |
+| `memory_curate` | Curate durable project memory | `project-memory-refresh` → `memory-curator` |
 | `code_review` | Review changes before PR | `code-review` |
 | `handoff` | Prepare next session/agent | `handoff` |
 | `wiki_management` | Sync, reinitialize, or query the wiki | `wiki-query` · `wiki-sync` · `wiki-init` |

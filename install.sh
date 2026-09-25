@@ -307,6 +307,9 @@ const codex=JSON.parse(fs.readFileSync('hooks/codex-hooks.json','utf8'));
 if (!claude.hooks?.UserPromptSubmit?.[0]?.hooks?.[0]?.command?.includes('claude-prompt-router.cjs')) process.exit(1);
 if (!codex.hooks?.UserPromptSubmit?.[0]?.hooks?.[0]?.command?.includes('codex-prompt-router.cjs')) process.exit(1);
 for (const file of ['hooks/prompt-router-core.cjs','hooks/claude-prompt-router.cjs','hooks/codex-prompt-router.cjs','opencode/index.ts','opencode/prompt-router.cjs']) if (!fs.existsSync(file)) process.exit(1);
+const opencode=fs.readFileSync('opencode/index.ts','utf8');
+if (!/^import\s+type\s+\{\s*Plugin\s*\}\s+from\s+['"]@opencode\/plugin['"]/m.test(opencode)) process.exit(1);
+if (!/export\s+default\s+promptRouter/.test(opencode) || !/async\s+setup\s*\(/.test(opencode)) process.exit(1);
 JS
   node <<'JS' && report_ok "plugin/marketplace versions match" || report_err "plugin/marketplace versions differ"
 const fs=require('fs');

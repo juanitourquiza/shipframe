@@ -150,3 +150,4 @@ After writing `AGENTS.md`, report:
 - What stack was detected
 - Where the file was written
 - Any ambiguities or gaps that could not be determined automatically
+- Suggest a matching optional `project-packs/` profile when a supported framework is detected; do not copy a pack or impose its commands without user approval.

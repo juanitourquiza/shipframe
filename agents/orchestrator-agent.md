@@ -52,6 +52,7 @@ position: Workflow router — start when useful or explicitly requested, not for
   Analyze user message. Classify intent as one of:
   new_feature | quick_task | implementation | refactor | bug | release |
   research | design_system | accessibility_audit | copy_review | mcp_debugging |
+  security_review | e2e_test | deps_upgrade | api_change | incident | memory_curate |
   code_review | handoff | wiki_management | unknown.
 
 2_context_gathering: |
@@ -109,6 +110,11 @@ release:
   sequence: project-profile → release-agent → deploy-evidence
   first_hop: project-profile
 
+evidence_audit:
+  when: Auditing a report, handoff, PR body, or release note for claims without sufficient evidence.
+  sequence: project-memory-refresh → evidence-audit
+  first_hop: project-memory-refresh
+
 research:
   when: User asks to investigate docs, APIs, versions, standards, or source-backed facts.
   sequence: project-memory-refresh → research
@@ -132,6 +138,36 @@ copy_review:
 mcp_debugging:
   when: User reports MCP connector, session, token, or tool behavior.
   sequence: project-memory-refresh → mcp-debugging
+  first_hop: project-memory-refresh
+
+security_review:
+  when: Assessing security risks, scanners, or trust boundaries.
+  sequence: project-memory-refresh → security-review
+  first_hop: project-memory-refresh
+
+e2e_test:
+  when: Planning or running an end-to-end user journey.
+  sequence: project-memory-refresh → e2e-verify
+  first_hop: project-memory-refresh
+
+deps_upgrade:
+  when: Updating one or more project dependencies.
+  sequence: project-memory-refresh → dependency-upgrade → code-review
+  first_hop: project-memory-refresh
+
+api_change:
+  when: Changing or reviewing a public API contract.
+  sequence: project-memory-refresh → api-contract-review
+  first_hop: project-memory-refresh
+
+incident:
+  when: Responding to a production incident; check operational access first.
+  sequence: project-memory-refresh → incident-response
+  first_hop: project-memory-refresh
+
+memory_curate:
+  when: Curating durable project memory with explicit write authorization.
+  sequence: project-memory-refresh → memory-curator
   first_hop: project-memory-refresh
 
 code_review:

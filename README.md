@@ -52,6 +52,24 @@ For non-trivial code changes, run the QA agent after planning when the host supp
 | `create-pr` | Opens a draft PR/MR with a populated template from git context. |
 | `generate-readme` | Generates a team-ready README by scanning the current codebase. |
 | `live-docs` | Consults version-compatible external library documentation before API-dependent changes. |
+| `security-review` | Reviews security risks using scoped scans and evidence-based triage. |
+| `e2e-verify` | Defines and verifies end-to-end journeys with explicit test data and criteria. |
+| `dependency-upgrade` | Plans safe dependency updates with compatibility and rollback evidence. |
+| `api-contract-review` | Assesses API compatibility, validation, and consumer impact. |
+| `incident-response` | Starts with operational access checks, then coordinates evidence-led response. |
+| `memory-curator` | Curates verified, durable project memory while excluding sensitive data. |
+
+### Optional framework packs
+
+Framework packs are starter guidance, not automatic configuration. Review the
+commands against the repository before adopting them.
+
+| Pack | Focus |
+|---|---|
+| `project-packs/nextjs/` | Next.js routing, server/client boundaries, caching, and runtime smoke. |
+| `project-packs/nestjs/` | NestJS transports, guards, validation, migrations, and health checks. |
+| `project-packs/fastapi/` | FastAPI/Pydantic contracts, async boundaries, lifespan, and ASGI smoke. |
+| `project-packs/go/` | Go toolchain, tests/race checks, context cancellation, and service smoke. |
 
 ### Engineering discipline skills
 
@@ -290,7 +308,7 @@ the base ShipFrame toolkit and the `shipframe` wrapper; use the `herdr plugin in
 #### ChatGPT/Codex curated plugin
 
 ShipFrame is also available as a curated ChatGPT/Codex plugin with
-24 public workflows selected from the full toolkit. The source of truth remains
+30 public workflows selected from the full toolkit. The source of truth remains
 `skills/`; the build script copies the curated plugin subset into a temporary
 bundle with the curated skills and Codex CLI prompt fast-path hook. It does not
 include MCP servers, apps, Claude hooks, or OpenCode/Claude agents. Codex runs
@@ -415,10 +433,10 @@ The Codex agent classifies each request and runs the matching skills in order:
 | Intent | Skill sequence |
 |---|---|
 | `new_feature` | `project-memory-refresh` → `feature-discovery` → `plan-expert` |
-| `quick_task` | `project-memory-refresh` → `plan-expert` → `implement-task` → `code-review` → `create-pr` |
-| `implementation` | `project-memory-refresh` → `implement-task` → `code-review` → `create-pr` |
+| `quick_task` | `project-memory-refresh` → `plan-expert` → `quality-assurance-agent` or `tdd` (non-trivial code only) → `implement-task` → `code-review` → `create-pr` |
+| `implementation` | `project-memory-refresh` → `quality-assurance-agent` or `tdd` (non-trivial code only) → `implement-task` → `code-review` → `create-pr` |
 | `refactor` | `project-memory-refresh` → `codebase-design` → `plan-expert` → `implement-task` → `code-review` → `create-pr` |
-| `bug` | `project-memory-refresh` → `bug-diagnosis` → `implement-task` → `code-review` → `create-pr` |
+| `bug` | `project-memory-refresh` → `bug-diagnosis` → `quality-assurance-agent` or `tdd` (non-trivial code only) → `implement-task` → `code-review` → `create-pr` |
 | `release` | `project-profile` → `project-release` → `deploy-evidence` |
 | `evidence_audit` | `project-memory-refresh` → `evidence-audit` |
 | `research` | `project-memory-refresh` → `research` |
@@ -426,9 +444,15 @@ The Codex agent classifies each request and runs the matching skills in order:
 | `accessibility_audit` | `project-memory-refresh` → `a11y-auditor` → `implement-task` if fixes are requested |
 | `copy_review` | `project-memory-refresh` → `client-copy-review` |
 | `mcp_debugging` | `project-memory-refresh` → `mcp-debugging` |
+| `security_review` | `project-memory-refresh` → `security-review` |
+| `e2e_test` | `project-memory-refresh` → `e2e-verify` |
+| `deps_upgrade` | `project-memory-refresh` → `dependency-upgrade` → `code-review` |
+| `api_change` | `project-memory-refresh` → `api-contract-review` |
+| `incident` | `project-memory-refresh` → `incident-response` |
+| `memory_curate` | `project-memory-refresh` → `memory-curator` |
 | `handoff` | `handoff` |
 | `code_review` | `code-review` |
-| `wiki_management` | `wiki-query` / `wiki-sync` / `wiki-init` |
+| `wiki_management` | `wiki-query` · `wiki-sync` · `wiki-init` |
 
 ---
 

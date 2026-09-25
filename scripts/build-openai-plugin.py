@@ -43,6 +43,12 @@ CURATED_SKILLS = [
     "client-copy-review",
     "mcp-debugging",
     "generate-readme",
+    "security-review",
+    "e2e-verify",
+    "dependency-upgrade",
+    "api-contract-review",
+    "incident-response",
+    "memory-curator",
 ]
 
 

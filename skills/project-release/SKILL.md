@@ -14,6 +14,7 @@ Project Release is the generic ShipFrame release entrypoint. It must work across
 
 1. Run `project-profile` to load repo-specific rules.
 2. Run `release-checklist` to define release gates.
+   Include migration/deprecation compatibility and rollback planning where relevant. Add a performance verification step only when the change affects measurable runtime/resource behavior; it is optional, not a universal release blocker.
 3. Dispatch by target:
    - frontend/static/UI changes → `frontend-release`
    - backend/API/jobs/integrations → `backend-release`

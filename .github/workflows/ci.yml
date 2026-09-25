@@ -24,6 +24,10 @@ jobs:
         run: node --test tests/test-orchestrator-guard.js
       - name: Test cross-host prompt fast path
         run: node --test tests/test-prompt-router.js
+      - name: Test OpenCode plugin adapter
+        run: node tests/test-opencode-adapter.js
+      - name: Test routing and skill parity
+        run: node tests/test-routing-parity.js
       - name: Validate context docs sync script
         run: ./tests/test-sync-context-docs.sh
       - name: ShellCheck shell scripts

@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+### Added
+- Added scoped security review, end-to-end verification, dependency upgrade, API contract review, incident response, and memory curation skills, with bilingual intent guidance and host limits.
+- Added starter project packs for Next.js, NestJS, FastAPI, and Go, plus incident runbook and postmortem templates.
+- Centralized workflow intent sequences in `routing.json` and added parity coverage for Codex, README, and orchestrator routing.
+
+### Changed
+- Added optional, change-triggered performance checks and migration guidance to release workflows; expanded the curated plugin bundle to 30 selected skills.
+
 ### Fixed
 - Made the OpenCode prompt-router plugin load from symlinked install paths (such as the Homebrew Cellar) by importing `@opencode/plugin` as a type only, so OpenCode no longer reports `Plugin failed: .../shipframe-prompt-router`.
 

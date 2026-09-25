@@ -16,6 +16,12 @@ Master catalog of all wiki pages. Mandatory entry point for any query with `/wik
 | `../skills/` | Flat installable skill catalog. | Which skills are linked into Codex/OpenCode? |
 | `../skills/evidence-audit/SKILL.md` | Evidence-honesty workflow for report, handoff, PR, and release-note claims. | How should delivery claims be classified as verified, partially verified, or unverified? |
 | `../skills/proof-runner/SKILL.md` | Optional command proof workflow for checklist items with `Verify:` commands. | Which planned steps were actually proven by exit-0 command evidence? |
+| `../skills/security-review/SKILL.md` | Evidence-based security triage using available, scoped scanners. | How should scan coverage, findings, and residual risk be reported? |
+| `../skills/e2e-verify/SKILL.md` | End-to-end verification with explicit test data and criteria. | How are host/browser limits and live-system proof distinguished? |
+| `../skills/dependency-upgrade/SKILL.md` | Safe, narrow dependency upgrade workflow. | How are version compatibility and rollback proven? |
+| `../skills/api-contract-review/SKILL.md` | API compatibility and consumer-impact review. | How are contract changes classified and migrated? |
+| `../skills/incident-response/SKILL.md` | Evidence-led incident workflow with access check first. | What is the first deliverable when operational access is missing? |
+| `../skills/memory-curator/SKILL.md` | Durable memory curation with explicit authorization. | What belongs in memory and what must be excluded? |
 | `../agents/` | Claude-shaped agents converted for OpenCode. | Which agents exist? How is the orchestrator represented? |
 
 ## Flows
@@ -23,9 +29,11 @@ Master catalog of all wiki pages. Mandatory entry point for any query with `/wik
 | Page | Summary | Answers |
 | ---- | ------- | ------- |
 | `../codex/dev-workflow.md` | Codex routing table and lifecycle. | Which skill sequence handles each intent? |
+| `../routing.json` | Canonical intent-to-workflow map. | Which workflow sequence is the source of truth for each intent? |
 | `../scripts/build-openai-plugin.py` | Builds the curated OpenAI/Codex plugin bundle with curated skills and a Codex CLI prompt hook. | How is the OpenAI submission bundle generated? Which hooks are included? |
 | `../herdr-plugin/` | Optional local Herdr plugin MVP that opens ShipFrame workflow/checklist panes. | How does Herdr launch ShipFrame process guidance without replacing ShipFrame? |
 | `../templates/pull_request_template.md` | PR/MR body skeleton used by `create-pr`. | What should generated PRs include? |
+| `../templates/postmortem.md` | Blameless incident postmortem template with evidence gaps. | How should incident impact, timeline, and follow-ups be recorded? |
 
 ## Integrations
 
@@ -45,3 +53,5 @@ Master catalog of all wiki pages. Mandatory entry point for any query with `/wik
 | `live-docs.md` | Optional version-compatible external documentation workflow and Neuledge pack. | How are dependency docs selected and synchronized? |
 | `../project-packs/` | Optional starter profile notes for specific stacks/projects. | What project-specific behavior should stay outside core? |
 | `sync-config.md` | Wiki sync include/exclude rules. | Which files should wiki sync watch? |
+| `../project-packs/incident-runbook.md` | Starter incident runbook, observability, and alert checklist. | What operational access and response details should a project profile document? |
+| `../docs/roadmap-v0.6.0.md` | Four-wave roadmap and independent release-surface policy. | What closes the v0.6.0 initiative, and what is explicitly out of scope? |
