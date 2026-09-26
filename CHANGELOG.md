@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## v0.6.1 — 2026-09-25
 
 ### Added
 - Added JavaScript, TypeScript, PHP, Node.js, React/Vite, Python, and Rust technology packs; expanded the existing Angular and Laravel packs and added stack-based pack suggestions in `init-project`.
