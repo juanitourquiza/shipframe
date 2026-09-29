@@ -6,7 +6,7 @@ It provides reusable skills, agent workflows, templates, and project profiles fo
 
 > Tagline: **AI coding workflows for teams that plan, prove, and ship.**
 
-**Current stable release:** [v0.6.1](https://github.com/juanitourquiza/shipframe/releases/tag/v0.6.1), closing the four-wave roadmap and adding optional language/runtime and framework/build packs with stack-aware suggestions. See the [changelog](CHANGELOG.md) for release details.
+**Current stable release:** [v0.7.0](https://github.com/juanitourquiza/shipframe/releases/tag/v0.7.0), adding a bilingual preventive security-hardening workflow alongside evidence-based security review. See the [changelog](CHANGELOG.md) for release details.
 
 **Website:** https://shipframe.hackeruna.com/  
 **Repository:** https://github.com/juanitourquiza/shipframe
