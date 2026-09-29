@@ -1,5 +1,14 @@
 # Changelog
 
+## v0.7.0 — Unreleased
+
+### Added
+- Added a preventive security-hardening workflow with conditional implementation guidance, distinct from evidence-based security review.
+- Routed natural English and Spanish hardening requests through the advisory prompt fast path.
+
+### Changed
+- Expanded the curated ChatGPT/Codex plugin bundle to 31 selected skills.
+
 ## v0.6.1 — 2026-09-25
 
 ### Added
