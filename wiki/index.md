@@ -17,6 +17,7 @@ Master catalog of all wiki pages. Mandatory entry point for any query with `/wik
 | `../skills/evidence-audit/SKILL.md` | Evidence-honesty workflow for report, handoff, PR, and release-note claims. | How should delivery claims be classified as verified, partially verified, or unverified? |
 | `../skills/proof-runner/SKILL.md` | Optional command proof workflow for checklist items with `Verify:` commands. | Which planned steps were actually proven by exit-0 command evidence? |
 | `../skills/security-review/SKILL.md` | Evidence-based security triage using available, scoped scanners. | How should scan coverage, findings, and residual risk be reported? |
+| `../skills/security-hardening/SKILL.md` | Preventive security controls for designs and implementation changes. | Which security controls should be applied at trust boundaries, and when should work hand off to security review? |
 | `../skills/e2e-verify/SKILL.md` | End-to-end verification with explicit test data and criteria. | How are host/browser limits and live-system proof distinguished? |
 | `../skills/dependency-upgrade/SKILL.md` | Safe, narrow dependency upgrade workflow. | How are version compatibility and rollback proven? |
 | `../skills/api-contract-review/SKILL.md` | API compatibility and consumer-impact review. | How are contract changes classified and migrated? |

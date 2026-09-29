@@ -52,7 +52,7 @@ position: Workflow router — start when useful or explicitly requested, not for
   Analyze user message. Classify intent as one of:
   new_feature | quick_task | implementation | refactor | bug | release |
   research | design_system | accessibility_audit | copy_review | mcp_debugging |
-  security_review | e2e_test | deps_upgrade | api_change | incident | memory_curate |
+  security_review | security_hardening | e2e_test | deps_upgrade | api_change | incident | memory_curate |
   code_review | handoff | wiki_management | unknown.
 
 2_context_gathering: |
@@ -143,6 +143,11 @@ mcp_debugging:
 security_review:
   when: Assessing security risks, scanners, or trust boundaries.
   sequence: project-memory-refresh → security-review
+  first_hop: project-memory-refresh
+
+security_hardening:
+  when: Applying preventive security controls to a design or implementation; not a full audit.
+  sequence: project-memory-refresh → security-hardening → implement-task if fixes are requested
   first_hop: project-memory-refresh
 
 e2e_test:

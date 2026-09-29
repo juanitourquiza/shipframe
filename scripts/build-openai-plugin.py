@@ -44,6 +44,7 @@ CURATED_SKILLS = [
     "mcp-debugging",
     "generate-readme",
     "security-review",
+    "security-hardening",
     "e2e-verify",
     "dependency-upgrade",
     "api-contract-review",

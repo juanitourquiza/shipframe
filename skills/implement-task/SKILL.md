@@ -184,6 +184,10 @@ Use the **Where** section from the ticket or plan to locate the relevant files. 
 
 Do not skip this step. Implementing without reading leads to convention violations that fail code review.
 
+### Conditional security hardening
+
+If the change handles untrusted input, authentication or authorization, sessions/cookies, sensitive data storage, or external integrations, read `security-hardening` before writing. Apply only its short, change-specific controls and tests within the approved scope; continue this workflow without invoking `implement-task` recursively. This is preventive guidance, not a full audit; use `security-review` when the task requests evidence-based security assessment.
+
 ---
 
 ## Step 4 — Build the implementation plan

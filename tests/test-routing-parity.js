@@ -29,14 +29,14 @@ for (const [intent, sequence] of Object.entries(routing.intents)) {
   }
 }
 
-for (const intent of ['security_review', 'e2e_test', 'deps_upgrade', 'api_change', 'incident', 'memory_curate']) {
+for (const intent of ['security_review', 'security_hardening', 'e2e_test', 'deps_upgrade', 'api_change', 'incident', 'memory_curate']) {
   const sequence = routing.intents[intent];
   assert.equal(routeCell(codex, intent, '## Routing Table'), sequence, `Codex sequence differs from routing.json for ${intent}`);
   assert.equal(routeCell(readme, intent, '## Codex workflow'), sequence, `README sequence differs from routing.json for ${intent}`);
   assert.ok(orchestrator.includes(`sequence: ${sequence}`), `Orchestrator sequence differs from routing.json for ${intent}`);
 }
 
-for (const skill of ['security-review', 'e2e-verify', 'dependency-upgrade', 'api-contract-review', 'incident-response', 'memory-curator']) {
+for (const skill of ['security-review', 'security-hardening', 'e2e-verify', 'dependency-upgrade', 'api-contract-review', 'incident-response', 'memory-curator']) {
   const file = path.join(root, 'skills', skill, 'SKILL.md');
   const contents = fs.readFileSync(file, 'utf8');
   assert.match(contents, /^---\nname: /);
@@ -45,4 +45,9 @@ for (const skill of ['security-review', 'e2e-verify', 'dependency-upgrade', 'api
   assert.match(contents, /Host (?:paths and )?limits/);
 }
 
-console.log(`Routing parity passed for ${Object.keys(routing.intents).length} intents and six new skills`);
+const implementTask = fs.readFileSync(path.join(root, 'skills/implement-task/SKILL.md'), 'utf8');
+assert.match(implementTask, /Conditional security hardening/);
+assert.match(implementTask, /without invoking `implement-task` recursively/);
+assert.match(implementTask, /security-review.*evidence-based security assessment/);
+
+console.log(`Routing parity passed for ${Object.keys(routing.intents).length} intents and seven checked skills`);

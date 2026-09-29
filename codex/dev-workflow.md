@@ -50,6 +50,7 @@ If missing, run `wiki-init` before anything else. If present, read `WIKI.md` bef
 | `copy_review` | Product/client-facing copy, i18n, email, landing copy | `project-memory-refresh` → `client-copy-review` |
 | `mcp_debugging` | MCP connector/tool/session/token failure | `project-memory-refresh` → `mcp-debugging` |
 | `security_review` | Security assessment of code, dependencies, or boundaries | `project-memory-refresh` → `security-review` |
+| `security_hardening` | Preventive security guidance for a design or implementation | `project-memory-refresh` → `security-hardening` → `implement-task` if fixes are requested |
 | `e2e_test` | Verify an end-to-end user journey | `project-memory-refresh` → `e2e-verify` |
 | `deps_upgrade` | Upgrade or migrate dependencies safely | `project-memory-refresh` → `dependency-upgrade` → `code-review` |
 | `api_change` | Review a public API/schema contract change | `project-memory-refresh` → `api-contract-review` |
