@@ -1,6 +1,6 @@
 # Changelog
 
-## v0.7.0 — Unreleased
+## v0.7.0 — 2026-09-29
 
 ### Added
 - Added a preventive security-hardening workflow with conditional implementation guidance, distinct from evidence-based security review.
