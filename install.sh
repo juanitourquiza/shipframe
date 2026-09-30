@@ -195,7 +195,11 @@ ensure_https_fallback() {
 
 plugin_version() {
   resolve_source_dir
-  node -e "const fs=require('fs'); const p='$SOURCE_DIR/.claude-plugin/plugin.json'; console.log(JSON.parse(fs.readFileSync(p,'utf8')).version)" 2>/dev/null || echo unknown
+  node - "$SOURCE_DIR/.claude-plugin/plugin.json" <<'JS' 2>/dev/null || echo unknown
+const fs=require('fs');
+const manifest=JSON.parse(fs.readFileSync(process.argv[2],'utf8'));
+console.log(manifest.version);
+JS
 }
 write_manifest() {
   resolve_source_dir
@@ -683,6 +687,19 @@ run_uninstall() {
   fi
 }
 run_repair() {
+  if [ "$YES" != true ]; then
+    echo "Dry-run: no files changed. Pass --yes to apply repair."
+    case "$TARGET" in
+      claude|all) echo "  would repair Claude Code settings" ;;
+    esac
+    case "$TARGET" in
+      opencode|all) echo "  would repair OpenCode skills, agents, and router" ;;
+    esac
+    case "$TARGET" in
+      codex|all) echo "  would repair Codex skills and workflow" ;;
+    esac
+    return 0
+  fi
   case "$TARGET" in claude|all) echo "Repairing Claude settings..."; remove_legacy_claude_hooks ;; esac
   case "$TARGET" in opencode|all) echo "Repairing OpenCode skills/agents..."; link_skills "$HOME/.config/opencode/skills" repair; install_opencode_agents; install_opencode_router ;; esac
   case "$TARGET" in codex|all) echo "Repairing Codex skills/workflow..."; link_skills "$HOME/.agents/skills" repair; link_skills "$HOME/.codex/skills" repair; install_codex_workflow ;; esac

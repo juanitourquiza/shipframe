@@ -58,6 +58,31 @@ assert_link(){ [ -L "$1" ] || { echo "Missing symlink: $1" >&2; exit 1; }; }
 bash -n "$ROOT/install.sh"
 "$ROOT/install.sh" --doctor --repo-only
 
+# Repair is non-mutating unless --yes is explicit, across every target host.
+REPAIR_HOME="$TMP/repair-dry-run-home"
+REPAIR_STATE="$TMP/repair-dry-run-state"
+mkdir -p "$REPAIR_HOME"
+HOME="$REPAIR_HOME" XDG_STATE_HOME="$REPAIR_STATE" "$ROOT/install.sh" --repair --all > "$TMP/repair-dry-run.log"
+grep -q 'Dry-run: no files changed' "$TMP/repair-dry-run.log"
+[ ! -e "$REPAIR_HOME/.agents" ]
+[ ! -e "$REPAIR_HOME/.codex" ]
+[ ! -e "$REPAIR_HOME/.claude" ]
+[ ! -e "$REPAIR_HOME/.config" ]
+[ ! -e "$REPAIR_STATE" ]
+
+# Version discovery must survive apostrophes/spaces in the source checkout path.
+QUOTED_SOURCE="$TMP/shipframe it's source"
+mkdir -p "$QUOTED_SOURCE/.claude-plugin" "$QUOTED_SOURCE/codex" "$TMP/quoted-home"
+cp "$ROOT/install.sh" "$QUOTED_SOURCE/install.sh"
+cp "$ROOT/.claude-plugin/plugin.json" "$QUOTED_SOURCE/.claude-plugin/plugin.json"
+cp "$ROOT/codex/dev-workflow.md" "$QUOTED_SOURCE/codex/dev-workflow.md"
+cp -R "$ROOT/skills" "$QUOTED_SOURCE/skills"
+HOME="$TMP/quoted-home" XDG_STATE_HOME="$TMP/quoted-state" "$QUOTED_SOURCE/install.sh" --repair --codex --yes > "$TMP/quoted-path-repair.log"
+node - "$TMP/quoted-state/shipframe/install-state.json" "$QUOTED_SOURCE" <<'JS'
+const fs=require('fs'); const [,,manifest,source]=process.argv; const state=JSON.parse(fs.readFileSync(manifest,'utf8'));
+if(state.shipframeVersion!=='0.7.0' || state.sourceDir!==source) process.exit(1);
+JS
+
 "$ROOT/install.sh" --all --opencode-model anthropic/claude-sonnet-4-5 >/tmp/shipframe-install-1.log
 grep -q 'plugins/shipframe-prompt-router' /tmp/shipframe-install-1.log
 assert_file "$HOME/.codex/AGENTS.md"
