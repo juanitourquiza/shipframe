@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.7.1 — 2026-09-30
+
+### Fixed
+- Kept `--repair` read-only unless `--yes` is explicitly supplied, including Codex and OpenCode targets.
+- Safely read plugin version metadata from checkout paths containing spaces or apostrophes.
+- Corrected broken resource references in the bug-diagnosis and wiki-init skills.
+
 ## v0.7.0 — 2026-09-29
 
 ### Added

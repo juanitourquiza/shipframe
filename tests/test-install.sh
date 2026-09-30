@@ -80,7 +80,8 @@ cp -R "$ROOT/skills" "$QUOTED_SOURCE/skills"
 HOME="$TMP/quoted-home" XDG_STATE_HOME="$TMP/quoted-state" "$QUOTED_SOURCE/install.sh" --repair --codex --yes > "$TMP/quoted-path-repair.log"
 node - "$TMP/quoted-state/shipframe/install-state.json" "$QUOTED_SOURCE" <<'JS'
 const fs=require('fs'); const [,,manifest,source]=process.argv; const state=JSON.parse(fs.readFileSync(manifest,'utf8'));
-if(state.shipframeVersion!=='0.7.0' || state.sourceDir!==source) process.exit(1);
+const expected=JSON.parse(fs.readFileSync(`${source}/.claude-plugin/plugin.json`,'utf8')).version;
+if(state.shipframeVersion!==expected || state.sourceDir!==source) process.exit(1);
 JS
 
 "$ROOT/install.sh" --all --opencode-model anthropic/claude-sonnet-4-5 >/tmp/shipframe-install-1.log
