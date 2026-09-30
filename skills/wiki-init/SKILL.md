@@ -177,7 +177,7 @@ Write all prose in `LANGUAGE`. Write the result to `CLAUDE.md`.
 
 If `.claude/wiki-conventions.md` already exists, skip this step.
 
-Read `.claude/skills/wiki-forge/references/conventions-template.md` and replace:
+Read the canonical template at `../../templates/wiki/conventions-template.md` (relative to this skill's directory) and replace:
 - `{{VAULT_NAME}}` → `VAULT_NAME`
 - `{{LANGUAGE}}` → `LANGUAGE`
 
