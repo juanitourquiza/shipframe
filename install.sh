@@ -24,10 +24,11 @@ print_usage() {
 Usage: install.sh [ACTION] [TARGET] [OPTIONS]
 
 Install targets:
-  --claude       Install for Claude Code.
+  --claude       Install for Claude Code (plugin + shared skills).
+  --openwork     Install shared skills for OpenWork (no OpenWork CLI required).
   --opencode     Install for OpenCode (skills + converted agents).
   --codex        Install for Codex CLI (skills + orchestrator workflow).
-  --all          Install for Claude Code, OpenCode, and Codex.
+  --all          Install for Claude Code, OpenCode, and Codex (shared skills for each host).
 
 Actions:
   install        Default action. Preserves the v0.3 command behavior.
@@ -72,6 +73,7 @@ while [ "$#" -gt 0 ]; do
     --uninstall) ACTION="uninstall" ;;
     --sync-docs) ACTION="sync-docs" ;; # legacy advanced: hidden from help
     --claude) TARGET="claude" ;;
+    --openwork) TARGET="openwork" ;;
     --opencode) TARGET="opencode" ;;
     --codex) TARGET="codex" ;;
     --all) TARGET="all" ;;
@@ -118,10 +120,11 @@ prompt_choice() {
   while :; do
     echo "Select an option:"
     echo "  1) Install for Claude Code"
-    echo "  2) Install for OpenCode"
-    echo "  3) Install for Codex CLI"
-    echo "  4) Install for all"
-    echo "  5) Exit"
+    echo "  2) Install shared skills for OpenWork"
+    echo "  3) Install for OpenCode"
+    echo "  4) Install for Codex CLI"
+    echo "  5) Install for all"
+    echo "  6) Exit"
     printf "> "
 
     if [ -t 0 ]; then
@@ -130,17 +133,18 @@ prompt_choice() {
       choice="$( { read -r line < /dev/tty && printf '%s' "$line"; } 2>/dev/null )" || true
       if [ -z "$choice" ] && ! { : < /dev/tty; } 2>/dev/null; then
         echo ""
-        echo "No TTY available. Re-run with --claude, --opencode, --codex, or --all." >&2
+        echo "No TTY available. Re-run with --claude, --openwork, --opencode, --codex, or --all." >&2
         exit 1
       fi
     fi
 
     case "$choice" in
       1) TARGET="claude"; return ;;
-      2) TARGET="opencode"; return ;;
-      3) TARGET="codex"; return ;;
-      4) TARGET="all"; return ;;
-      5) echo "Aborted."; exit 0 ;;
+      2) TARGET="openwork"; return ;;
+      3) TARGET="opencode"; return ;;
+      4) TARGET="codex"; return ;;
+      5) TARGET="all"; return ;;
+      6) echo "Aborted."; exit 0 ;;
       *) echo "Invalid choice: $choice"; echo "" ;;
     esac
   done
@@ -433,6 +437,9 @@ environment_doctor() {
       ;;
   esac
   case "$TARGET" in
+    claude|openwork|all) check_symlink_dir "$HOME/.claude/skills" "$SOURCE_DIR/skills" "Claude Code / OpenWork skills" ;;
+  esac
+  case "$TARGET" in
     codex|all) check_symlink_dir "$HOME/.agents/skills" "$SOURCE_DIR/skills" "Agent Skills (Codex)"; check_symlink_dir "$HOME/.codex/skills" "$SOURCE_DIR/skills" "Legacy Codex skills" ;;
   esac
   if [[ "$TARGET" =~ ^(codex|all)$ ]]; then
@@ -486,6 +493,7 @@ JS
 }
 
 install_claude_code() {
+  link_skills "$HOME/.claude/skills" "install"
   ensure_https_fallback
   echo "Adding marketplace source..."
   if [ "$_USE_HTTPS_FALLBACK" = true ]; then
@@ -499,7 +507,9 @@ install_claude_code() {
   echo "  Plugin : shipframe"
   echo "  Hooks  : plugin-managed hooks/hooks.json"
   write_manifest
-  record_artifacts claude "$SOURCE_DIR/hooks/hooks.json" "$SOURCE_DIR/.claude-plugin/plugin.json"
+  local artifacts=() artifact
+  while IFS= read -r artifact; do artifacts+=("$artifact"); done < <(collect_skill_artifacts "$HOME/.claude/skills")
+  record_artifacts claude "$SOURCE_DIR/hooks/hooks.json" "$SOURCE_DIR/.claude-plugin/plugin.json" "${artifacts[@]}"
 }
 
 link_skills() {
@@ -552,6 +562,14 @@ validate_opencode_model() {
 }
 
 install_opencode_skills() { link_skills "$HOME/.config/opencode/skills" "install"; }
+install_openwork_skills() {
+  link_skills "$HOME/.claude/skills" "install"
+  echo "OpenWork skills available in the Library by individual skill name."
+  write_manifest
+  local artifacts=() artifact
+  while IFS= read -r artifact; do artifacts+=("$artifact"); done < <(collect_skill_artifacts "$HOME/.claude/skills")
+  record_artifacts openwork "${artifacts[@]}"
+}
 install_opencode_agents() {
   resolve_source_dir; validate_opencode_model
   local agents_src="$SOURCE_DIR/agents" agents_dst="$HOME/.config/opencode/agents"
@@ -677,9 +695,11 @@ remove_opencode_router() {
 run_uninstall() {
   case "$TARGET" in
     claude|all)
+      echo "Removing Claude Code skills..."; uninstall_symlinked_skills "$HOME/.claude/skills"
       echo "Removing Claude legacy hooks and plugin..."; remove_legacy_claude_hooks
       if command_exists claude; then if [ "$YES" = true ]; then claude plugin uninstall shipframe || true; else echo "  dry-run: would run claude plugin uninstall shipframe"; fi; fi ;;
   esac
+  case "$TARGET" in openwork|all) echo "Removing OpenWork shared skills..."; uninstall_symlinked_skills "$HOME/.claude/skills" ;; esac
   case "$TARGET" in opencode|all) echo "Removing OpenCode artifacts..."; uninstall_symlinked_skills "$HOME/.config/opencode/skills"; remove_opencode_agents; remove_opencode_router ;; esac
   case "$TARGET" in codex|all) echo "Removing Codex artifacts..."; uninstall_symlinked_skills "$HOME/.agents/skills"; uninstall_symlinked_skills "$HOME/.codex/skills"; remove_codex_block ;; esac
   if [ "$PURGE" = true ]; then
@@ -690,8 +710,9 @@ run_repair() {
   if [ "$YES" != true ]; then
     echo "Dry-run: no files changed. Pass --yes to apply repair."
     case "$TARGET" in
-      claude|all) echo "  would repair Claude Code settings" ;;
+      claude|all) echo "  would repair Claude Code settings and shared skills" ;;
     esac
+    case "$TARGET" in openwork|all) echo "  would repair OpenWork shared skills" ;; esac
     case "$TARGET" in
       opencode|all) echo "  would repair OpenCode skills, agents, and router" ;;
     esac
@@ -700,7 +721,8 @@ run_repair() {
     esac
     return 0
   fi
-  case "$TARGET" in claude|all) echo "Repairing Claude settings..."; remove_legacy_claude_hooks ;; esac
+  case "$TARGET" in claude|all) echo "Repairing Claude Code settings and shared skills..."; link_skills "$HOME/.claude/skills" repair; remove_legacy_claude_hooks ;; esac
+  case "$TARGET" in openwork|all) echo "Repairing OpenWork shared skills..."; link_skills "$HOME/.claude/skills" repair ;; esac
   case "$TARGET" in opencode|all) echo "Repairing OpenCode skills/agents..."; link_skills "$HOME/.config/opencode/skills" repair; install_opencode_agents; install_opencode_router ;; esac
   case "$TARGET" in codex|all) echo "Repairing Codex skills/workflow..."; link_skills "$HOME/.agents/skills" repair; link_skills "$HOME/.codex/skills" repair; install_codex_workflow ;; esac
   [ "$YES" = true ] && write_manifest || true
@@ -730,17 +752,19 @@ case "$ACTION" in
   uninstall) run_uninstall; exit $? ;;
   install)
     case "$TARGET" in
+      openwork) install_openwork_skills ;;
       claude|opencode|codex)
         case "$TARGET" in claude) needed=claude;; opencode) needed=opencode;; codex) needed=codex;; esac
         if ! command_exists "$needed"; then echo "Error: $needed CLI is required for --$TARGET. Install it or choose an available target." >&2; exit 1; fi
         case "$TARGET" in claude) install_claude_code;; opencode) install_opencode;; codex) install_codex;; esac ;;
       all)
+        install_openwork_skills
         missing=0
         if command_exists claude; then install_claude_code; else echo "⚠ Skipping Claude Code: claude CLI not found."; missing=$((missing+1)); fi
         if command_exists opencode; then echo ""; install_opencode; else echo "⚠ Skipping OpenCode: opencode CLI not found."; missing=$((missing+1)); fi
         if command_exists codex; then echo ""; install_codex; else echo "⚠ Skipping Codex: codex CLI not found."; missing=$((missing+1)); fi
         if [ "$missing" -gt 0 ]; then echo "Partial install: $missing requested target(s) were unavailable; install their CLI and rerun." >&2; exit 1; fi ;;
-      *) echo "Missing target. Use --claude, --opencode, --codex, or --all." >&2; exit 2 ;;
+      *) echo "Missing target. Use --claude, --openwork, --opencode, --codex, or --all." >&2; exit 2 ;;
     esac
     check_engram_memory
     check_context_mcp install

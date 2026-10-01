@@ -70,6 +70,16 @@ grep -q 'Dry-run: no files changed' "$TMP/repair-dry-run.log"
 [ ! -e "$REPAIR_HOME/.config" ]
 [ ! -e "$REPAIR_STATE" ]
 
+# OpenWork needs the shared skills path and does not require a separate CLI.
+OPENWORK_HOME="$TMP/openwork-home"
+mkdir -p "$OPENWORK_HOME"
+HOME="$OPENWORK_HOME" XDG_STATE_HOME="$TMP/openwork-state" "$ROOT/install.sh" --openwork > "$TMP/openwork-install.log"
+[ -L "$OPENWORK_HOME/.claude/skills/code-review" ]
+HOME="$OPENWORK_HOME" XDG_STATE_HOME="$TMP/openwork-state" "$ROOT/install.sh" --doctor --openwork > "$TMP/openwork-doctor.log"
+grep -q 'OpenWork skills' "$TMP/openwork-doctor.log"
+HOME="$OPENWORK_HOME" XDG_STATE_HOME="$TMP/openwork-state" "$ROOT/install.sh" --uninstall --openwork --yes > "$TMP/openwork-uninstall.log"
+[ ! -L "$OPENWORK_HOME/.claude/skills/code-review" ]
+
 # Version discovery must survive apostrophes/spaces in the source checkout path.
 QUOTED_SOURCE="$TMP/shipframe it's source"
 mkdir -p "$QUOTED_SOURCE/.claude-plugin" "$QUOTED_SOURCE/codex" "$TMP/quoted-home"
@@ -90,6 +100,7 @@ assert_file "$HOME/.codex/AGENTS.md"
 grep -q 'shipframe-block-version: 1' "$HOME/.codex/AGENTS.md"
 assert_link "$HOME/.agents/skills/code-review"
 assert_link "$HOME/.codex/skills/code-review"
+assert_link "$HOME/.claude/skills/code-review"
 assert_link "$HOME/.config/opencode/skills/code-review"
 assert_link "$HOME/.config/opencode/plugins/shipframe-prompt-router"
 count_agents="$(find "$HOME/.config/opencode/agents" -maxdepth 1 -name '*.md' | wc -l | tr -d ' ')"
@@ -158,6 +169,7 @@ assert_link "$HOME/.agents/skills/code-review"
 "$ROOT/install.sh" --uninstall --all --yes --purge >/tmp/shipframe-uninstall.log
 [ ! -L "$HOME/.agents/skills/code-review" ]
 [ ! -L "$HOME/.codex/skills/code-review" ]
+[ ! -L "$HOME/.claude/skills/code-review" ]
 [ ! -L "$HOME/.config/opencode/skills/code-review" ]
 [ ! -L "$HOME/.config/opencode/plugins/shipframe-prompt-router" ]
 [ ! -f "$HOME/.config/opencode/agents/orchestrator-agent.md" ]
