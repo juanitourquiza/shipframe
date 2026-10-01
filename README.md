@@ -314,9 +314,11 @@ and contract-check commands.
 shipframe install --openwork
 ```
 
-This links the shared skills to `~/.claude/skills/<name>`, which OpenWork's
-Library discovers. Skills are listed individually (for example, `code-review`),
-not as one item named `shipframe`. No OpenWork CLI is required.
+This installs managed physical skill folders in `~/.claude/skills/<name>` so
+OpenWork's Library can index them (symlinks are not discovered there). Skills
+are listed individually (for example, `code-review`), not as one item named
+`shipframe`. Restart or refresh OpenWork after installing to rescan its Library.
+No OpenWork CLI is required. Modified or unmanaged folders are preserved.
 
 
 #### Herdr local workflow plugin

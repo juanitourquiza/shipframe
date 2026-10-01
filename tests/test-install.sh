@@ -45,6 +45,7 @@ snapshot() {
   mkdir -p "$(dirname "$out")"
   {
     [ -f "$HOME/.codex/AGENTS.md" ] && shasum -a 256 "$HOME/.codex/AGENTS.md" || true
+    find "$HOME/.claude/skills" -mindepth 2 -maxdepth 2 -type f \( -name SKILL.md -o -name .shipframe-openwork.json \) -print 2>/dev/null | sort | while read -r p; do shasum -a 256 "$p"; done
     find "$HOME/.agents/skills" "$HOME/.codex/skills" "$HOME/.config/opencode/skills" "$HOME/.config/opencode/agents" -maxdepth 1 \( -type l -o -type f \) -print 2>/dev/null | sort | while read -r p; do
       if [ -L "$p" ]; then printf 'L %s -> %s\n' "$p" "$(readlink "$p")"; else printf 'F %s ' "$p"; shasum -a 256 "$p"; fi
     done
@@ -54,6 +55,7 @@ snapshot() {
 
 assert_file(){ [ -f "$1" ] || { echo "Missing file: $1" >&2; exit 1; }; }
 assert_link(){ [ -L "$1" ] || { echo "Missing symlink: $1" >&2; exit 1; }; }
+assert_directory(){ [ -d "$1" ] && [ ! -L "$1" ] || { echo "Missing physical directory: $1" >&2; exit 1; }; }
 
 bash -n "$ROOT/install.sh"
 "$ROOT/install.sh" --doctor --repo-only
@@ -74,11 +76,25 @@ grep -q 'Dry-run: no files changed' "$TMP/repair-dry-run.log"
 OPENWORK_HOME="$TMP/openwork-home"
 mkdir -p "$OPENWORK_HOME"
 HOME="$OPENWORK_HOME" XDG_STATE_HOME="$TMP/openwork-state" "$ROOT/install.sh" --openwork > "$TMP/openwork-install.log"
-[ -L "$OPENWORK_HOME/.claude/skills/code-review" ]
+assert_directory "$OPENWORK_HOME/.claude/skills/code-review"
+assert_file "$OPENWORK_HOME/.claude/skills/code-review/SKILL.md"
+assert_file "$OPENWORK_HOME/.claude/skills/code-review/.shipframe-openwork.json"
 HOME="$OPENWORK_HOME" XDG_STATE_HOME="$TMP/openwork-state" "$ROOT/install.sh" --doctor --openwork > "$TMP/openwork-doctor.log"
-grep -q 'OpenWork skills' "$TMP/openwork-doctor.log"
+grep -q 'OpenWork physical skill folders' "$TMP/openwork-doctor.log"
+HOME="$OPENWORK_HOME" XDG_STATE_HOME="$TMP/openwork-state" "$ROOT/install.sh" --openwork > "$TMP/openwork-install-again.log"
+assert_file "$OPENWORK_HOME/.claude/skills/code-review/SKILL.md"
 HOME="$OPENWORK_HOME" XDG_STATE_HOME="$TMP/openwork-state" "$ROOT/install.sh" --uninstall --openwork --yes > "$TMP/openwork-uninstall.log"
-[ ! -L "$OPENWORK_HOME/.claude/skills/code-review" ]
+[ ! -e "$OPENWORK_HOME/.claude/skills/code-review" ]
+
+# Convert only a manifest-style ShipFrame symlink and restore it on uninstall.
+PRELINK_HOME="$TMP/openwork-prelink-home"
+mkdir -p "$PRELINK_HOME/.claude/skills"
+ln -s "$ROOT/skills/code-review" "$PRELINK_HOME/.claude/skills/code-review"
+HOME="$PRELINK_HOME" XDG_STATE_HOME="$TMP/openwork-prelink-state" "$ROOT/install.sh" --openwork > "$TMP/openwork-convert.log"
+assert_directory "$PRELINK_HOME/.claude/skills/code-review"
+HOME="$PRELINK_HOME" XDG_STATE_HOME="$TMP/openwork-prelink-state" "$ROOT/install.sh" --uninstall --openwork --yes > "$TMP/openwork-restore.log"
+assert_link "$PRELINK_HOME/.claude/skills/code-review"
+[ "$(readlink "$PRELINK_HOME/.claude/skills/code-review")" = "$ROOT/skills/code-review" ]
 
 # Version discovery must survive apostrophes/spaces in the source checkout path.
 QUOTED_SOURCE="$TMP/shipframe it's source"
@@ -100,7 +116,7 @@ assert_file "$HOME/.codex/AGENTS.md"
 grep -q 'shipframe-block-version: 1' "$HOME/.codex/AGENTS.md"
 assert_link "$HOME/.agents/skills/code-review"
 assert_link "$HOME/.codex/skills/code-review"
-assert_link "$HOME/.claude/skills/code-review"
+assert_directory "$HOME/.claude/skills/code-review"
 assert_link "$HOME/.config/opencode/skills/code-review"
 assert_link "$HOME/.config/opencode/plugins/shipframe-prompt-router"
 count_agents="$(find "$HOME/.config/opencode/agents" -maxdepth 1 -name '*.md' | wc -l | tr -d ' ')"
@@ -169,7 +185,7 @@ assert_link "$HOME/.agents/skills/code-review"
 "$ROOT/install.sh" --uninstall --all --yes --purge >/tmp/shipframe-uninstall.log
 [ ! -L "$HOME/.agents/skills/code-review" ]
 [ ! -L "$HOME/.codex/skills/code-review" ]
-[ ! -L "$HOME/.claude/skills/code-review" ]
+[ ! -e "$HOME/.claude/skills/code-review" ]
 [ ! -L "$HOME/.config/opencode/skills/code-review" ]
 [ ! -L "$HOME/.config/opencode/plugins/shipframe-prompt-router" ]
 [ ! -f "$HOME/.config/opencode/agents/orchestrator-agent.md" ]

@@ -12,7 +12,7 @@ Master catalog of all wiki pages. Mandatory entry point for any query with `/wik
 
 | Page | Summary | Answers |
 | ---- | ------- | ------- |
-| `../install.sh` | Multi-tool installer for Claude Code, OpenWork shared skills, OpenCode, and Codex with doctor/repair/uninstall flows. | How are artifacts installed? How are managed files repaired or removed? |
+| `../install.sh` | Multi-tool installer for Claude Code, OpenWork physical skill copies, OpenCode, and Codex with doctor/repair/uninstall flows. | How are artifacts installed? How are managed files repaired or removed? |
 | `../skills/` | Flat installable skill catalog. | Which skills are linked into Codex/OpenCode? |
 | `../skills/evidence-audit/SKILL.md` | Evidence-honesty workflow for report, handoff, PR, and release-note claims. | How should delivery claims be classified as verified, partially verified, or unverified? |
 | `../skills/proof-runner/SKILL.md` | Optional command proof workflow for checklist items with `Verify:` commands. | Which planned steps were actually proven by exit-0 command evidence? |
