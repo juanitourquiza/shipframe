@@ -64,6 +64,7 @@ Every invocation from the orchestrator includes:
   This covers Phase 1 (spec compliance, type safety, stack alignment, basic security,
   performance) and Phase 2 (SOLID / structural audit).
   Collect all findings — do not stop on first failure.
+  This final review is mandatory for every task, including tasks classified small by QA. Inspect the complete diff; if risk exceeds the QA classification, return block_pr until the appropriate deeper QA is completed.
 
 3_security_scan: |
   Run the extended security checklist (see below) on each changed file.

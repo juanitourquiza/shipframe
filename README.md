@@ -298,6 +298,11 @@ fast path, install the curated ShipFrame plugin and review/trust its
 `UserPromptSubmit` hook in Codex. Until trusted, the workflow block remains the
 fallback.
 
+The QA `small` classification reduces test depth only: it excludes public API,
+authentication/secrets, migration, and CI changes, and never skips independent
+final review. See [QA fast path](docs/qa-fast-path.md) for the bilingual policy
+and contract-check commands.
+
 
 #### Herdr local workflow plugin
 

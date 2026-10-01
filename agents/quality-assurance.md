@@ -72,10 +72,11 @@ Every invocation from the orchestrator includes:
   Store detected framework and test directories as TEST_CONTEXT for use in later steps.
 
 3_calibrate: |
-  Classify the task size before writing any tests:
-    small  — 1-2 functions changed, no new public API, isolated change (bug fix, helper, minor UI tweak)
+  Classify the task size before writing any tests, and record the classification plus a short rationale in the QA manifest:
+    small  — 1-2 functions changed, isolated change, with no public API, authentication/secrets, migration, or CI changes
     medium — new endpoint or component, some new logic, up to ~5 files
     large  — new feature slice, multiple layers touched, new data model or user flow
+  Any change to a public API, authentication/secrets, database migration, or CI is ineligible for small and must be medium or large based on scope/risk. If the diff reveals risk beyond the initial estimate, escalate the classification and QA depth.
   Store as TASK_SIZE. Use it in step 3 to decide test depth.
 
 4_read_existing_tests: |
@@ -83,7 +84,7 @@ Every invocation from the orchestrator includes:
   Load base test classes or fixtures if they exist.
 
 5_write_tests: |
-  Apply depth proportional to TASK_SIZE (see Test Depth by Size below).
+  Apply test depth proportional to TASK_SIZE (see Test Depth by Size below). Small is a reduced QA-depth path only; it never skips the independent final diff review. The reviewer must inspect the full diff and escalate if risk warrants deeper QA.
   Run the project's test command filtered to the new files to confirm all tests FAIL (red).
   Do not proceed if any written test passes unexpectedly.
 
@@ -97,7 +98,7 @@ Every invocation from the orchestrator includes:
   Otherwise include the QA summary in the local return manifest; do not block on tracker setup.
 
 8_return: |
-  Return the test manifest and confirmation that all tests are red to the Orchestrator.
+  Return the test manifest, TASK_SIZE classification, a concise justification, and confirmation that all tests are red to the Orchestrator. The classification does not waive final review.
 ```
 
 ---
@@ -106,7 +107,7 @@ Every invocation from the orchestrator includes:
 
 ```yaml
 small: |
-  Happy path only. One unit test per changed function.
+  Eligible changes only (see calibration exclusions). Happy path only. One unit test per changed function.
   No integration tests unless the change touches an existing endpoint's contract.
   Skip edge cases unless they are explicitly in the acceptance criteria.
 
@@ -258,6 +259,8 @@ cannot:
 
 ```yaml
 status: success | blocked | skipped
+task_size: small | medium | large
+classification_rationale: "<why this size and, if small, why none of the excluded risk areas apply>"
 skipped_reason: "no test suite detected" | null
 tests_created:
   - file: path/to/test/file

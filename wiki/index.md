@@ -24,6 +24,7 @@ Master catalog of all wiki pages. Mandatory entry point for any query with `/wik
 | `../skills/incident-response/SKILL.md` | Evidence-led incident workflow with access check first. | What is the first deliverable when operational access is missing? |
 | `../skills/memory-curator/SKILL.md` | Durable memory curation with explicit authorization. | What belongs in memory and what must be excluded? |
 | `../agents/` | Claude-shaped agents converted for OpenCode. | Which agents exist? How is the orchestrator represented? |
+| `../docs/qa-fast-path.md` | Bilingual QA-small eligibility, review guarantee, and metadata checker commands. | When may test depth be reduced, and what remains mandatory? |
 
 ## Flows
 
