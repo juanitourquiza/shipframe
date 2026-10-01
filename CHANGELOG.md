@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.7.2 — 2026-10-01
+
+### Added
+- Added a CI checker for required skill and agent metadata, naming consistency, and actionable diagnostics.
+- Formalized the QA `small` fast path as reduced test depth only, with risk exclusions and mandatory independent final review.
+
 ## v0.7.1 — 2026-09-30
 
 ### Fixed
