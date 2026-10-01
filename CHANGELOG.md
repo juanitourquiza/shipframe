@@ -1,5 +1,10 @@
 # Changelog
 
+## v0.7.3 — 2026-10-01
+
+### Fixed
+- Installed the shared ShipFrame skill catalog under `~/.claude/skills` for Claude Code and OpenWork discovery; included it in doctor, repair, and uninstall flows.
+
 ## v0.7.2 — 2026-10-01
 
 ### Added

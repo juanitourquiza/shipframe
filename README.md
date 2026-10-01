@@ -252,7 +252,8 @@ shipframe install --all
 
 | Tool | Skills | Orchestration |
 |---|---|---|
-| Claude Code | plugin marketplace / plugin namespace | agents + hooks |
+| Claude Code | plugin marketplace / native skills | agents + hooks |
+| OpenWork | shared skills in `~/.claude/skills` | OpenWork Library; no extra CLI |
 | Codex CLI | Agent Skills via `/skills` | routing table in `~/.codex/AGENTS.md`; optional prompt fast-path hook in the curated plugin (user review/trust required) |
 | OpenCode v2 | native skill discovery | converted agents; optional prompt fast-path plugin |
 
@@ -271,6 +272,10 @@ user-owned.
 /reload-plugins
 /shipframe:code-review
 ```
+
+`shipframe install --claude` links the full skill catalog into Claude Code's
+`~/.claude/skills/<name>` directory. The Claude plugin namespace remains
+available separately.
 
 Claude plugin skills are namespaced as `/shipframe:<skill>` to avoid collisions
 with personal or project skills. Use `/help` or the custom commands view to
@@ -302,6 +307,16 @@ The QA `small` classification reduces test depth only: it excludes public API,
 authentication/secrets, migration, and CI changes, and never skips independent
 final review. See [QA fast path](docs/qa-fast-path.md) for the bilingual policy
 and contract-check commands.
+
+#### OpenWork
+
+```bash
+shipframe install --openwork
+```
+
+This links the shared skills to `~/.claude/skills/<name>`, which OpenWork's
+Library discovers. Skills are listed individually (for example, `code-review`),
+not as one item named `shipframe`. No OpenWork CLI is required.
 
 
 #### Herdr local workflow plugin
