@@ -397,6 +397,24 @@ check_symlink_dir() {
   [ "$broken" -eq 0 ] && report_ok "$label symlinks ($total)" || report_err "$label has $broken broken symlink(s); run ./install.sh --repair --yes"
   [ "$unmanaged" -eq 0 ] || report_warn "$label has $unmanaged unmanaged symlink(s)"
 }
+check_openwork_skills() {
+  resolve_source_dir
+  local summary missing
+  summary="$(node - "$SOURCE_DIR/skills" "$HOME/.claude/skills" <<'JS'
+const fs=require('fs'),path=require('path');
+const [,,src,dst]=process.argv;let total=0,ready=0;
+for(const d of fs.readdirSync(src,{withFileTypes:true}).filter(x=>x.isDirectory())){
+ const skill=path.join(src,d.name,'SKILL.md');if(!fs.existsSync(skill))continue;total++;
+ const target=path.join(dst,d.name);
+ try{const st=fs.lstatSync(target);if(st.isDirectory()&&!st.isSymbolicLink()&&fs.existsSync(path.join(target,'SKILL.md')))ready++;}catch{}
+}
+console.log(`${ready}/${total}`);
+JS
+)"
+  missing="${summary%%/*}"
+  local total="${summary##*/}"
+  if [ "$missing" = "$total" ]; then report_ok "Claude Code / OpenWork physical skill folders ($summary)"; else report_warn "Claude Code / OpenWork physical skill folders ($summary); run ./install.sh --openwork"; fi
+}
 
 check_opencode_router() {
   local output state message
@@ -437,7 +455,7 @@ environment_doctor() {
       ;;
   esac
   case "$TARGET" in
-    claude|openwork|all) check_symlink_dir "$HOME/.claude/skills" "$SOURCE_DIR/skills" "Claude Code / OpenWork skills" ;;
+    claude|openwork|all) check_openwork_skills ;;
   esac
   case "$TARGET" in
     codex|all) check_symlink_dir "$HOME/.agents/skills" "$SOURCE_DIR/skills" "Agent Skills (Codex)"; check_symlink_dir "$HOME/.codex/skills" "$SOURCE_DIR/skills" "Legacy Codex skills" ;;
@@ -493,7 +511,7 @@ JS
 }
 
 install_claude_code() {
-  link_skills "$HOME/.claude/skills" "install"
+  install_openwork_skills
   ensure_https_fallback
   echo "Adding marketplace source..."
   if [ "$_USE_HTTPS_FALLBACK" = true ]; then
@@ -507,9 +525,7 @@ install_claude_code() {
   echo "  Plugin : shipframe"
   echo "  Hooks  : plugin-managed hooks/hooks.json"
   write_manifest
-  local artifacts=() artifact
-  while IFS= read -r artifact; do artifacts+=("$artifact"); done < <(collect_skill_artifacts "$HOME/.claude/skills")
-  record_artifacts claude "$SOURCE_DIR/hooks/hooks.json" "$SOURCE_DIR/.claude-plugin/plugin.json" "${artifacts[@]}"
+  record_artifacts claude "$SOURCE_DIR/hooks/hooks.json" "$SOURCE_DIR/.claude-plugin/plugin.json"
 }
 
 link_skills() {
@@ -563,12 +579,106 @@ validate_opencode_model() {
 
 install_opencode_skills() { link_skills "$HOME/.config/opencode/skills" "install"; }
 install_openwork_skills() {
-  link_skills "$HOME/.claude/skills" "install"
-  echo "OpenWork skills available in the Library by individual skill name."
+  resolve_source_dir
+  node - "$SOURCE_DIR/skills" "$HOME/.claude/skills" "$MANIFEST_FILE" <<'JS'
+const fs = require('fs');
+const path = require('path');
+const crypto = require('crypto');
+const [, , srcRoot, dstRoot, manifestPath] = process.argv;
+const markerName = '.shipframe-openwork.json';
+fs.mkdirSync(dstRoot, { recursive: true });
+let manifest = { installs: [] };
+try { manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8')); } catch {}
+
+function hashTree(root) {
+  const hash = crypto.createHash('sha256');
+  function visit(dir, rel = '') {
+    for (const item of fs.readdirSync(dir, { withFileTypes: true }).sort((a, b) => a.name.localeCompare(b.name))) {
+      if (!rel && item.name === markerName) continue;
+      const abs = path.join(dir, item.name);
+      const childRel = path.join(rel, item.name);
+      const stat = fs.lstatSync(abs);
+      hash.update(`${childRel}\0${stat.mode}\0`);
+      if (stat.isDirectory()) visit(abs, childRel);
+      else if (stat.isSymbolicLink()) hash.update(`link:${fs.readlinkSync(abs)}\0`);
+      else if (stat.isFile()) hash.update(fs.readFileSync(abs));
+    }
+  }
+  visit(root);
+  return hash.digest('hex');
+}
+
+function manifestOwnsLink(target, linkTarget, name) {
+  return (manifest.installs || []).some((install) =>
+    ['openwork', 'claude'].includes(install.target) &&
+    Array.isArray(install.artifacts) && install.artifacts.some((artifact) =>
+      artifact.path === target && artifact.type === 'symlink' && artifact.linkTarget === linkTarget &&
+      (manifest.sourceDir && path.resolve(linkTarget) === path.resolve(manifest.sourceDir, 'skills', name))
+    )
+  );
+}
+
+function claudeOwnsLink(target, linkTarget) {
+  return (manifest.installs || []).some((install) =>
+    install.target === 'claude' && Array.isArray(install.artifacts) && install.artifacts.some((artifact) =>
+      artifact.path === target && artifact.type === 'symlink' && artifact.linkTarget === linkTarget
+    )
+  );
+}
+
+function writeCopy(src, dst, previousLink, restorePreviousLink = false) {
+  const temp = fs.mkdtempSync(path.join(dstRoot, `.shipframe-openwork-${path.basename(dst)}-`));
+  fs.cpSync(src, temp, { recursive: true });
+  const contentHash = hashTree(temp);
+  fs.writeFileSync(path.join(temp, markerName), JSON.stringify({ schema: 1, contentHash, previousLink, restorePreviousLink }, null, 2) + '\n');
+  fs.renameSync(temp, dst);
+}
+
+let copied = 0, current = 0, skipped = 0, updated = 0;
+for (const entry of fs.readdirSync(srcRoot, { withFileTypes: true }).filter((item) => item.isDirectory()).sort((a, b) => a.name.localeCompare(b.name))) {
+  const name = entry.name;
+  const src = path.join(srcRoot, name);
+  if (!fs.existsSync(path.join(src, 'SKILL.md'))) continue;
+  const dst = path.join(dstRoot, name);
+  let stat = null;
+  try { stat = fs.lstatSync(dst); } catch (error) { if (error.code !== 'ENOENT') throw error; }
+  let previousLink = null;
+  if (stat?.isSymbolicLink()) {
+    const linkTarget = fs.readlinkSync(dst);
+    if (!manifestOwnsLink(dst, linkTarget, name) && path.resolve(linkTarget) !== path.resolve(src)) {
+      console.log(`  skip ${name} (unmanaged symlink)`); skipped++; continue;
+    }
+    previousLink = linkTarget;
+    const restorePreviousLink = claudeOwnsLink(dst, linkTarget) || path.resolve(linkTarget) === path.resolve(src);
+    fs.unlinkSync(dst);
+    writeCopy(src, dst, previousLink, restorePreviousLink);
+    console.log(`  copy ${name} (replaced ShipFrame skill link)`); copied++; continue;
+  }
+  if (stat) {
+    if (!stat.isDirectory()) { console.log(`  skip ${name} (unmanaged path exists)`); skipped++; continue; }
+    const marker = path.join(dst, markerName);
+    if (!fs.existsSync(marker)) { console.log(`  skip ${name} (unmanaged skill directory)`); skipped++; continue; }
+    let metadata;
+    try { metadata = JSON.parse(fs.readFileSync(marker, 'utf8')); } catch { console.log(`  skip ${name} (invalid ShipFrame marker)`); skipped++; continue; }
+    if (metadata.schema !== 1 || hashTree(dst) !== metadata.contentHash) {
+      console.log(`  skip ${name} (local copy changed; preserving it)`); skipped++; continue;
+    }
+    const srcHash = hashTree(src);
+    if (srcHash === metadata.contentHash) { console.log(`  ok ${name}`); current++; continue; }
+    previousLink = metadata.previousLink || null;
+    const restorePreviousLink = metadata.restorePreviousLink === true;
+    fs.rmSync(dst, { recursive: true, force: true });
+    writeCopy(src, dst, previousLink, restorePreviousLink);
+    console.log(`  update ${name}`); updated++; continue;
+  }
+  writeCopy(src, dst, null, false);
+  console.log(`  copy ${name}`); copied++;
+}
+console.log(`  OpenWork skills: ${copied} copied, ${updated} updated, ${current} current, ${skipped} skipped`);
+JS
+  echo "OpenWork Library can list the skills individually after refresh."
   write_manifest
-  local artifacts=() artifact
-  while IFS= read -r artifact; do artifacts+=("$artifact"); done < <(collect_skill_artifacts "$HOME/.claude/skills")
-  record_artifacts openwork "${artifacts[@]}"
+  record_artifacts openwork
 }
 install_opencode_agents() {
   resolve_source_dir; validate_opencode_model
@@ -670,6 +780,25 @@ uninstall_symlinked_skills() {
     fi
   done
 }
+uninstall_openwork_skills() {
+  resolve_source_dir
+  node - "$SOURCE_DIR/skills" "$HOME/.claude/skills" "$YES" <<'JS'
+const fs=require('fs'),path=require('path'),crypto=require('crypto');
+const [,,srcRoot,dstRoot,yes]=process.argv,markerName='.shipframe-openwork.json';
+function hashTree(root){const h=crypto.createHash('sha256');function visit(dir,rel=''){for(const item of fs.readdirSync(dir,{withFileTypes:true}).sort((a,b)=>a.name.localeCompare(b.name))){if(!rel&&item.name===markerName)continue;const abs=path.join(dir,item.name),r=path.join(rel,item.name),st=fs.lstatSync(abs);h.update(`${r}\0${st.mode}\0`);if(st.isDirectory())visit(abs,r);else if(st.isSymbolicLink())h.update(`link:${fs.readlinkSync(abs)}\0`);else if(st.isFile())h.update(fs.readFileSync(abs));}}visit(root);return h.digest('hex');}
+if(!fs.existsSync(dstRoot))process.exit(0);let removed=0,skipped=0;
+for(const d of fs.readdirSync(srcRoot,{withFileTypes:true}).filter(x=>x.isDirectory())){
+ if(!fs.existsSync(path.join(dstRoot,d.name,'SKILL.md')))continue;
+ const target=path.join(dstRoot,d.name),marker=path.join(target,markerName);if(!fs.existsSync(marker))continue;
+ let meta;try{meta=JSON.parse(fs.readFileSync(marker,'utf8'));}catch{console.log(`  preserve ${d.name} (invalid OpenWork marker)`);skipped++;continue;}
+ if(meta.schema!==1||hashTree(target)!==meta.contentHash){console.log(`  preserve ${d.name} (local copy changed)`);skipped++;continue;}
+ const previousLink=meta.previousLink||null;
+ if(yes==='true'){fs.rmSync(target,{recursive:true,force:true});if(previousLink&&meta.restorePreviousLink===true)fs.symlinkSync(previousLink,target);console.log(`  removed ${d.name}${previousLink&&meta.restorePreviousLink===true?' and restored prior Claude/source link':''}`);}else console.log(`  dry-run: would remove ${target}`);
+ removed++;
+}
+console.log(`  OpenWork copies: ${removed} eligible, ${skipped} preserved`);
+JS
+}
 remove_codex_block() {
   local agents_file="$HOME/.codex/AGENTS.md"; [ -f "$agents_file" ] || return 0
   if [ "$YES" = true ]; then
@@ -695,11 +824,11 @@ remove_opencode_router() {
 run_uninstall() {
   case "$TARGET" in
     claude|all)
-      echo "Removing Claude Code skills..."; uninstall_symlinked_skills "$HOME/.claude/skills"
+      echo "Removing Claude Code / OpenWork skills..."; uninstall_openwork_skills
       echo "Removing Claude legacy hooks and plugin..."; remove_legacy_claude_hooks
       if command_exists claude; then if [ "$YES" = true ]; then claude plugin uninstall shipframe || true; else echo "  dry-run: would run claude plugin uninstall shipframe"; fi; fi ;;
   esac
-  case "$TARGET" in openwork|all) echo "Removing OpenWork shared skills..."; uninstall_symlinked_skills "$HOME/.claude/skills" ;; esac
+  case "$TARGET" in openwork) echo "Removing OpenWork shared skills..."; uninstall_openwork_skills ;; esac
   case "$TARGET" in opencode|all) echo "Removing OpenCode artifacts..."; uninstall_symlinked_skills "$HOME/.config/opencode/skills"; remove_opencode_agents; remove_opencode_router ;; esac
   case "$TARGET" in codex|all) echo "Removing Codex artifacts..."; uninstall_symlinked_skills "$HOME/.agents/skills"; uninstall_symlinked_skills "$HOME/.codex/skills"; remove_codex_block ;; esac
   if [ "$PURGE" = true ]; then
@@ -721,8 +850,8 @@ run_repair() {
     esac
     return 0
   fi
-  case "$TARGET" in claude|all) echo "Repairing Claude Code settings and shared skills..."; link_skills "$HOME/.claude/skills" repair; remove_legacy_claude_hooks ;; esac
-  case "$TARGET" in openwork|all) echo "Repairing OpenWork shared skills..."; link_skills "$HOME/.claude/skills" repair ;; esac
+  case "$TARGET" in claude|all) echo "Repairing Claude Code settings and shared skills..."; install_openwork_skills; remove_legacy_claude_hooks ;; esac
+  case "$TARGET" in openwork) echo "Repairing OpenWork shared skills..."; install_openwork_skills ;; esac
   case "$TARGET" in opencode|all) echo "Repairing OpenCode skills/agents..."; link_skills "$HOME/.config/opencode/skills" repair; install_opencode_agents; install_opencode_router ;; esac
   case "$TARGET" in codex|all) echo "Repairing Codex skills/workflow..."; link_skills "$HOME/.agents/skills" repair; link_skills "$HOME/.codex/skills" repair; install_codex_workflow ;; esac
   [ "$YES" = true ] && write_manifest || true

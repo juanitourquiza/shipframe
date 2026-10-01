@@ -1,5 +1,10 @@
 # Changelog
 
+## v0.7.4 — 2026-10-01
+
+### Fixed
+- Install OpenWork skills as managed physical folders so its Library indexes them; preserve modified/unmanaged folders and restore prior Claude skill links only when appropriate.
+
 ## v0.7.3 — 2026-10-01
 
 ### Fixed
