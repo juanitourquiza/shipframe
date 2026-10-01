@@ -69,7 +69,7 @@ position: Workflow router — start when useful or explicitly requested, not for
   Pass the full payload: intent, ticket/spec, branch, profile summary, and constraints.
 
 5_quality_gate: |
-  For code changes, run reviewer-agent or code-review before PR.
+  For all code changes, including QA-small tasks, run reviewer-agent or code-review on the complete diff before PR. Small may reduce QA/test depth only; the reviewer must escalate when risk warrants it.
   For releases, run deploy-evidence before declaring completion.
 
 6_delivery: |
