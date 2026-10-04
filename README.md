@@ -6,7 +6,7 @@ It provides reusable skills, agent workflows, templates, and project profiles fo
 
 > Tagline: **AI coding workflows for teams that plan, prove, and ship.**
 
-**Current stable release:** [v0.7.2](https://github.com/juanitourquiza/shipframe/releases/tag/v0.7.2), with CI validation for skill/agent contracts and a clearer QA-small policy. See the [changelog](CHANGELOG.md) for release details.
+**Current stable release:** [v0.8.0](https://github.com/juanitourquiza/shipframe/releases/tag/v0.8.0), with opt-in Git-backed project memory and reviewed GitHub Draft PR publication; Engram remains optional. See the [changelog](CHANGELOG.md) for release details.
 
 **Website:** https://shipframe.hackeruna.com/  
 **Repository:** https://github.com/juanitourquiza/shipframe
@@ -61,6 +61,7 @@ For non-trivial code changes, run the QA agent after planning when the host supp
 | `api-contract-review` | Assesses API compatibility, validation, and consumer impact. |
 | `incident-response` | Starts with operational access checks, then coordinates evidence-led response. |
 | `memory-curator` | Curates verified, durable project memory while excluding sensitive data. |
+| `project-memory-init` | Opt-in setup for minimal Git-backed project memory with safe, reviewed GitHub publication. |
 
 ### Optional technology packs
 
@@ -349,7 +350,7 @@ the base ShipFrame toolkit and the `shipframe` wrapper; use the `herdr plugin in
 
 #### ChatGPT/Codex curated plugin
 
-The repository builds a curated ChatGPT/Codex plugin bundle with 31 selected
+The repository builds a curated ChatGPT/Codex plugin bundle with 32 selected
 skills from the full toolkit. The source of truth remains `skills/`; the build
 script copies the curated subset into a temporary bundle with the Codex CLI
 prompt fast-path hook. It does not include MCP servers, apps, Claude hooks, or
@@ -466,6 +467,23 @@ claude plugin marketplace add Gentleman-Programming/engram && claude plugin inst
 Like ShipFrame, Engram is configured globally for the current user/agent. Project
 specific behavior should still live in each repo's ShipFrame profile.
 
+### Optional Git-backed project memory
+
+ShipFrame can optionally initialize a small, project-local Markdown memory at
+`.shipframe/memory/`. Use `project-memory-init` only when you choose to enable it.
+The installer merely suggests the skill; it never creates files, writes consent,
+or connects/publishes to GitHub. Setup consent is stored in the repository’s local
+`.git/config` (shared by linked worktrees). Local curation does not authorize publication. GitHub publication
+requires a separate review and confirmation and creates only a documentation-only
+Draft PR; no automatic merge or default-branch push. Missing `gh` or auth leaves
+the memory local and provides instructions. Public repositories receive an explicit
+visibility warning before publication.
+
+Engram remains independently recommended for cross-project/session memory, but is
+optional. It is never synchronized with repository memory. The Git-backed option
+works without Engram and does not change Claude Code, Codex CLI, or OpenCode’s
+existing workflows unless a user opts into it.
+
 ---
 
 ## Codex workflow
@@ -494,6 +512,7 @@ The Codex agent classifies each request and runs the matching skills in order:
 | `deps_upgrade` | `project-memory-refresh` → `dependency-upgrade` → `code-review` |
 | `api_change` | `project-memory-refresh` → `api-contract-review` |
 | `incident` | `project-memory-refresh` → `incident-response` |
+| `memory_setup` | `project-memory-init` |
 | `memory_curate` | `project-memory-refresh` → `memory-curator` |
 | `handoff` | `handoff` |
 | `code_review` | `code-review` |
@@ -682,7 +701,7 @@ modelos/configuración bajo control del usuario.
 
 - Claude Code: agrega el marketplace con `/plugin marketplace add juanitourquiza/shipframe`, instala con `/plugin install shipframe`, recarga con `/reload-plugins` y usa `/shipframe:code-review`.
 - Codex CLI: instala con `shipframe install --codex`, abre Codex, ejecuta `/skills` y llama skills con `$code-review`, `$plan-expert`, etc.
-- ChatGPT/Codex plugin: abre el plugin público en https://chatgpt.com/plugins/plugins_6a88e6256bb48191a343d39dace5e05c o genera el bundle local curado de 31 skills con `python3 scripts/build-openai-plugin.py`; el plugin público de ChatGPT es una superficie independiente y conserva la publicación previa de 24 skills hasta que se envíe una actualización; el ZIP queda en `dist/openai-plugin/shipframe-openai-plugin.zip` y el packet de submission está en `docs/openai-plugin-submission.md`.
+- ChatGPT/Codex plugin: abre el plugin público en https://chatgpt.com/plugins/plugins_6a88e6256bb48191a343d39dace5e05c o genera el bundle local curado de 32 skills con `python3 scripts/build-openai-plugin.py`; el plugin público de ChatGPT es una superficie independiente y conserva la publicación previa de 24 skills hasta que se envíe una actualización; el ZIP queda en `dist/openai-plugin/shipframe-openai-plugin.zip` y el packet de submission está en `docs/openai-plugin-submission.md`.
 - OpenCode: instala con `shipframe install --opencode`; OpenCode carga las skills con su herramienta nativa `skill` desde `~/.config/opencode/skills` y también puede ver `~/.agents/skills`/`~/.claude/skills`.
 
 
@@ -712,6 +731,21 @@ herdr plugin action invoke shipframe.workflow.start-workflow
 Homebrew no instala el plugin Herdr. `brew install shipframe` instala el toolkit
 base de ShipFrame y el wrapper `shipframe`; usa el comando `herdr plugin install` para la
 superficie Herdr.
+
+### Memoria de proyecto opcional respaldada por Git
+
+ShipFrame puede inicializar una memoria Markdown pequeña en `.shipframe/memory/`
+cuando el usuario lo elige mediante `project-memory-init`. El instalador solo
+muestra la sugerencia: no crea archivos, no guarda consentimiento ni publica en
+GitHub. El consentimiento queda en el `.git/config` local del repo (compartido
+por sus worktrees vinculados). Mantener la memoria local no autoriza publicarla. GitHub requiere revisión y confirmación
+separadas y crea únicamente un Draft PR documental; nunca hace merge ni push a la
+rama principal. Sin `gh` o autenticación, conserva la memoria local y explica los
+pasos faltantes. En repositorios públicos avisa explícitamente antes de publicar.
+
+Engram sigue siendo recomendado, opcional e independiente para memoria entre
+proyectos y sesiones. No se sincroniza con esta memoria Git. Claude Code, Codex CLI
+y OpenCode conservan su flujo existente si no se activa esta opción.
 
 ### Memoria persistente opcional con Engram
 

@@ -52,7 +52,7 @@ position: Workflow router — start when useful or explicitly requested, not for
   Analyze user message. Classify intent as one of:
   new_feature | quick_task | implementation | refactor | bug | release |
   research | design_system | accessibility_audit | copy_review | mcp_debugging |
-  security_review | security_hardening | e2e_test | deps_upgrade | api_change | incident | memory_curate |
+  security_review | security_hardening | e2e_test | deps_upgrade | api_change | incident | memory_setup | memory_curate |
   code_review | handoff | wiki_management | unknown.
 
 2_context_gathering: |
@@ -169,6 +169,11 @@ incident:
   when: Responding to a production incident; check operational access first.
   sequence: project-memory-refresh → incident-response
   first_hop: project-memory-refresh
+
+memory_setup:
+  when: Initializing opt-in Git-backed project memory.
+  sequence: project-memory-init
+  first_hop: project-memory-init
 
 memory_curate:
   when: Curating durable project memory with explicit write authorization.

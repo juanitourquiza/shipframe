@@ -50,6 +50,7 @@ CURATED_SKILLS = [
     "api-contract-review",
     "incident-response",
     "memory-curator",
+    "project-memory-init",
 ]
 
 

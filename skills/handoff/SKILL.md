@@ -8,6 +8,8 @@ allowed-tools: Read Write Bash mcp__engram__mem_session_summary
 
 Write a handoff document summarising the current conversation so a fresh agent can continue the work. Save to the temporary directory of the user's OS - not the current workspace.
 
+If `.shipframe/memory/index.md` exists in the active repo, check local state with `project-memory-state.sh status <repo-root>`; if it is not `declined`, also use the memory-curator workflow to persist only verified durable task state in one project task note (goal, status, evidence, next steps, source paths). Do not copy the conversation/transcript. Project-memory opt-in permits local curation only, never publication. Keep the temporary handoff as the local fallback; Engram remains optional and is never synced.
+
 If Engram's `mem_session_summary` tool is available, save the same concise handoff using its required Goal / Instructions / Discoveries / Accomplished / Next Steps / Relevant Files structure. Engram is optional: always preserve the local handoff as the fallback, and never install or configure memory tooling.
 
 Include a "suggested skills" section in the document, which suggests skills that the agent should invoke.

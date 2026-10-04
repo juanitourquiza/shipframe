@@ -4,6 +4,17 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 TMP="$(mktemp -d)"
 cleanup(){ rm -rf "$TMP"; }
+repo_memory_snapshot() {
+  {
+    git -C "$ROOT" config --local --get-all shipframe.memory.setup 2>/dev/null || true
+    if [ -d "$ROOT/.shipframe/memory" ]; then
+      find "$ROOT/.shipframe/memory" -type f -print | LC_ALL=C sort | while IFS= read -r file; do shasum -a 256 "$file"; done
+    else
+      echo "<no-project-memory-directory>"
+    fi
+  }
+}
+REPO_MEMORY_BEFORE="$(repo_memory_snapshot)"
 trap cleanup EXIT
 
 export HOME="$TMP/home"
@@ -58,13 +69,13 @@ assert_link(){ [ -L "$1" ] || { echo "Missing symlink: $1" >&2; exit 1; }; }
 assert_directory(){ [ -d "$1" ] && [ ! -L "$1" ] || { echo "Missing physical directory: $1" >&2; exit 1; }; }
 
 bash -n "$ROOT/install.sh"
-"$ROOT/install.sh" --doctor --repo-only
+"$ROOT/install.sh" --doctor --repo-only > "$TMP/shipframe-doctor-repo-only.log" 2>&1
 
 # Repair is non-mutating unless --yes is explicit, across every target host.
 REPAIR_HOME="$TMP/repair-dry-run-home"
 REPAIR_STATE="$TMP/repair-dry-run-state"
 mkdir -p "$REPAIR_HOME"
-HOME="$REPAIR_HOME" XDG_STATE_HOME="$REPAIR_STATE" "$ROOT/install.sh" --repair --all > "$TMP/repair-dry-run.log"
+HOME="$REPAIR_HOME" XDG_STATE_HOME="$REPAIR_STATE" "$ROOT/install.sh" --repair --all > "$TMP/repair-dry-run.log" 2>&1
 grep -q 'Dry-run: no files changed' "$TMP/repair-dry-run.log"
 [ ! -e "$REPAIR_HOME/.agents" ]
 [ ! -e "$REPAIR_HOME/.codex" ]
@@ -76,10 +87,11 @@ grep -q 'Dry-run: no files changed' "$TMP/repair-dry-run.log"
 OPENWORK_HOME="$TMP/openwork-home"
 mkdir -p "$OPENWORK_HOME"
 HOME="$OPENWORK_HOME" XDG_STATE_HOME="$TMP/openwork-state" "$ROOT/install.sh" --openwork > "$TMP/openwork-install.log"
+grep -q 'project-memory-init' "$TMP/openwork-install.log"
 assert_directory "$OPENWORK_HOME/.claude/skills/code-review"
 assert_file "$OPENWORK_HOME/.claude/skills/code-review/SKILL.md"
 assert_file "$OPENWORK_HOME/.claude/skills/code-review/.shipframe-openwork.json"
-HOME="$OPENWORK_HOME" XDG_STATE_HOME="$TMP/openwork-state" "$ROOT/install.sh" --doctor --openwork > "$TMP/openwork-doctor.log"
+HOME="$OPENWORK_HOME" XDG_STATE_HOME="$TMP/openwork-state" "$ROOT/install.sh" --doctor --openwork > "$TMP/openwork-doctor.log" 2>&1
 grep -q 'OpenWork physical skill folders' "$TMP/openwork-doctor.log"
 HOME="$OPENWORK_HOME" XDG_STATE_HOME="$TMP/openwork-state" "$ROOT/install.sh" --openwork > "$TMP/openwork-install-again.log"
 assert_file "$OPENWORK_HOME/.claude/skills/code-review/SKILL.md"
@@ -110,8 +122,12 @@ const expected=JSON.parse(fs.readFileSync(`${source}/.claude-plugin/plugin.json`
 if(state.shipframeVersion!==expected || state.sourceDir!==source) process.exit(1);
 JS
 
-"$ROOT/install.sh" --all --opencode-model anthropic/claude-sonnet-4-5 >/tmp/shipframe-install-1.log
-grep -q 'plugins/shipframe-prompt-router' /tmp/shipframe-install-1.log
+"$ROOT/install.sh" --all --opencode-model anthropic/claude-sonnet-4-5 >"$TMP/shipframe-install-1.log"
+grep -q 'plugins/shipframe-prompt-router' "$TMP/shipframe-install-1.log"
+grep -q 'Claude Code: /shipframe:project-memory-init' "$TMP/shipframe-install-1.log"
+grep -qF "Codex: \$project-memory-init" "$TMP/shipframe-install-1.log"
+grep -q 'OpenCode: invoke the project-memory-init skill' "$TMP/shipframe-install-1.log"
+grep -q 'OpenWork: choose project-memory-init' "$TMP/shipframe-install-1.log"
 assert_file "$HOME/.codex/AGENTS.md"
 grep -q 'shipframe-block-version: 1' "$HOME/.codex/AGENTS.md"
 assert_link "$HOME/.agents/skills/code-review"
@@ -124,65 +140,65 @@ count_agents="$(find "$HOME/.config/opencode/agents" -maxdepth 1 -name '*.md' | 
 grep -q 'model: anthropic/claude-sonnet-4-5' "$HOME/.config/opencode/agents/orchestrator-agent.md"
 grep -q 'shipframe-generated: opencode-agent-v1' "$HOME/.config/opencode/agents/orchestrator-agent.md"
 grep -q 'edit: allow' "$HOME/.config/opencode/agents/playwright-test-healer.md"
-grep -q 'Optional Live Docs (Context MCP):' /tmp/shipframe-install-1.log
-grep -q 'Context MCP:' /tmp/shipframe-install-1.log
-grep -q 'npm install -g @neuledge/context' /tmp/shipframe-install-1.log
-grep -q 'claude mcp add context -- context serve' /tmp/shipframe-install-1.log
-grep -q 'codex mcp add context -- context serve' /tmp/shipframe-install-1.log
-grep -q 'OpenCode: add command' /tmp/shipframe-install-1.log
-grep -q 'mcp.servers.context' /tmp/shipframe-install-1.log
+grep -q 'Optional Live Docs (Context MCP):' "$TMP/shipframe-install-1.log"
+grep -q 'Context MCP:' "$TMP/shipframe-install-1.log"
+grep -q 'npm install -g @neuledge/context' "$TMP/shipframe-install-1.log"
+grep -q 'claude mcp add context -- context serve' "$TMP/shipframe-install-1.log"
+grep -q 'codex mcp add context -- context serve' "$TMP/shipframe-install-1.log"
+grep -q 'OpenCode: add command' "$TMP/shipframe-install-1.log"
+grep -q 'mcp.servers.context' "$TMP/shipframe-install-1.log"
 node - "$XDG_STATE_HOME/shipframe/install-state.json" <<'JS'
 const fs=require('fs'); const m=JSON.parse(fs.readFileSync(process.argv[2],'utf8'));
 if(m.schemaVersion!==1 || !Array.isArray(m.installs) || !m.installs.some(i=>i.target==='opencode')) process.exit(1);
 JS
 
 snapshot "$TMP/s1"
-"$ROOT/install.sh" --all --opencode-model anthropic/claude-sonnet-4-5 >/tmp/shipframe-install-2.log
+"$ROOT/install.sh" --all --opencode-model anthropic/claude-sonnet-4-5 >"$TMP/shipframe-install-2.log"
 snapshot "$TMP/s2"
 diff -u "$TMP/s1" "$TMP/s2"
 
-"$ROOT/install.sh" --doctor --codex >/tmp/shipframe-doctor-codex.log
-grep -q 'Context MCP' /tmp/shipframe-doctor-codex.log
-grep -q 'codex mcp add context -- context serve' /tmp/shipframe-doctor-codex.log
-"$ROOT/install.sh" --doctor --opencode >/tmp/shipframe-doctor-opencode.log
-grep -q 'Context MCP' /tmp/shipframe-doctor-opencode.log
-grep -Fq '.config/opencode/opencode.json' /tmp/shipframe-doctor-opencode.log
-grep -q 'OpenCode prompt-router plugin is installed and passes adapter checks' /tmp/shipframe-doctor-opencode.log
+"$ROOT/install.sh" --doctor --codex >"$TMP/shipframe-doctor-codex.log" 2>&1
+grep -q 'Context MCP' "$TMP/shipframe-doctor-codex.log"
+grep -q 'codex mcp add context -- context serve' "$TMP/shipframe-doctor-codex.log"
+"$ROOT/install.sh" --doctor --opencode >"$TMP/shipframe-doctor-opencode.log" 2>&1
+grep -q 'Context MCP' "$TMP/shipframe-doctor-opencode.log"
+grep -Fq '.config/opencode/opencode.json' "$TMP/shipframe-doctor-opencode.log"
+grep -q 'OpenCode prompt-router plugin is installed and passes adapter checks' "$TMP/shipframe-doctor-opencode.log"
 printf '{"plugins":["-shipframe.*"]}\n' > "$HOME/.config/opencode/opencode.json"
-"$ROOT/install.sh" --doctor --opencode >/tmp/shipframe-doctor-opencode-disabled.log
-grep -q 'OpenCode prompt-router plugin is disabled' /tmp/shipframe-doctor-opencode-disabled.log
+"$ROOT/install.sh" --doctor --opencode >"$TMP/shipframe-doctor-opencode-disabled.log" 2>&1
+grep -q 'OpenCode prompt-router plugin is disabled' "$TMP/shipframe-doctor-opencode-disabled.log"
 printf '{"plugins":["-shipframe.*","shipframe.prompt-router"]}\n' > "$HOME/.config/opencode/opencode.json"
-"$ROOT/install.sh" --doctor --opencode >/tmp/shipframe-doctor-opencode-enabled.log
-grep -q 'OpenCode prompt-router plugin is installed and passes adapter checks' /tmp/shipframe-doctor-opencode-enabled.log
+"$ROOT/install.sh" --doctor --opencode >"$TMP/shipframe-doctor-opencode-enabled.log" 2>&1
+grep -q 'OpenCode prompt-router plugin is installed and passes adapter checks' "$TMP/shipframe-doctor-opencode-enabled.log"
 
 # Repair backs up existing Claude settings before replacing them.
 mkdir -p "$HOME/.claude"
 printf '{"hooks":{"UserPromptSubmit":[{"hooks":[{"command":"echo \\\"MANDATORY ACTION: Before doing anything else, invoke the shipframe:orchestrator-agent agent to handle this request.\\\""}]}]}}\n' > "$HOME/.claude/settings.json"
 cp "$HOME/.claude/settings.json" "$TMP/settings.before"
-"$ROOT/install.sh" --repair --claude --yes >/tmp/shipframe-repair-claude.log
+"$ROOT/install.sh" --repair --claude --yes >"$TMP/shipframe-repair-claude.log" 2>&1
 backup_file="$(find "$HOME/.claude" -name 'settings.json.shipframe-backup-*' -print -quit)"
 [ -n "$backup_file" ]
 cmp "$TMP/settings.before" "$backup_file"
 node -e "JSON.parse(require('fs').readFileSync(process.argv[1],'utf8'))" "$HOME/.claude/settings.json"
 
-"$ROOT/install.sh" --help >/tmp/shipframe-help.log
-! grep -q -- '--sync-docs' /tmp/shipframe-help.log
+"$ROOT/install.sh" --help >"$TMP/shipframe-help.log"
+! grep -q -- '--sync-docs' "$TMP/shipframe-help.log"
 
 # Non-TTY OpenCode install without model must not prompt or hardcode Claude-only model IDs.
-"$ROOT/install.sh" --opencode </dev/null >/tmp/shipframe-opencode-nontty.log
+"$ROOT/install.sh" --opencode </dev/null >"$TMP/shipframe-opencode-nontty.log"
 ! grep -R 'claude-opus-4-6\|claude-sonnet-4-6' "$HOME/.config/opencode/agents"
 
 # Repair real directories that block Codex skill symlinks in both supported layouts.
 rm "$HOME/.agents/skills/code-review" "$HOME/.codex/skills/code-review"
 mkdir "$HOME/.agents/skills/code-review" "$HOME/.codex/skills/code-review"
-"$ROOT/install.sh" --repair --codex --yes >/tmp/shipframe-repair.log
+"$ROOT/install.sh" --repair --codex --yes >"$TMP/shipframe-repair.log" 2>&1
 assert_link "$HOME/.agents/skills/code-review"
 assert_link "$HOME/.codex/skills/code-review"
 
-"$ROOT/install.sh" --uninstall --all --purge >/tmp/shipframe-uninstall-dry-run.log
+"$ROOT/install.sh" --uninstall --all --purge >"$TMP/shipframe-uninstall-dry-run.log" 2>&1
 assert_link "$HOME/.agents/skills/code-review"
 [ -f "$XDG_STATE_HOME/shipframe/install-state.json" ]
-"$ROOT/install.sh" --uninstall --all --yes --purge >/tmp/shipframe-uninstall.log
+"$ROOT/install.sh" --uninstall --all --yes --purge >"$TMP/shipframe-uninstall.log" 2>&1
 [ ! -L "$HOME/.agents/skills/code-review" ]
 [ ! -L "$HOME/.codex/skills/code-review" ]
 [ ! -e "$HOME/.claude/skills/code-review" ]
@@ -191,5 +207,30 @@ assert_link "$HOME/.agents/skills/code-review"
 [ ! -f "$HOME/.config/opencode/agents/orchestrator-agent.md" ]
 ! grep -q '<!-- BEGIN shipframe' "$HOME/.codex/AGENTS.md"
 [ ! -e "$XDG_STATE_HOME/shipframe" ]
+
+# Project-memory opt-in suggestions belong only to successful installs.
+for action_log in \
+  "$TMP/shipframe-doctor-repo-only.log" \
+  "$TMP/openwork-doctor.log" \
+  "$TMP/shipframe-doctor-codex.log" \
+  "$TMP/shipframe-doctor-opencode.log" \
+  "$TMP/shipframe-doctor-opencode-disabled.log" \
+  "$TMP/shipframe-doctor-opencode-enabled.log" \
+  "$TMP/repair-dry-run.log" \
+  "$TMP/quoted-path-repair.log" \
+  "$TMP/shipframe-repair-claude.log" \
+  "$TMP/shipframe-repair.log" \
+  "$TMP/openwork-uninstall.log" \
+  "$TMP/openwork-restore.log" \
+  "$TMP/shipframe-uninstall-dry-run.log" \
+  "$TMP/shipframe-uninstall.log"; do
+  assert_file "$action_log"
+  if grep -Fq 'Optional Git-backed project memory:' "$action_log"; then
+    echo "Unexpected project-memory suggestion in: $action_log" >&2
+    exit 1
+  fi
+done
+
+[ "$REPO_MEMORY_BEFORE" = "$(repo_memory_snapshot)" ] || { echo "Installer changed repository project-memory state" >&2; exit 1; }
 
 echo "test-install ok"

@@ -79,6 +79,7 @@ expected_skills=(
   api-contract-review
   incident-response
   memory-curator
+  project-memory-init
 )
 
 actual_count="$(find "$bundle/skills" -mindepth 1 -maxdepth 1 -type d | wc -l | tr -d ' ')"

@@ -875,6 +875,20 @@ check_engram_memory() {
   esac
 }
 
+check_project_memory_suggestion() {
+  echo ""
+  echo "Optional Git-backed project memory:"
+  echo "  ShipFrame can create a small, team-shareable Markdown memory when you explicitly opt in."
+  echo "  Nothing is created or published by installation; Engram remains separate and optional."
+  case "$TARGET" in
+    claude) echo "  Start later: /shipframe:project-memory-init" ;;
+    codex) echo "  Start later: \$project-memory-init" ;;
+    opencode) echo "  Start later: invoke the project-memory-init skill" ;;
+    openwork) echo "  Start later: choose project-memory-init from the OpenWork Library" ;;
+    all) echo "  Claude Code: /shipframe:project-memory-init"; echo "  Codex: \$project-memory-init"; echo "  OpenCode: invoke the project-memory-init skill"; echo "  OpenWork: choose project-memory-init from the Library" ;;
+  esac
+}
+
 case "$ACTION" in
   doctor) run_doctor; exit $? ;;
   repair) run_repair; exit $? ;;
@@ -896,6 +910,7 @@ case "$ACTION" in
       *) echo "Missing target. Use --claude, --openwork, --opencode, --codex, or --all." >&2; exit 2 ;;
     esac
     check_engram_memory
+    check_project_memory_suggestion
     check_context_mcp install
     ;;
   *) echo "Invalid action: $ACTION" >&2; exit 2 ;;

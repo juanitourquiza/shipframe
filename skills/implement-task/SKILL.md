@@ -17,6 +17,8 @@ effort: high
 
 Read before you write. Every file you touch must be understood before it is modified. Never guess at conventions — find them in the codebase. If the task is ambiguous after reading all available context, surface the ambiguity and ask rather than assume.
 
+When `.shipframe/memory/index.md` exists and the checkout's project-memory state is not `declined`, invoke `memory-curator` after verification to record only durable, verified task outcomes/decisions in the project's task note. Do not record routine implementation details, secrets, or transcripts; this local curation does not publish anything.
+
 ---
 
 ## Step 1 — Resolve the task input
