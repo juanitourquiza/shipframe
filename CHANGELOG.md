@@ -1,5 +1,13 @@
 # Changelog
 
+## v0.8.0 — 2026-10-03
+
+### Added
+- Added opt-in Git-backed project memory at `.shipframe/memory/` with repository-local consent, provenance-aware refresh/curation, and explicit GitHub Draft PR safeguards; Engram remains recommended, optional, and independent.
+- Added installer guidance and consistent project-memory setup routing across Claude Code, Codex CLI, OpenCode, OpenWork, and the curated OpenAI/Codex plugin.
+- Added regression coverage for consent-state isolation, memory workflow privacy boundaries, installer suggestions, and safe handling of Git-config sandbox restrictions.
+
+
 ## v0.7.4 — 2026-10-01
 
 ### Fixed

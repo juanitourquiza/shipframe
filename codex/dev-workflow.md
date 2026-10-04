@@ -55,6 +55,7 @@ If missing, run `wiki-init` before anything else. If present, read `WIKI.md` bef
 | `deps_upgrade` | Upgrade or migrate dependencies safely | `project-memory-refresh` → `dependency-upgrade` → `code-review` |
 | `api_change` | Review a public API/schema contract change | `project-memory-refresh` → `api-contract-review` |
 | `incident` | Respond to production outage or degradation | `project-memory-refresh` → `incident-response` |
+| `memory_setup` | Initialize opt-in Git-backed project memory | `project-memory-init` |
 | `memory_curate` | Curate durable project memory | `project-memory-refresh` → `memory-curator` |
 | `code_review` | Review changes before PR | `code-review` |
 | `handoff` | Prepare next session/agent | `handoff` |

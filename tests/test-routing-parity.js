@@ -29,14 +29,14 @@ for (const [intent, sequence] of Object.entries(routing.intents)) {
   }
 }
 
-for (const intent of ['security_review', 'security_hardening', 'e2e_test', 'deps_upgrade', 'api_change', 'incident', 'memory_curate']) {
+for (const intent of ['security_review', 'security_hardening', 'e2e_test', 'deps_upgrade', 'api_change', 'incident', 'memory_curate', 'memory_setup']) {
   const sequence = routing.intents[intent];
   assert.equal(routeCell(codex, intent, '## Routing Table'), sequence, `Codex sequence differs from routing.json for ${intent}`);
   assert.equal(routeCell(readme, intent, '## Codex workflow'), sequence, `README sequence differs from routing.json for ${intent}`);
   assert.ok(orchestrator.includes(`sequence: ${sequence}`), `Orchestrator sequence differs from routing.json for ${intent}`);
 }
 
-for (const skill of ['security-review', 'security-hardening', 'e2e-verify', 'dependency-upgrade', 'api-contract-review', 'incident-response', 'memory-curator']) {
+for (const skill of ['security-review', 'security-hardening', 'e2e-verify', 'dependency-upgrade', 'api-contract-review', 'incident-response', 'memory-curator', 'project-memory-init']) {
   const file = path.join(root, 'skills', skill, 'SKILL.md');
   const contents = fs.readFileSync(file, 'utf8');
   assert.match(contents, /^---\nname: /);
