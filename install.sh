@@ -28,6 +28,7 @@ Install targets:
   --openwork     Install shared skills for OpenWork (no OpenWork CLI required).
   --opencode     Install for OpenCode (skills + converted agents).
   --codex        Install for Codex CLI (skills + orchestrator workflow).
+  --codex-agents Install ShipFrame native Codex roles globally (explorer + reviewer; opt-in).
   --all          Install for Claude Code, OpenCode, and Codex (shared skills for each host).
 
 Actions:
@@ -60,6 +61,7 @@ ACTION="install"
 PROJECT_DIR="$(pwd)"
 DRY_RUN=false
 TARGET=""
+CODEX_AGENTS=false
 REPO_ONLY=false
 YES=false
 PURGE=false
@@ -76,6 +78,7 @@ while [ "$#" -gt 0 ]; do
     --openwork) TARGET="openwork" ;;
     --opencode) TARGET="opencode" ;;
     --codex) TARGET="codex" ;;
+    --codex-agents) CODEX_AGENTS=true ;;
     --all) TARGET="all" ;;
     --repo-only) REPO_ONLY=true ;;
     --yes) YES=true ;;
@@ -94,6 +97,11 @@ while [ "$#" -gt 0 ]; do
   esac
   shift
 done
+
+if [ "$CODEX_AGENTS" = true ] && [ "$TARGET" != "codex" ] && [ "$TARGET" != "all" ]; then
+  echo "--codex-agents requires --codex or --all." >&2
+  exit 2
+fi
 
 if [ "$ACTION" = "doctor" ] && [ "$REPO_ONLY" = true ] && [ -n "$TARGET" ]; then
   echo "--doctor --repo-only does not use install targets." >&2
@@ -435,6 +443,7 @@ check_opencode_router() {
 }
 
 environment_doctor() {
+  local local_profile_count profile
   resolve_source_dir
   status_counts_ok=0; status_counts_warn=0; status_counts_err=0
   case "$TARGET" in
@@ -464,6 +473,13 @@ environment_doctor() {
     if [ -f "$HOME/.codex/AGENTS.md" ] && grep -q '<!-- BEGIN shipframe' "$HOME/.codex/AGENTS.md"; then
       grep -q 'shipframe-block-version: 1' "$HOME/.codex/AGENTS.md" && report_ok "Codex managed block versioned" || report_warn "Codex managed block lacks version; re-run install or repair"
     else report_warn "Codex managed block missing"; fi
+    if [ -d "$HOME/.codex/agents" ]; then
+      local_profile_count=0
+      for profile in "$HOME"/.codex/agents/*.toml; do
+        [ -f "$profile" ] && grep -q 'shipframe-managed: codex-agent-v1' "$profile" && local_profile_count=$((local_profile_count + 1))
+      done
+      [ "$local_profile_count" -gt 0 ] && report_ok "ShipFrame Codex native profiles present ($local_profile_count)" || true
+    fi
     if command_exists codex; then codex doctor --summary >/dev/null 2>&1 && report_ok "codex doctor" || report_warn "codex doctor reported issues; run codex doctor --summary"; fi
   fi
   if [[ "$TARGET" =~ ^(claude|all)$ ]]; then
@@ -753,8 +769,28 @@ else throw new Error('Partial ShipFrame managed block in '+dst+'. Run --repair -
 fs.writeFileSync(dst, existing);
 JS
 }
+install_codex_agents() {
+  resolve_source_dir
+  local src="$SOURCE_DIR/codex/agents" dst="$HOME/.codex/agents" file target
+  [ -d "$src" ] || { echo "Error: no codex/agents directory in $SOURCE_DIR" >&2; exit 1; }
+  mkdir -p "$dst"
+  for file in "$src"/*.toml; do
+    [ -f "$file" ] || continue
+    target="$dst/$(basename "$file")"
+    if [ -L "$target" ]; then
+      echo "  skip $(basename "$file") (symlink exists; preserving user path)"; continue
+    fi
+    if [ -e "$target" ] && ! grep -q 'shipframe-managed: codex-agent-v1' "$target"; then
+      echo "  skip $(basename "$file") (unmanaged profile exists)"; continue
+    fi
+    cp "$file" "$target"
+    echo "  installed native Codex role: $target"
+  done
+}
 install_codex() {
-  install_codex_skills; echo ""; install_codex_workflow; echo ""
+  install_codex_skills; echo ""; install_codex_workflow
+  [ "$CODEX_AGENTS" = true ] && install_codex_agents
+  echo ""
   echo "Codex CLI install complete."
   echo "  Skills   : $HOME/.agents/skills   (Codex recommended layout)"
   echo "  Legacy   : $HOME/.codex/skills    (compatibility symlinks)"
@@ -764,6 +800,11 @@ install_codex() {
   write_manifest
   local artifacts=() artifact
   while IFS= read -r artifact; do artifacts+=("$artifact"); done < <(collect_skill_artifacts "$HOME/.agents/skills"; collect_skill_artifacts "$HOME/.codex/skills"; printf '%s\n' "$HOME/.codex/AGENTS.md")
+  if [ "$CODEX_AGENTS" = true ]; then
+    for artifact in "$HOME"/.codex/agents/*.toml; do
+      [ -f "$artifact" ] && [ ! -L "$artifact" ] && grep -q 'shipframe-managed: codex-agent-v1' "$artifact" && artifacts+=("$artifact")
+    done
+  fi
   record_artifacts codex "${artifacts[@]}"
   return 0
 }
@@ -809,6 +850,15 @@ if(b!==-1&&e!==-1&&e>b){ s=(s.slice(0,b)+s.slice(e+END.length)).replace(/\n{3,}/
 JS
   else echo "  dry-run: would remove ShipFrame block from $agents_file"; fi
 }
+remove_codex_agents() {
+  local file
+  for file in "$HOME"/.codex/agents/*.toml; do
+    [ -f "$file" ] && [ ! -L "$file" ] || continue
+    if grep -q 'shipframe-managed: codex-agent-v1' "$file"; then
+      if [ "$YES" = true ]; then rm "$file"; echo "  removed $file"; else echo "  dry-run: would remove $file"; fi
+    fi
+  done
+}
 
 remove_opencode_agents() {
   local dir="$HOME/.config/opencode/agents"; [ -d "$dir" ] || return 0
@@ -830,12 +880,16 @@ run_uninstall() {
   esac
   case "$TARGET" in openwork) echo "Removing OpenWork shared skills..."; uninstall_openwork_skills ;; esac
   case "$TARGET" in opencode|all) echo "Removing OpenCode artifacts..."; uninstall_symlinked_skills "$HOME/.config/opencode/skills"; remove_opencode_agents; remove_opencode_router ;; esac
-  case "$TARGET" in codex|all) echo "Removing Codex artifacts..."; uninstall_symlinked_skills "$HOME/.agents/skills"; uninstall_symlinked_skills "$HOME/.codex/skills"; remove_codex_block ;; esac
+  case "$TARGET" in codex|all) echo "Removing Codex artifacts..."; uninstall_symlinked_skills "$HOME/.agents/skills"; uninstall_symlinked_skills "$HOME/.codex/skills"; remove_codex_block; remove_codex_agents ;; esac
   if [ "$PURGE" = true ]; then
     if [ "$YES" = true ]; then rm -rf "$PLUGIN_CACHE" "$STATE_DIR"; echo "Purged $PLUGIN_CACHE and $STATE_DIR"; else echo "dry-run: would purge $PLUGIN_CACHE and $STATE_DIR"; fi
   fi
 }
 run_repair() {
+  local codex_agents_present=false profile
+  for profile in "$HOME"/.codex/agents/*.toml; do
+    [ -f "$profile" ] && grep -q 'shipframe-managed: codex-agent-v1' "$profile" && { codex_agents_present=true; break; }
+  done
   if [ "$YES" != true ]; then
     echo "Dry-run: no files changed. Pass --yes to apply repair."
     case "$TARGET" in
@@ -846,14 +900,19 @@ run_repair() {
       opencode|all) echo "  would repair OpenCode skills, agents, and router" ;;
     esac
     case "$TARGET" in
-      codex|all) echo "  would repair Codex skills and workflow" ;;
+      codex|all) echo "  would repair Codex skills and workflow"; { [ "$CODEX_AGENTS" = true ] || [ "$codex_agents_present" = true ]; } && echo "  would install/update opt-in Codex native roles" ;;
     esac
     return 0
   fi
   case "$TARGET" in claude|all) echo "Repairing Claude Code settings and shared skills..."; install_openwork_skills; remove_legacy_claude_hooks ;; esac
   case "$TARGET" in openwork) echo "Repairing OpenWork shared skills..."; install_openwork_skills ;; esac
   case "$TARGET" in opencode|all) echo "Repairing OpenCode skills/agents..."; link_skills "$HOME/.config/opencode/skills" repair; install_opencode_agents; install_opencode_router ;; esac
-  case "$TARGET" in codex|all) echo "Repairing Codex skills/workflow..."; link_skills "$HOME/.agents/skills" repair; link_skills "$HOME/.codex/skills" repair; install_codex_workflow ;; esac
+  case "$TARGET" in codex|all)
+    echo "Repairing Codex skills/workflow..."; link_skills "$HOME/.agents/skills" repair; link_skills "$HOME/.codex/skills" repair; install_codex_workflow
+    if [ "$CODEX_AGENTS" = true ]; then install_codex_agents
+    else for profile in "$HOME"/.codex/agents/*.toml; do [ -f "$profile" ] && grep -q 'shipframe-managed: codex-agent-v1' "$profile" && { install_codex_agents; break; }; done; fi
+    ;;
+  esac
   [ "$YES" = true ] && write_manifest || true
 }
 check_engram_memory() {

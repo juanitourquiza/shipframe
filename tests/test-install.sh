@@ -147,6 +147,28 @@ grep -q 'claude mcp add context -- context serve' "$TMP/shipframe-install-1.log"
 grep -q 'codex mcp add context -- context serve' "$TMP/shipframe-install-1.log"
 grep -q 'OpenCode: add command' "$TMP/shipframe-install-1.log"
 grep -q 'mcp.servers.context' "$TMP/shipframe-install-1.log"
+
+# Codex native agent roles are explicit opt-in; managed roles are repairable/removable,
+# while an unrelated user role and config.toml remain untouched.
+CODEX_AGENT_HOME="$TMP/codex-agent-home"
+mkdir -p "$CODEX_AGENT_HOME/.codex/agents"
+printf 'user-owned = true\n' > "$CODEX_AGENT_HOME/.codex/config.toml"
+printf 'name = "user_explorer"\n' > "$CODEX_AGENT_HOME/.codex/agents/explorer-custom.toml"
+ln -s "$CODEX_AGENT_HOME/.codex/agents/explorer-custom.toml" "$CODEX_AGENT_HOME/.codex/agents/explorer.toml"
+HOME="$CODEX_AGENT_HOME" XDG_STATE_HOME="$TMP/codex-agent-state" "$ROOT/install.sh" --codex --codex-agents > "$TMP/codex-agents-install.log"
+grep -q 'skip explorer.toml (symlink exists; preserving user path)' "$TMP/codex-agents-install.log"
+assert_file "$CODEX_AGENT_HOME/.codex/agents/reviewer.toml"
+grep -q 'shipframe-managed: codex-agent-v1' "$CODEX_AGENT_HOME/.codex/agents/reviewer.toml"
+grep -q 'user-owned = true' "$CODEX_AGENT_HOME/.codex/config.toml"
+HOME="$CODEX_AGENT_HOME" XDG_STATE_HOME="$TMP/codex-agent-state" "$ROOT/install.sh" --repair --codex --codex-agents --yes > "$TMP/codex-agents-repair.log"
+HOME="$CODEX_AGENT_HOME" XDG_STATE_HOME="$TMP/codex-agent-state" "$ROOT/install.sh" --uninstall --codex > "$TMP/codex-agents-uninstall-dry.log"
+assert_file "$CODEX_AGENT_HOME/.codex/agents/reviewer.toml"
+HOME="$CODEX_AGENT_HOME" XDG_STATE_HOME="$TMP/codex-agent-state" "$ROOT/install.sh" --uninstall --codex --yes > "$TMP/codex-agents-uninstall.log"
+[ ! -e "$CODEX_AGENT_HOME/.codex/agents/reviewer.toml" ]
+assert_link "$CODEX_AGENT_HOME/.codex/agents/explorer.toml"
+assert_file "$CODEX_AGENT_HOME/.codex/agents/explorer-custom.toml"
+grep -q 'name = "user_explorer"' "$CODEX_AGENT_HOME/.codex/agents/explorer-custom.toml"
+grep -q 'user-owned = true' "$CODEX_AGENT_HOME/.codex/config.toml"
 node - "$XDG_STATE_HOME/shipframe/install-state.json" <<'JS'
 const fs=require('fs'); const m=JSON.parse(fs.readFileSync(process.argv[2],'utf8'));
 if(m.schemaVersion!==1 || !Array.isArray(m.installs) || !m.installs.some(i=>i.target==='opencode')) process.exit(1);
