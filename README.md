@@ -216,6 +216,7 @@ cd ~/tools/shipframe
 ./install.sh --codex
 ./install.sh --claude
 ./install.sh --opencode
+./install.sh --codex --codex-agents
 ```
 
 ### Targets
@@ -224,6 +225,7 @@ cd ~/tools/shipframe
 ./install.sh --claude     # Claude Code plugin + plugin-managed hooks
 ./install.sh --opencode   # OpenCode skills + converted agents
 ./install.sh --codex      # Codex CLI skills + global workflow block
+./install.sh --codex --codex-agents  # additionally install native Codex roles (opt-in)
 ./install.sh --all        # all supported tools
 ```
 
@@ -488,9 +490,17 @@ existing workflows unless a user opts into it.
 
 ## Codex workflow
 
-Codex has no sub-agent delegation, so ShipFrame installs a routing table into `~/.codex/AGENTS.md`.
+Codex supports native subagents in compatible CLI/runtime configurations. ShipFrame installs a routing table into `~/.codex/AGENTS.md`; it does not modify user-owned `config.toml` or enable experimental settings. For substantive, separable work, the workflow asks the host to use native delegation when available and an independent read-only review after non-trivial implementation. Trivial tasks remain in the primary agent. If the host cannot actually delegate, it must say so and must not claim independent review.
 
 The Codex agent classifies each request and runs the matching skills in order:
+
+Codex documents custom native roles in [its subagents guide](https://developers.openai.com/codex/subagents). For compatible Codex versions, `--codex --codex-agents` also
+installs optional `shipframe_explorer` and `shipframe_reviewer` role files under
+`~/.codex/agents/`. The explorer is read-only; the reviewer is read-only and
+independent. These files are installed only by explicit choice, can be repaired
+with `--repair --codex --codex-agents`, and are removed by `--uninstall --codex --yes` only when marked ShipFrame-managed. Existing `config.toml` and unmanaged
+agent files are preserved. If native agents cannot actually run, report that
+instead of claiming delegated work.
 
 | Intent | Skill sequence |
 |---|---|
@@ -525,7 +535,7 @@ The Codex agent classifies each request and runs the matching skills in order:
 ```text
 shipframe/
 ├── agents/                 # Claude-shaped agents and orchestrator docs
-├── codex/                  # Codex routing workflow
+├── codex/                  # Codex routing workflow and optional native agent roles
 ├── skills/                 # Installable flat skill directories
 ├── templates/              # PR, issue, ClickUp, and wiki templates
 ├── project-packs/          # Optional project profile starters

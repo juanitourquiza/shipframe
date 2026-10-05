@@ -1,7 +1,7 @@
 # ShipFrame — Codex Workflow
 
 > ShipFrame adapts a team-oriented AI coding workflow to the Codex CLI.
-> Codex has no sub-agent delegation, so **you** (the single Codex agent) classify the request, then invoke the matching **skills** yourself, in sequence.
+> Codex supports native subagents in compatible CLI/runtime configurations. **You** classify the request and orchestrate the matching skills and agents; do not claim delegation unless a native child agent actually ran.
 
 ## Core rule
 
@@ -19,6 +19,10 @@ For non-trivial workflow work, before acting:
 2. Refresh project context when prior decisions or repo conventions may matter.
 3. Run the skills in the listed sequence, in order, waiting for each to finish.
 4. Only write code after the required upstream steps (context, spec, plan, tests/review) are done.
+
+Use the host's native subagent mechanism for substantive, separable investigation or implementation work when available. Keep trivial questions, one-line edits, and tightly coupled changes in the main agent. For non-trivial code changes, delegate independent review after implementation when the host supports it; the reviewer must inspect the resulting diff and report findings without editing. If native delegation is unavailable or fails, continue with the matching skills in the current agent and explicitly report that delegation/review was not independently performed. Never simulate a subagent by relabeling your own work. ShipFrame does not enable experimental features or edit user-owned `config.toml` settings.
+
+When ShipFrame's optional Codex roles are installed (`./install.sh --codex --codex-agents`), use `shipframe_explorer` for read-only code mapping and `shipframe_reviewer` for independent read-only diff review. Installation is opt-in; the CLI/runtime must support native subagents. Do not spawn a separate writer for tightly coupled changes or claim child-agent work without an actual child result.
 
 Skills live in the current Agent Skills layout at `~/.agents/skills/<name>/SKILL.md`; ShipFrame also keeps compatibility symlinks in `~/.codex/skills/<name>/SKILL.md` for existing Codex setups. In Codex, run `/skills` to list them or type `$skill-name` to invoke one explicitly. Never re-implement a skill's logic inline — load and follow its `SKILL.md`.
 

@@ -10,6 +10,7 @@ assert.equal(routing.schemaVersion, 1);
 const codex = fs.readFileSync(path.join(root, 'codex/dev-workflow.md'), 'utf8');
 const readme = fs.readFileSync(path.join(root, 'README.md'), 'utf8');
 const orchestrator = fs.readFileSync(path.join(root, 'agents/orchestrator-agent.md'), 'utf8');
+const claudeAgents = fs.readdirSync(path.join(root, 'agents')).filter((file) => file.endsWith('.md'));
 const routeCell = (document, intent, sectionHeading) => {
   const scoped = document.slice(document.indexOf(sectionHeading));
   const line = scoped.split('\n').find((entry) => entry.includes(`| \`${intent}\` |`));
@@ -44,6 +45,15 @@ for (const skill of ['security-review', 'security-hardening', 'e2e-verify', 'dep
   assert.match(contents, /Resumen \(ES\)/);
   assert.match(contents, /Host (?:paths and )?limits/);
 }
+
+// Native delegation is a host capability, not an assumed or simulated outcome.
+assert.ok(claudeAgents.includes('reviewer-agent.md'), 'Claude/OpenCode independent reviewer remains available');
+assert.doesNotMatch(codex, /Codex has no sub-?agent delegation/i, 'Codex docs must not claim native delegation is absent');
+assert.match(codex, /native subagent mechanism/i, 'Codex workflow should use native delegation when available');
+assert.match(codex, /explicitly report that delegation\/review was not independently performed/i);
+assert.match(codex, /does not enable experimental features or edit user-owned `config\.toml` settings/i);
+assert.match(readme, /Codex supports native subagents/i, 'README must describe current Codex capability');
+assert.match(readme, /does not modify user-owned `config\.toml`/i);
 
 const implementTask = fs.readFileSync(path.join(root, 'skills/implement-task/SKILL.md'), 'utf8');
 assert.match(implementTask, /Conditional security hardening/);
