@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.8.1 — 2026-10-05
+
+### Added
+- Added opt-in native Codex subagent roles for read-only code exploration and independent diff review; the installer preserves user configuration and unmanaged profiles.
+- Updated Codex workflow guidance to use native child agents when available and report honestly when delegation cannot be performed.
+
+
 ## v0.8.0 — 2026-10-03
 
 ### Added
