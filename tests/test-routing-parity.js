@@ -6,7 +6,7 @@ const path = require('node:path');
 
 const root = path.resolve(__dirname, '..');
 const routing = JSON.parse(fs.readFileSync(path.join(root, 'routing.json'), 'utf8'));
-assert.equal(routing.schemaVersion, 1);
+assert.equal(routing.schemaVersion, 2);
 const codex = fs.readFileSync(path.join(root, 'codex/dev-workflow.md'), 'utf8');
 const readme = fs.readFileSync(path.join(root, 'README.md'), 'utf8');
 const orchestrator = fs.readFileSync(path.join(root, 'agents/orchestrator-agent.md'), 'utf8');
@@ -17,24 +17,45 @@ const routeCell = (document, intent, sectionHeading) => {
   return line?.split('|').at(-2).replace(/`/g, '').trim();
 };
 
+const aliasEntries = Object.entries(routing.aliases || {});
+const canonicalize = (sequence) => {
+  return sequence.split(/\s*(?:→|·)\s*/).map((rawStep) => {
+    const conditions = [...rawStep.matchAll(/\(([^)]*)\)/g)].map((match) => match[1].replace(/\s+/g, ' ').trim().toLowerCase());
+    const normalizedConditions = conditions.map((condition) => condition.replace(/; otherwise tdd skill/i, ''));
+    let step = rawStep.replace(/\([^)]*\)/g, ' ').replace(/\s+/g, ' ').trim();
+    const requestedFixes = /\bif fixes are requested\b/i.test(step);
+    step = step.replace(/\s+if fixes are requested\b/i, '').trim();
+    if (routing.qa_gate.tokens.some((token) => new RegExp(`\\b${token}\\b`, 'i').test(step))) return `qa-gate${normalizedConditions.length ? `[${normalizedConditions.join(';')}]` : ''}`;
+    for (const [canonical, aliases] of aliasEntries) {
+      for (const alias of aliases) step = step.split(alias).join(canonical);
+    }
+    if (requestedFixes) normalizedConditions.push('if fixes are requested');
+    return `${step}${normalizedConditions.length ? `[${normalizedConditions.join(';')}]` : ''}`;
+  });
+};
+
+const sourceSequence = (document, intent, sectionHeading) => routeCell(document, intent, sectionHeading);
+
 for (const [intent, sequence] of Object.entries(routing.intents)) {
   assert.ok(codex.includes(`| \`${intent}\` |`), `Codex routing missing ${intent}`);
   assert.ok(readme.includes(`| \`${intent}\` |`), `README routing missing ${intent}`);
   assert.ok(orchestrator.includes(`${intent}:`), `Orchestrator routing missing ${intent}`);
-  assert.equal(routeCell(codex, intent, '## Routing Table'), sequence, `Codex sequence differs from routing.json for ${intent}`);
-  assert.equal(routeCell(readme, intent, '## Codex workflow'), sequence, `README sequence differs from routing.json for ${intent}`);
-  for (const skill of sequence.match(/[a-z][a-z0-9-]+/g) || []) {
-    // Agent aliases and conditional prose are not skill paths; only enforce files for routed skill slugs.
-    const skillFile = path.join(root, 'skills', skill, 'SKILL.md');
-    if (fs.existsSync(skillFile)) assert.ok(fs.statSync(skillFile).isFile());
-  }
+  const canonicalSequence = canonicalize(sequence);
+  assert.deepEqual(canonicalize(sourceSequence(codex, intent, '## Routing Table')), canonicalSequence, `Codex sequence differs from routing.json for ${intent}`);
+  assert.deepEqual(canonicalize(sourceSequence(readme, intent, '## Codex workflow')), canonicalSequence, `README sequence differs from routing.json for ${intent}`);
+  const variant = routing.host_variants?.[intent];
+  const expectedAgent = variant?.agents || sequence;
+  const scopedOrchestrator = orchestrator.split('## Routing Table')[1];
+  const match = scopedOrchestrator.match(new RegExp(`^${intent}:\\n(?:(?!^[a-z][a-z0-9_]*:)[\\s\\S])*?^  sequence: (.+)$`, 'm'));
+  assert.ok(match, `Orchestrator sequence missing for ${intent}`);
+  assert.deepEqual(canonicalize(match[1]), canonicalize(expectedAgent), `Orchestrator sequence differs from routing.json/host variant for ${intent}`);
+  if (variant) assert.deepEqual(canonicalize(variant.expands_to), canonicalSequence, `Host variant expansion differs from canonical route for ${intent}`);
 }
 
 for (const intent of ['security_review', 'security_hardening', 'e2e_test', 'deps_upgrade', 'api_change', 'incident', 'memory_curate', 'memory_setup']) {
   const sequence = routing.intents[intent];
-  assert.equal(routeCell(codex, intent, '## Routing Table'), sequence, `Codex sequence differs from routing.json for ${intent}`);
-  assert.equal(routeCell(readme, intent, '## Codex workflow'), sequence, `README sequence differs from routing.json for ${intent}`);
-  assert.ok(orchestrator.includes(`sequence: ${sequence}`), `Orchestrator sequence differs from routing.json for ${intent}`);
+  assert.deepEqual(canonicalize(routeCell(codex, intent, '## Routing Table')), canonicalize(sequence));
+  assert.deepEqual(canonicalize(routeCell(readme, intent, '## Codex workflow')), canonicalize(sequence));
 }
 
 for (const skill of ['security-review', 'security-hardening', 'e2e-verify', 'dependency-upgrade', 'api-contract-review', 'incident-response', 'memory-curator', 'project-memory-init']) {

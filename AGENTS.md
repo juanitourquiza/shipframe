@@ -39,6 +39,8 @@ bash -n install.sh
 shellcheck install.sh
 ./install.sh --doctor --repo-only
 ./tests/test-install.sh
+node tests/test-routing-parity.js # required when changing routing
+python3 scripts/check-contracts.py
 claude plugin validate .
 ```
 

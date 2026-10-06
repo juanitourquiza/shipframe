@@ -34,6 +34,7 @@ Master catalog of all wiki pages. Mandatory entry point for any query with `/wik
 | `../codex/dev-workflow.md` | Codex routing table and lifecycle. | Which skill sequence handles each intent? |
 | `../codex/agents/` | Optional, read-only native Codex explorer and reviewer roles installed only with explicit `--codex-agents`. | Which ShipFrame custom subagents can Codex use, and how are they installed? |
 | `../routing.json` | Canonical intent-to-workflow map. | Which workflow sequence is the source of truth for each intent? |
+| `../docs/routing-parity.md` | Routing schema, host aliases/variants, and parity verification contract. | How are route variants represented and how is parity tested? |
 | `../scripts/build-openai-plugin.py` | Builds the curated OpenAI/Codex plugin bundle with curated skills and a Codex CLI prompt hook. | How is the OpenAI submission bundle generated? Which hooks are included? |
 | `../scripts/opencode-doctor.cjs` | Inspects the installed OpenCode router adapter and explicit disable directives without printing user configuration. | How does environment doctor distinguish absent, invalid, and disabled plugins? |
 | `../herdr-plugin/` | Optional local Herdr plugin MVP that opens ShipFrame workflow/checklist panes. | How does Herdr launch ShipFrame process guidance without replacing ShipFrame? |
