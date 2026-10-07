@@ -507,7 +507,7 @@ instead of claiming delegated work.
 | `new_feature` | `project-memory-refresh` → `feature-discovery` → `plan-expert` |
 | `quick_task` | `project-memory-refresh` → `plan-expert` → `quality-assurance-agent` or `tdd` (non-trivial code only) → `implement-task` → `code-review` → `create-pr` |
 | `implementation` | `project-memory-refresh` → `quality-assurance-agent` or `tdd` (non-trivial code only) → `implement-task` → `code-review` → `create-pr` |
-| `refactor` | `project-memory-refresh` → `codebase-design` → `plan-expert` → `implement-task` → `code-review` → `create-pr` |
+| `refactor` | `project-memory-refresh` → `codebase-design` → `plan-expert` → `quality-assurance-agent` or `tdd` (non-trivial code only) → `implement-task` → `code-review` → `create-pr` |
 | `bug` | `project-memory-refresh` → `bug-diagnosis` → `quality-assurance-agent` or `tdd` (non-trivial code only) → `implement-task` → `code-review` → `create-pr` |
 | `release` | `project-profile` → `project-release` → `deploy-evidence` |
 | `evidence_audit` | `project-memory-refresh` → `evidence-audit` |
@@ -527,6 +527,8 @@ instead of claiming delegated work.
 | `handoff` | `handoff` |
 | `code_review` | `code-review` |
 | `wiki_management` | `wiki-query` · `wiki-sync` · `wiki-init` |
+
+`routing.json` is the canonical routing contract. See [routing parity](docs/routing-parity.md) for aliases, host-specific agent variants, and validation.
 
 ---
 

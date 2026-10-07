@@ -1,4 +1,5 @@
 import importlib.util
+import json
 import tempfile
 import unittest
 from pathlib import Path
@@ -16,6 +17,15 @@ class ContractTests(unittest.TestCase):
         self.root = Path(self.temp.name)
         (self.root / "skills/demo").mkdir(parents=True)
         (self.root / "agents").mkdir()
+        self.write("skills/demo/SKILL.md", "---\nname: demo\ndescription: Demo skill\n---\n")
+        self.write("agents/demo-agent.md", "---\nname: demo-agent\ndescription: Demo agent\nmodel: opus\ntools:\n  - Read\n---\n")
+        self.write("routing.json", json.dumps({
+            "schemaVersion": 2,
+            "intents": {"demo": "demo"},
+            "aliases": {"demo": ["demo-agent"]},
+            "host_variants": {"demo": {"agents": "demo-agent", "expands_to": "demo"}},
+            "qa_gate": {"tokens": ["qa-gate"]},
+        }))
 
     def tearDown(self):
         self.temp.cleanup()
@@ -44,6 +54,22 @@ class ContractTests(unittest.TestCase):
         path = self.write("agents/broken.md", "# no metadata\n")
         errors = CHECKER.validate(self.root)
         self.assertTrue(any(str(path.relative_to(self.root)) in error and "frontmatter" in error for error in errors), errors)
+
+    def test_rejects_unknown_routing_targets_and_schema(self):
+        data = json.loads((self.root / "routing.json").read_text(encoding="utf-8"))
+        data["schemaVersion"] = 1
+        data["intents"]["demo"] = "missing-skill"
+        data["aliases"]["demo"] = ["missing-agent"]
+        data["host_variants"]["demo"] = {"agents": "missing-agent"}
+        (self.root / "routing.json").write_text(json.dumps(data), encoding="utf-8")
+        errors = CHECKER.validate(self.root)
+        self.assertTrue(any("schemaVersion must be 2" in error for error in errors), errors)
+        self.assertTrue(any("missing-agent" in error for error in errors), errors)
+        self.assertTrue(any("missing-skill" in error for error in errors), errors)
+        data["aliases"]["demo"] = [[]]
+        (self.root / "routing.json").write_text(json.dumps(data), encoding="utf-8")
+        errors = CHECKER.validate(self.root)
+        self.assertTrue(any("not a known agent" in error for error in errors), errors)
 
     def test_small_is_qa_depth_only_with_risk_exclusions_and_mandatory_review(self):
         root = SCRIPT.parents[1]

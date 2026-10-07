@@ -44,7 +44,7 @@ If missing, run `wiki-init` before anything else. If present, read `WIKI.md` bef
 | `quick_task` | Well-defined code task; QA only for non-trivial changes | `project-memory-refresh` → `plan-expert` → `quality-assurance-agent` or `tdd` (non-trivial code only) → `implement-task` → `code-review` → `create-pr` |
 | `implementation` | Confirmed plan exists; QA only for non-trivial code changes | `project-memory-refresh` → `quality-assurance-agent` or `tdd` (non-trivial code only) → `implement-task` → `code-review` → `create-pr` |
 
-| `refactor` | Improve structure, no behavior change | `project-memory-refresh` → `codebase-design` → `plan-expert` → `implement-task` → `code-review` → `create-pr` |
+| `refactor` | Improve structure, no behavior change | `project-memory-refresh` → `codebase-design` → `plan-expert` → `quality-assurance-agent` or `tdd` (non-trivial code only) → `implement-task` → `code-review` → `create-pr` |
 | `bug` | Broken behavior, regression, failing test, or performance issue | `project-memory-refresh` → `bug-diagnosis` → `quality-assurance-agent` or `tdd` (non-trivial code only) → `implement-task` → `code-review` → `create-pr` |
 | `release` | Merge, deploy, publish, version, or smoke request | `project-profile` → `project-release` → `deploy-evidence` |
 | `evidence_audit` | Audit a report, handoff, PR body, or release note for unsupported claims | `project-memory-refresh` → `evidence-audit` |

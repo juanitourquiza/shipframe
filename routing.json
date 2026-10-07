@@ -1,10 +1,28 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
+  "aliases": {
+    "implement-task": ["implement-task-agent"],
+    "code-review": ["reviewer-agent"],
+    "plan-expert": ["plan-expert-agent"],
+    "project-release": ["release-agent"],
+    "design-system-setup": ["design-system-setup-agent"]
+  },
+  "host_variants": {
+    "new_feature": {
+      "agents": "project-memory-refresh → planning-features-agent",
+      "expands_to": "project-memory-refresh → feature-discovery → plan-expert"
+    },
+    "wiki_management": {
+      "agents": "wiki-agent",
+      "expands_to": "wiki-query · wiki-sync · wiki-init"
+    }
+  },
+  "qa_gate": {"tokens": ["quality-assurance-agent", "tdd", "qa-gate"]},
   "intents": {
     "new_feature": "project-memory-refresh → feature-discovery → plan-expert",
     "quick_task": "project-memory-refresh → plan-expert → quality-assurance-agent or tdd (non-trivial code only) → implement-task → code-review → create-pr",
     "implementation": "project-memory-refresh → quality-assurance-agent or tdd (non-trivial code only) → implement-task → code-review → create-pr",
-    "refactor": "project-memory-refresh → codebase-design → plan-expert → implement-task → code-review → create-pr",
+    "refactor": "project-memory-refresh → codebase-design → plan-expert → quality-assurance-agent or tdd (non-trivial code only) → implement-task → code-review → create-pr",
     "bug": "project-memory-refresh → bug-diagnosis → quality-assurance-agent or tdd (non-trivial code only) → implement-task → code-review → create-pr",
     "release": "project-profile → project-release → deploy-evidence",
     "evidence_audit": "project-memory-refresh → evidence-audit",

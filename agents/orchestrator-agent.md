@@ -97,7 +97,7 @@ implementation:
 
 refactor:
   when: Improving existing code structure without changing behavior.
-  sequence: project-memory-refresh → codebase-design → plan-expert-agent → quality-assurance-agent (non-trivial code only; otherwise TDD skill) → implement-task-agent → reviewer-agent → create-pr
+  sequence: project-memory-refresh → codebase-design → plan-expert-agent → quality-assurance-agent or tdd (non-trivial code only) → implement-task-agent → reviewer-agent → create-pr
   first_hop: project-memory-refresh
 
 bug:
