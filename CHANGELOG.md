@@ -1,5 +1,10 @@
 # Changelog
 
+## v0.8.3 — 2026-10-07
+
+### Fixed
+- Enforced read-only permissions for the reviewer agent, preventing shell access and restricting review tools to read-only operations.
+
 ## v0.8.2 — 2026-10-06
 
 ### Fixed
