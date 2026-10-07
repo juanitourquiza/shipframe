@@ -6,7 +6,7 @@ It provides reusable skills, agent workflows, templates, and project profiles fo
 
 > Tagline: **AI coding workflows for teams that plan, prove, and ship.**
 
-**Current stable release:** [v0.8.0](https://github.com/juanitourquiza/shipframe/releases/tag/v0.8.0), with opt-in Git-backed project memory and reviewed GitHub Draft PR publication; Engram remains optional. See the [changelog](CHANGELOG.md) for release details.
+**Current stable release:** [v0.8.2](https://github.com/juanitourquiza/shipframe/releases/tag/v0.8.2), with explicit cross-host routing parity and opt-in native Codex subagents. See the [changelog](CHANGELOG.md) for release details.
 
 **Website:** https://shipframe.hackeruna.com/  
 **Repository:** https://github.com/juanitourquiza/shipframe
