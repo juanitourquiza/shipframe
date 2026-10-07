@@ -66,10 +66,10 @@ position: Workflow router — start when useful or explicitly requested, not for
 
 4_delegation: |
   Spawn the first sub-agent in the routing sequence or invoke the first skill.
-  Pass the full payload: intent, ticket/spec, branch, profile summary, and constraints.
+  Pass the full payload: intent, ticket/spec, branch, profile summary, and constraints. For independent review, pass the complete scoped unified diff, changed-file list, and exact QA/check results; never claim the reviewer reran checks unless it did.
 
 5_quality_gate: |
-  For all code changes, including QA-small tasks, run reviewer-agent or code-review on the complete diff before PR. Small may reduce QA/test depth only; the reviewer must escalate when risk warrants it.
+  For all code changes, including QA-small tasks, run reviewer-agent or code-review on the complete diff before PR. Small may reduce QA/test depth only; the reviewer must escalate when risk warrants it. The dedicated reviewer is read-only and receives the complete diff and prior check results; it must not use shell commands or claim to rerun checks.
   For releases, run deploy-evidence before declaring completion.
 
 6_delivery: |

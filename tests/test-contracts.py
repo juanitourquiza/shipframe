@@ -80,6 +80,7 @@ class ContractTests(unittest.TestCase):
         self.assertIn("Small is a reduced QA-depth path only", qa)
         self.assertIn("TASK_SIZE classification", qa)
         self.assertIn("mandatory for every task", reviewer)
+        self.assertNotRegex(reviewer, r"(?m)^\s+- Bash$")
 
 
 if __name__ == "__main__":

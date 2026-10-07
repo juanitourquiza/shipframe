@@ -444,6 +444,9 @@ project where you run the command:
   pass `--opencode-model provider/model` only when an explicit override is
   needed. Third-party MCP servers and their tools remain host configuration;
   the converter does not install or translate Claude-specific MCP integrations.
+  The generated independent reviewer allows only file reads, search, globs, and
+  skill access; other tool permissions are denied. The orchestrator passes it the
+  scoped diff and prior check evidence. Runtime enforcement still depends on the host.
 
 Run `shipframe install ...` once per user/machine. Then add project-specific
 rules inside each repository with `shipframe.profile.md`,
