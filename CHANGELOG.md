@@ -1,5 +1,14 @@
 # Changelog
 
+## v0.8.2 — 2026-10-06
+
+### Fixed
+- Enforced normalized routing parity across Codex, README, and Claude/OpenCode orchestrator paths, including QA conditions and host-agent expansions.
+- Corrected the refactor workflow to include the QA/TDD gate for non-trivial code changes.
+
+### Changed
+- Versioned routing metadata as schema v2 and documented aliases and host variants.
+
 ## v0.8.1 — 2026-10-05
 
 ### Added
