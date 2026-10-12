@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.8.4 — 2026-10-12
+
+### Changed
+- Raised the code-review quality bar with concrete materiality criteria, scoped findings, and consistent severity across review phases, without mandating line-count or design-pattern rules.
+- Updated the Axis-Human upstream notice to reflect its currently published MIT license while retaining source attribution.
+
 ## v0.8.3 — 2026-10-07
 
 ### Fixed
