@@ -25,4 +25,4 @@ ShipFrame started from `Axis-Human/dev-workflow-plugin` and preserves attributio
 
 Source: https://github.com/Axis-Human/dev-workflow-plugin
 
-GitHub license metadata check on 2026-08-15 returned no detected repository license for `Axis-Human/dev-workflow-plugin`. ShipFrame keeps this attribution notice so the origin remains clear; any third-party material from that upstream remains subject to its original terms or permissions, if any.
+The upstream repository currently publishes an MIT license, Copyright (c) 2026 Axis Human. This was verified against its `LICENSE` file on 2026-10-12 at upstream commit `90243da5750149aad6c34f7bbff8e2e8c5831b2f`. ShipFrame retains this attribution to document its origin and the upstream license notice.
