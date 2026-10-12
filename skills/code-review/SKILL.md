@@ -1,6 +1,6 @@
 ---
 name: code-review
-description: Review changed code before commit or PR with fast checks plus pragmatic structural, security, performance, and test coverage audit.
+description: Review changed code before commit or PR with strict quality, structural, security, performance, and test coverage gates.
 argument-hint: '[--base-branch <branch>]'
 allowed-tools: Read Grep Glob Bash
 effort: high
@@ -8,7 +8,7 @@ effort: high
 
 # code-review
 
-Two-phase code review skill. Phase 1 catches surface-level issues. Phase 2 evaluates structural correctness and maintainability in context, using SOLID, KISS, DRY, and YAGNI as complementary review lenses.
+Two-phase code review skill. Phase 1 catches correctness and safety issues. Phase 2 holds the change to a high bar for clarity, cohesion, testability, and maintainability. SOLID, KISS, DRY, and YAGNI are complementary lenses for reaching that bar, not substitutes for judgment.
 
 ## Usage
 
@@ -115,37 +115,39 @@ Check the detected stack (see `AGENTS.md` if available) and verify conventions a
 
 ---
 
-## Phase 2 — Contextual Structural Review
+## Phase 2 — Quality and Structural Review
 
-Use SOLID, KISS, DRY, and YAGNI as lenses, not quotas or automatic design prescriptions. A review finding must point to a concrete correctness, safety, maintainability, or changeability problem in this code and explain when it occurs. Prefer the smallest fix that resolves that problem; do not request a refactor for style or hypothetical future needs.
+Hold changed code to a high standard: it should be easy to understand, cohesive, straightforward to test, and no more complex than the requirement needs. Actively look for avoidable complexity, unclear control flow, misplaced responsibilities, fragile coupling, and duplication that can drift. Do not approve merely because tests pass or no functional bug is obvious.
+
+Use SOLID, KISS, DRY, and YAGNI as complementary lenses, not quotas or automatic design prescriptions. A heuristic such as function length is a prompt to inspect: determine whether the code is harder to understand, verify, or change because of it. If so, request a focused improvement and explain why. If not, do not demand a mechanical rewrite. Prefer the smallest change that reaches the quality bar; a refactor is warranted when it materially improves clarity, cohesion, testability, or change safety without adding greater complexity.
 
 ### Gate 1: Single Responsibility (SRP)
 
-- **Pass:** Responsibilities are cohesive, and the code is understandable in its context. Function length and nesting are signals to investigate, not limits that require decomposition by themselves.
-- **Fail:** Mixed responsibilities or control flow make a concrete behavior difficult to understand, change, or verify (for example, an I/O side effect in a function presented as pure).
-- **Action on Fail:** Propose the smallest responsibility split that improves the demonstrated problem. Do not split code merely to meet a line-count target or create helpers used only to shorten a function.
+- **Pass:** Each unit has a coherent purpose, and its control flow makes the behavior easy to follow. Long functions and deep nesting must be examined for mixed responsibilities, hidden state transitions, or difficult-to-test branches.
+- **Fail:** A unit combines responsibilities or control flow in a way that obscures behavior, prevents focused tests, or makes a likely change risky (for example, hidden I/O in a function presented as pure).
+- **Action on Fail:** Propose a focused decomposition or simplification that measurably improves cohesion or comprehension. Do not count lines as the defect; show what the split clarifies or makes independently verifiable.
 
 ### Gate 2: Open/Closed + Liskov Substitution (OCP/LSP)
 
-- **Pass:** Changes preserve the contracts callers rely on. Modifying existing code is acceptable when it is the clearest, safest way to implement the requested behavior.
-- **Fail:** A concrete change or caller breaks an existing contract, or repeated real variations already make conditional logic error-prone.
-- **Action on Fail:** Fix the contract break first. Recommend polymorphism or another extension point only when the code has genuine variation that benefits from it; do not introduce patterns for hypothetical future types.
+- **Pass:** Changes preserve caller contracts and handle variation through the clearest maintainable design. Extending an existing implementation is fine when that remains simpler and safer.
+- **Fail:** A change violates an existing contract, or growing conditional logic for actual variants is already difficult to reason about, test, or extend safely.
+- **Action on Fail:** Fix contract violations. Where real variation exists, recommend the smallest useful extension point (for example, composition or polymorphism) and explain why it reduces the current complexity; reject both speculative frameworks and brittle conditionals that are already costly.
 
 ### Gate 3: Interface Segregation + Dependency Inversion (ISP/DIP)
 
-- **Pass:** Callers depend only on the behavior they need. Concrete dependencies are fine when they are stable and do not cause a demonstrated testing or changeability problem.
-- **Fail:** A concrete dependency or broad interface prevents a required substitution, forces callers to support unused behavior, or makes relevant behavior untestable.
-- **Action on Fail:** Add the smallest seam that solves the demonstrated problem. Use dependency injection, a narrower interface, or a wrapper only when the code has a real need for that seam; do not add abstraction layers by default.
+- **Pass:** Dependencies and interfaces keep responsibilities clear and required behavior testable without needless indirection. Concrete dependencies are acceptable only when they do not make the relevant code fragile or hard to verify.
+- **Fail:** A dependency prevents a needed substitution or focused test, a broad interface burdens clients with unrelated behavior, or an external detail leaks across a boundary and makes change risky.
+- **Action on Fail:** Add the smallest seam that restores testability or isolates the volatile boundary. Select dependency injection, a narrow interface, or a wrapper based on the actual coupling; avoid both needless abstractions and coupling that makes tests or changes brittle.
 
 ### Gate 4: Pragmatic Quality (KISS / DRY / YAGNI)
 
-- **Pass:** The solution is as simple as the requirement allows, with clear names and behavior. Small duplication is acceptable when the duplicated cases change independently or a shared abstraction would add more complexity.
-- **Fail:** Repeated logic has the same meaning and change boundary, so maintaining it separately creates a concrete inconsistency risk; or an abstraction adds complexity without a current use.
-- **Action on Fail:** Consolidate only when the shared rule is real and the resulting abstraction is clearer. Otherwise leave the code separate. Do not treat zero duplication as a goal.
+- **Pass:** The solution is the clearest maintainable design for the requirement: names reveal intent, logic has one source of truth where it represents one rule, and abstractions earn their complexity. Keep independent behavior separate when combining it would obscure the model.
+- **Fail:** Accidental complexity makes the change harder to understand than necessary; the same rule is implemented in multiple places and can diverge; names hide intent; or indirection has no current value.
+- **Action on Fail:** Simplify, clarify, or consolidate when doing so makes the code materially easier to reason about and maintain. Do not preserve avoidable complexity in the name of minimal diffs, and do not force zero duplication when the cases genuinely have different meanings or change for different reasons.
 
 ### Finding quality
 
-Before recommending a structural change, state the affected code, the concrete scenario or maintenance problem, and why a smaller local change is insufficient. Include the smallest safe fix and its consequence if left unchanged. Do not block a review for line-count preferences, pattern choices, or hypothetical reuse.
+Every finding must state the affected code, the specific clarity, cohesion, testability, correctness, safety, or maintenance problem, and its likely consequence if left unchanged. For a structural recommendation, explain why a smaller local fix would not meet the quality bar, propose the smallest effective improvement, and account for any complexity it adds. Do not block for line-count preferences, pattern choices, or hypothetical reuse alone; do block when avoidable complexity materially degrades the code even if current tests pass.
 
 ---
 
