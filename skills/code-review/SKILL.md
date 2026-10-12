@@ -1,6 +1,6 @@
 ---
 name: code-review
-description: Review changed code before commit or PR with fast checks plus SOLID, security, performance, and test coverage audit.
+description: Review changed code before commit or PR with strict quality, structural, security, performance, and test coverage gates.
 argument-hint: '[--base-branch <branch>]'
 allowed-tools: Read Grep Glob Bash
 effort: high
@@ -8,7 +8,7 @@ effort: high
 
 # code-review
 
-Two-phase code review skill. Phase 1 catches surface-level issues fast. Phase 2 audits structural correctness using SOLID as the primary framework and KISS/DRY/YAGNI for implementation quality.
+Two-phase code review skill. Phase 1 catches correctness and safety issues. Phase 2 holds the change to a high bar for clarity, cohesion, testability, and maintainability. SOLID, KISS, DRY, and YAGNI are complementary lenses for reaching that bar, not substitutes for judgment.
 
 ## Usage
 
@@ -59,9 +59,11 @@ Run:
 ```
 git diff <BASE_BRANCH>...HEAD --name-only
 ```
-Read only the files returned by that command. Do not review files that were not changed relative to `BASE_BRANCH`.
+Treat the returned files as the review scope. Read those files and only additional callers, contracts, or tests needed to verify their changed behavior; do not broaden the review into unrelated code.
 
 If the diff is empty, inform the user: "No changes detected between the current branch and `<BASE_BRANCH>`." and stop.
+
+Review the changed code and its directly affected callers/contracts. Do not expand into unrelated pre-existing issues; report one only when this change exposes it, worsens it, or makes a narrowly scoped fix necessary. Apply the same scope rule in both phases.
 
 ---
 
@@ -90,8 +92,8 @@ Check the detected stack (see `AGENTS.md` if available) and verify conventions a
 
 ### 1.4 Verification
 
-- [ ] Existing tests pass
-- [ ] New behavior has test coverage (unit or integration)
+- [ ] Relevant existing tests pass
+- [ ] New or changed behavior has appropriate test coverage (unit or integration)
 - [ ] There is observable evidence the change works (test output, screenshot, logs)
 
 
@@ -100,46 +102,52 @@ Check the detected stack (see `AGENTS.md` if available) and verify conventions a
 - [ ] No hardcoded secrets or credentials
 - [ ] No sensitive data in logs or error messages
 - [ ] Input validation prevents injection attacks
-- [ ] Dependencies are up to date
+- [ ] Changed dependencies have no known relevant security or compatibility issue
 
 ### 1.6 Performance Checks
 
-- [ ] No N+1 queries
-- [ ] No unnecessary database queries
-- [ ] No unnecessary API calls
-- [ ] No unnecessary computations
+- [ ] No avoidable performance cost with a credible impact in the affected workload (for example, an N+1 query or repeated expensive call)
+- [ ] Database queries, API calls, and computations are necessary for the changed behavior
 
 **Phase 1 outcome:**
-- All items pass → proceed to Phase 2
-- Any item fails → fix and re-run Phase 1 before continuing
+- Continue to Phase 2 after recording relevant findings and evidence.
+- Apply the finding severity rules in **Reporting** consistently to both phases; a checklist concern is not automatically a blocking error.
 
 ---
 
-## Phase 2 — Deep SOLID & Structural Audit
+## Phase 2 — Quality and Structural Review
+
+Hold changed code to a high standard: it should be easy to understand, cohesive, straightforward to test, and no more complex than the requirement needs. Actively look for avoidable complexity, unclear control flow, misplaced responsibilities, fragile coupling, and duplication that can drift. Do not approve merely because tests pass or no functional bug is obvious.
+
+Use SOLID, KISS, DRY, and YAGNI as complementary lenses, not quotas or automatic design prescriptions. A heuristic such as function length is a prompt to inspect: determine whether the code is harder to understand, verify, or change because of it. A material quality problem has a concrete consequence, such as branches that cannot be tested independently, duplicated business rules already diverging, hidden state transitions that obscure behavior, or a dependency that prevents a necessary test or safe change. If so, request a focused improvement and explain why. If not, do not demand a mechanical rewrite. Prefer the smallest change that reaches the quality bar; a refactor is warranted when it materially improves clarity, cohesion, testability, or change safety without adding greater complexity.
 
 ### Gate 1: Single Responsibility (SRP)
 
-- **Pass:** Each function/class has one reason to change. Logic is encapsulated by domain. Functions are under ~20 lines.
-- **Fail:** "God objects" that mix UI, state, and I/O logic. Deep nesting (>2 levels). Side effects inside functions advertised as pure.
-- **Action on Fail:** Trigger decomposition — split logic into atomic, single-purpose units. Each extracted piece should be testable in isolation.
+- **Pass:** Each unit has a coherent purpose, and its control flow makes the behavior easy to follow. Long functions and deep nesting must be examined for mixed responsibilities, hidden state transitions, or difficult-to-test branches.
+- **Fail:** A unit combines responsibilities or control flow in a way that obscures behavior, prevents focused tests, or makes a likely change risky (for example, hidden I/O in a function presented as pure).
+- **Action on Fail:** Propose a focused decomposition or simplification that measurably improves cohesion or comprehension. Do not count lines as the defect; show what the split clarifies or makes independently verifiable.
 
 ### Gate 2: Open/Closed + Liskov Substitution (OCP/LSP)
 
-- **Pass:** New behavior is added by extending, not by modifying existing code. Subtypes are drop-in replacements for their parents without breaking contracts.
-- **Fail:** Large `if/else` or `switch` chains that must grow for each new type. Subclass methods throwing "Not Implemented".
-- **Action on Fail:** Refactor using the Strategy pattern or polymorphism. Close the current abstraction and extend via composition.
+- **Pass:** Changes preserve caller contracts and handle variation through the clearest maintainable design. Extending an existing implementation is fine when that remains simpler and safer.
+- **Fail:** A change violates an existing contract, or growing conditional logic for actual variants is already difficult to reason about, test, or extend safely.
+- **Action on Fail:** Fix contract violations. Where real variation exists, recommend the smallest useful extension point (for example, composition or polymorphism) and explain why it reduces the current complexity; reject both speculative frameworks and brittle conditionals that are already costly.
 
 ### Gate 3: Interface Segregation + Dependency Inversion (ISP/DIP)
 
-- **Pass:** Interfaces are narrow — clients only depend on what they use. High-level modules depend on abstractions, not concrete implementations.
-- **Fail:** "Fat" interfaces where implementors are forced to stub unused methods. Hardcoded `new SpecificClass()` inside constructors. Tight coupling to third-party SDKs in business logic.
-- **Action on Fail:** Introduce dependency injection. Split fat interfaces into focused contracts. Wrap third-party dependencies behind an abstraction layer owned by your code.
+- **Pass:** Dependencies and interfaces keep responsibilities clear and required behavior testable without needless indirection. Concrete dependencies are acceptable only when they do not make the relevant code fragile or hard to verify.
+- **Fail:** A dependency prevents a needed substitution or focused test, a broad interface burdens clients with unrelated behavior, or an external detail leaks across a boundary and makes change risky.
+- **Action on Fail:** Add the smallest seam that restores testability or isolates the volatile boundary. Select dependency injection, a narrow interface, or a wrapper based on the actual coupling; avoid both needless abstractions and coupling that makes tests or changes brittle.
 
 ### Gate 4: Pragmatic Quality (KISS / DRY / YAGNI)
 
-- **Pass:** Zero duplicated logic. Simplest solution that satisfies the requirement. Intent-revealing names (`isExpired` vs `flag`). Related code is colocated.
-- **Fail:** Over-engineering for hypothetical future requirements. Magic numbers. Single-use abstractions with more complexity than the code they replaced. Abbreviated names (`ptr`, `tmp`, `idx`).
-- **Action on Fail:** Inline over-engineered abstractions. Replace magic numbers with named constants. Choose duplication over a premature abstraction when the abstraction adds net complexity.
+- **Pass:** The solution is the clearest maintainable design for the requirement: names reveal intent, logic has one source of truth where it represents one rule, and abstractions earn their complexity. Keep independent behavior separate when combining it would obscure the model.
+- **Fail:** Accidental complexity makes the change harder to understand than necessary; the same rule is implemented in multiple places and can diverge; names hide intent; or indirection has no current value.
+- **Action on Fail:** Simplify, clarify, or consolidate when doing so makes the code materially easier to reason about and maintain. Do not preserve avoidable complexity in the name of minimal diffs, and do not force zero duplication when the cases genuinely have different meanings or change for different reasons.
+
+### Finding quality
+
+Every finding must point to changed code or a directly affected contract and state the specific clarity, cohesion, testability, correctness, safety, or maintenance problem and its likely consequence if left unchanged. For a structural recommendation, explain why a smaller local fix would not meet the quality bar, propose the smallest effective improvement, and account for any complexity it adds. Do not report unrelated pre-existing problems unless this change exposes or worsens them. Do not block for line-count preferences, pattern choices, or hypothetical reuse alone; do block when avoidable complexity materially degrades the changed code even if current tests pass.
 
 ---
 
@@ -178,6 +186,11 @@ After completing both phases, report findings in this format:
 ### Recommendation
 Approve / Request Changes — <one-line rationale>
 ```
+
+- **Errors (must fix / Request Changes):** A demonstrated correctness, security, data-integrity, compatibility, or high-impact reliability failure; or a material maintainability defect in changed code that makes likely changes unsafe or prevents adequate verification. State the evidence and consequence.
+- **Warnings (should fix):** A concrete, lower-impact quality concern within scope. Warnings are not blockers by themselves; explain the benefit of addressing them.
+- **Passed:** State what was actually verified. Do not imply a check ran when it did not.
+- Do not turn personal style preferences, numeric heuristics, or speculative future needs into findings. Apply these severity rules to Phase 1 and Phase 2 alike; checklist location does not determine severity.
 
 - If errors exist: report them and ask "Should I apply the fixes?"
 - After applying fixes: re-run the relevant phase to verify resolution
