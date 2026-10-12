@@ -1,12 +1,16 @@
 # ShipFrame — AI Coding Workflows for Teams
 
+<p align="center"><img src="https://shipframe.hackeruna.com/brand/shipframe-lockup.svg" alt="ShipFrame — AI coding workflows for teams" width="308"></p>
+
+<p align="center"><a href="https://shipframe.hackeruna.com/#install">Install with Homebrew</a> · <a href="https://shipframe.hackeruna.com/#demo">Watch the 30-second demo</a> · <a href="https://github.com/juanitourquiza/shipframe">Visit & star on GitHub</a> · <a href="LICENSE">MIT License</a> · <a href="https://github.com/juanitourquiza/shipframe/security">Security</a> · <a href="CONTRIBUTING.md">Contributing</a></p>
+
 **ShipFrame** is a practical AI coding workflow toolkit for teams that plan, prove, and ship software changes with discipline.
 
 It provides reusable skills, agent workflows, templates, and project profiles for Claude Code, Codex CLI, and OpenCode. The optional `live-docs` workflow consults version-compatible external library documentation before API-dependent changes, without requiring a paid documentation service. The core workflow is generic enough for any software team, while project-specific behavior lives in opt-in profiles.
 
 > Tagline: **AI coding workflows for teams that plan, prove, and ship.**
 
-**Current stable release:** [v0.8.3](https://github.com/juanitourquiza/shipframe/releases/tag/v0.8.3), with read-only permissions for the reviewer agent. See the [changelog](CHANGELOG.md) for release details.
+**Current stable release:** [v0.8.4](https://github.com/juanitourquiza/shipframe/releases/tag/v0.8.4), with read-only permissions for the reviewer agent. See the [changelog](CHANGELOG.md) for release details.
 
 **Website:** https://shipframe.hackeruna.com/  
 **Repository:** https://github.com/juanitourquiza/shipframe
