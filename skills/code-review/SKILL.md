@@ -59,9 +59,11 @@ Run:
 ```
 git diff <BASE_BRANCH>...HEAD --name-only
 ```
-Read only the files returned by that command. Do not review files that were not changed relative to `BASE_BRANCH`.
+Treat the returned files as the review scope. Read those files and only additional callers, contracts, or tests needed to verify their changed behavior; do not broaden the review into unrelated code.
 
 If the diff is empty, inform the user: "No changes detected between the current branch and `<BASE_BRANCH>`." and stop.
+
+Review the changed code and its directly affected callers/contracts. Do not expand into unrelated pre-existing issues; report one only when this change exposes it, worsens it, or makes a narrowly scoped fix necessary. Apply the same scope rule in both phases.
 
 ---
 
@@ -90,8 +92,8 @@ Check the detected stack (see `AGENTS.md` if available) and verify conventions a
 
 ### 1.4 Verification
 
-- [ ] Existing tests pass
-- [ ] New behavior has test coverage (unit or integration)
+- [ ] Relevant existing tests pass
+- [ ] New or changed behavior has appropriate test coverage (unit or integration)
 - [ ] There is observable evidence the change works (test output, screenshot, logs)
 
 
@@ -100,18 +102,16 @@ Check the detected stack (see `AGENTS.md` if available) and verify conventions a
 - [ ] No hardcoded secrets or credentials
 - [ ] No sensitive data in logs or error messages
 - [ ] Input validation prevents injection attacks
-- [ ] Dependencies are up to date
+- [ ] Changed dependencies have no known relevant security or compatibility issue
 
 ### 1.6 Performance Checks
 
-- [ ] No N+1 queries
-- [ ] No unnecessary database queries
-- [ ] No unnecessary API calls
-- [ ] No unnecessary computations
+- [ ] No avoidable performance cost with a credible impact in the affected workload (for example, an N+1 query or repeated expensive call)
+- [ ] Database queries, API calls, and computations are necessary for the changed behavior
 
 **Phase 1 outcome:**
-- All items pass → proceed to Phase 2
-- Any item fails → fix and re-run Phase 1 before continuing
+- Continue to Phase 2 after recording relevant findings and evidence.
+- Apply the finding severity rules in **Reporting** consistently to both phases; a checklist concern is not automatically a blocking error.
 
 ---
 
@@ -119,7 +119,7 @@ Check the detected stack (see `AGENTS.md` if available) and verify conventions a
 
 Hold changed code to a high standard: it should be easy to understand, cohesive, straightforward to test, and no more complex than the requirement needs. Actively look for avoidable complexity, unclear control flow, misplaced responsibilities, fragile coupling, and duplication that can drift. Do not approve merely because tests pass or no functional bug is obvious.
 
-Use SOLID, KISS, DRY, and YAGNI as complementary lenses, not quotas or automatic design prescriptions. A heuristic such as function length is a prompt to inspect: determine whether the code is harder to understand, verify, or change because of it. If so, request a focused improvement and explain why. If not, do not demand a mechanical rewrite. Prefer the smallest change that reaches the quality bar; a refactor is warranted when it materially improves clarity, cohesion, testability, or change safety without adding greater complexity.
+Use SOLID, KISS, DRY, and YAGNI as complementary lenses, not quotas or automatic design prescriptions. A heuristic such as function length is a prompt to inspect: determine whether the code is harder to understand, verify, or change because of it. A material quality problem has a concrete consequence, such as branches that cannot be tested independently, duplicated business rules already diverging, hidden state transitions that obscure behavior, or a dependency that prevents a necessary test or safe change. If so, request a focused improvement and explain why. If not, do not demand a mechanical rewrite. Prefer the smallest change that reaches the quality bar; a refactor is warranted when it materially improves clarity, cohesion, testability, or change safety without adding greater complexity.
 
 ### Gate 1: Single Responsibility (SRP)
 
@@ -147,7 +147,7 @@ Use SOLID, KISS, DRY, and YAGNI as complementary lenses, not quotas or automatic
 
 ### Finding quality
 
-Every finding must state the affected code, the specific clarity, cohesion, testability, correctness, safety, or maintenance problem, and its likely consequence if left unchanged. For a structural recommendation, explain why a smaller local fix would not meet the quality bar, propose the smallest effective improvement, and account for any complexity it adds. Do not block for line-count preferences, pattern choices, or hypothetical reuse alone; do block when avoidable complexity materially degrades the code even if current tests pass.
+Every finding must point to changed code or a directly affected contract and state the specific clarity, cohesion, testability, correctness, safety, or maintenance problem and its likely consequence if left unchanged. For a structural recommendation, explain why a smaller local fix would not meet the quality bar, propose the smallest effective improvement, and account for any complexity it adds. Do not report unrelated pre-existing problems unless this change exposes or worsens them. Do not block for line-count preferences, pattern choices, or hypothetical reuse alone; do block when avoidable complexity materially degrades the changed code even if current tests pass.
 
 ---
 
@@ -186,6 +186,11 @@ After completing both phases, report findings in this format:
 ### Recommendation
 Approve / Request Changes — <one-line rationale>
 ```
+
+- **Errors (must fix / Request Changes):** A demonstrated correctness, security, data-integrity, compatibility, or high-impact reliability failure; or a material maintainability defect in changed code that makes likely changes unsafe or prevents adequate verification. State the evidence and consequence.
+- **Warnings (should fix):** A concrete, lower-impact quality concern within scope. Warnings are not blockers by themselves; explain the benefit of addressing them.
+- **Passed:** State what was actually verified. Do not imply a check ran when it did not.
+- Do not turn personal style preferences, numeric heuristics, or speculative future needs into findings. Apply these severity rules to Phase 1 and Phase 2 alike; checklist location does not determine severity.
 
 - If errors exist: report them and ask "Should I apply the fixes?"
 - After applying fixes: re-run the relevant phase to verify resolution
