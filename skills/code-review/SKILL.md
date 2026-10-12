@@ -1,6 +1,6 @@
 ---
 name: code-review
-description: Review changed code before commit or PR with fast checks plus SOLID, security, performance, and test coverage audit.
+description: Review changed code before commit or PR with fast checks plus pragmatic structural, security, performance, and test coverage audit.
 argument-hint: '[--base-branch <branch>]'
 allowed-tools: Read Grep Glob Bash
 effort: high
@@ -8,7 +8,7 @@ effort: high
 
 # code-review
 
-Two-phase code review skill. Phase 1 catches surface-level issues fast. Phase 2 audits structural correctness using SOLID as the primary framework and KISS/DRY/YAGNI for implementation quality.
+Two-phase code review skill. Phase 1 catches surface-level issues. Phase 2 evaluates structural correctness and maintainability in context, using SOLID, KISS, DRY, and YAGNI as complementary review lenses.
 
 ## Usage
 
@@ -115,31 +115,37 @@ Check the detected stack (see `AGENTS.md` if available) and verify conventions a
 
 ---
 
-## Phase 2 — Deep SOLID & Structural Audit
+## Phase 2 — Contextual Structural Review
+
+Use SOLID, KISS, DRY, and YAGNI as lenses, not quotas or automatic design prescriptions. A review finding must point to a concrete correctness, safety, maintainability, or changeability problem in this code and explain when it occurs. Prefer the smallest fix that resolves that problem; do not request a refactor for style or hypothetical future needs.
 
 ### Gate 1: Single Responsibility (SRP)
 
-- **Pass:** Each function/class has one reason to change. Logic is encapsulated by domain. Functions are under ~20 lines.
-- **Fail:** "God objects" that mix UI, state, and I/O logic. Deep nesting (>2 levels). Side effects inside functions advertised as pure.
-- **Action on Fail:** Trigger decomposition — split logic into atomic, single-purpose units. Each extracted piece should be testable in isolation.
+- **Pass:** Responsibilities are cohesive, and the code is understandable in its context. Function length and nesting are signals to investigate, not limits that require decomposition by themselves.
+- **Fail:** Mixed responsibilities or control flow make a concrete behavior difficult to understand, change, or verify (for example, an I/O side effect in a function presented as pure).
+- **Action on Fail:** Propose the smallest responsibility split that improves the demonstrated problem. Do not split code merely to meet a line-count target or create helpers used only to shorten a function.
 
 ### Gate 2: Open/Closed + Liskov Substitution (OCP/LSP)
 
-- **Pass:** New behavior is added by extending, not by modifying existing code. Subtypes are drop-in replacements for their parents without breaking contracts.
-- **Fail:** Large `if/else` or `switch` chains that must grow for each new type. Subclass methods throwing "Not Implemented".
-- **Action on Fail:** Refactor using the Strategy pattern or polymorphism. Close the current abstraction and extend via composition.
+- **Pass:** Changes preserve the contracts callers rely on. Modifying existing code is acceptable when it is the clearest, safest way to implement the requested behavior.
+- **Fail:** A concrete change or caller breaks an existing contract, or repeated real variations already make conditional logic error-prone.
+- **Action on Fail:** Fix the contract break first. Recommend polymorphism or another extension point only when the code has genuine variation that benefits from it; do not introduce patterns for hypothetical future types.
 
 ### Gate 3: Interface Segregation + Dependency Inversion (ISP/DIP)
 
-- **Pass:** Interfaces are narrow — clients only depend on what they use. High-level modules depend on abstractions, not concrete implementations.
-- **Fail:** "Fat" interfaces where implementors are forced to stub unused methods. Hardcoded `new SpecificClass()` inside constructors. Tight coupling to third-party SDKs in business logic.
-- **Action on Fail:** Introduce dependency injection. Split fat interfaces into focused contracts. Wrap third-party dependencies behind an abstraction layer owned by your code.
+- **Pass:** Callers depend only on the behavior they need. Concrete dependencies are fine when they are stable and do not cause a demonstrated testing or changeability problem.
+- **Fail:** A concrete dependency or broad interface prevents a required substitution, forces callers to support unused behavior, or makes relevant behavior untestable.
+- **Action on Fail:** Add the smallest seam that solves the demonstrated problem. Use dependency injection, a narrower interface, or a wrapper only when the code has a real need for that seam; do not add abstraction layers by default.
 
 ### Gate 4: Pragmatic Quality (KISS / DRY / YAGNI)
 
-- **Pass:** Zero duplicated logic. Simplest solution that satisfies the requirement. Intent-revealing names (`isExpired` vs `flag`). Related code is colocated.
-- **Fail:** Over-engineering for hypothetical future requirements. Magic numbers. Single-use abstractions with more complexity than the code they replaced. Abbreviated names (`ptr`, `tmp`, `idx`).
-- **Action on Fail:** Inline over-engineered abstractions. Replace magic numbers with named constants. Choose duplication over a premature abstraction when the abstraction adds net complexity.
+- **Pass:** The solution is as simple as the requirement allows, with clear names and behavior. Small duplication is acceptable when the duplicated cases change independently or a shared abstraction would add more complexity.
+- **Fail:** Repeated logic has the same meaning and change boundary, so maintaining it separately creates a concrete inconsistency risk; or an abstraction adds complexity without a current use.
+- **Action on Fail:** Consolidate only when the shared rule is real and the resulting abstraction is clearer. Otherwise leave the code separate. Do not treat zero duplication as a goal.
+
+### Finding quality
+
+Before recommending a structural change, state the affected code, the concrete scenario or maintenance problem, and why a smaller local change is insufficient. Include the smallest safe fix and its consequence if left unchanged. Do not block a review for line-count preferences, pattern choices, or hypothetical reuse.
 
 ---
 
