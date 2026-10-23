@@ -21,6 +21,7 @@ project's own conventions. Stdlib only; no pip installs.
 """
 
 import json
+import http.client
 import os
 import sys
 import time
@@ -76,9 +77,10 @@ def http_json(url: str, method: str, token: str, payload: dict | None = None,
                 last_error = exc
                 continue
             raise RuntimeError(f"HTTP {exc.code} from {url}: {detail}") from exc
-        except (urllib.error.URLError, TimeoutError) as exc:
-            # TimeoutError: el socket superó REQUEST_TIMEOUT (respuestas lentas del modelo).
-            # Un solo reintento extra: reintentar 3x una llamada de 10 min no tiene sentido.
+        except (urllib.error.URLError, TimeoutError, http.client.HTTPException,
+                ConnectionError) as exc:
+            # HTTPException cubre RemoteDisconnected: la API puede cerrar la
+            # conexión sin responder; TimeoutError: socket > REQUEST_TIMEOUT.
             if isinstance(exc, TimeoutError) and attempt >= 2:
                 raise RuntimeError(
                     f"Provider timed out after {REQUEST_TIMEOUT}s twice ({url}); "

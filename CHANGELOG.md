@@ -23,7 +23,9 @@
 - Reviewer script: comment lookup paginates past 100 comments, non-JSON
   provider responses raise a descriptive error, the prompt fence tolerates
   triple-backtick diffs, and provider read timeouts retry once more with the
-  job timeout raised to 45 minutes.
+  job timeout raised to 45 minutes. Transient provider connection resets
+  (`RemoteDisconnected`) now retry with backoff, and any failure is surfaced
+  as a check-run annotation with its real cause.
 
 ## v0.8.4 — 2026-10-12
 
