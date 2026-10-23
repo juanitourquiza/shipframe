@@ -29,7 +29,7 @@ import urllib.request
 
 MARKER = "<!-- shipframe-pr-review -->"
 MAX_ATTEMPTS = 3
-REQUEST_TIMEOUT = 240
+REQUEST_TIMEOUT = 600  # segundos; los modelos con razonamiento pueden tardar varios minutos
 PROFILE_MAX_CHARS = 4000
 PROFILE_CANDIDATES = (".shipframe/profile.md", "shipframe.profile.md")
 
@@ -71,10 +71,17 @@ def http_json(url: str, method: str, token: str, payload: dict | None = None,
                 last_error = exc
                 continue
             raise RuntimeError(f"HTTP {exc.code} from {url}: {detail}") from exc
-        except urllib.error.URLError as exc:
+        except (urllib.error.URLError, TimeoutError) as exc:
+            # TimeoutError: el socket superó REQUEST_TIMEOUT (respuestas lentas del modelo).
+            # Un solo reintento extra: reintentar 3x una llamada de 10 min no tiene sentido.
+            if isinstance(exc, TimeoutError) and attempt >= 2:
+                raise RuntimeError(
+                    f"Provider timed out after {REQUEST_TIMEOUT}s twice ({url}); "
+                    "reduce SF_REVIEW_MAX_DIFF_CHARS or pick a faster model"
+                ) from exc
             if attempt < MAX_ATTEMPTS:
                 wait = 2 ** attempt
-                print(f"Network error (attempt {attempt}); retrying in {wait}s: {exc.reason}")
+                print(f"Network error/timeout (attempt {attempt}); retrying in {wait}s: {exc}")
                 time.sleep(wait)
                 last_error = exc
                 continue

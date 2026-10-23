@@ -23,7 +23,12 @@ jobs:
         if: runner.os == 'macOS'
         run: brew install shellcheck
       - name: Run installer tests
-        run: ./tests/test-install.sh
+        run: |
+          set -o pipefail
+          ./tests/test-install.sh 2>&1 | tee test-install-ci.log || {
+            echo "::error::test-install tail >> $(tail -c 2500 test-install-ci.log | tr '\n' '|')"
+            exit 1
+          }
       - name: Test orchestrator mutation guard
         run: node --test tests/test-orchestrator-guard.js
       - name: Test cross-host prompt fast path
