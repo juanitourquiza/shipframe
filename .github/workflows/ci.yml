@@ -25,8 +25,8 @@ jobs:
       - name: Run installer tests
         run: |
           set -o pipefail
-          ./tests/test-install.sh 2>&1 | tee test-install-ci.log || {
-            echo "::error::test-install tail >> $(tail -c 2500 test-install-ci.log | tr '\n' '|')"
+          bash -x ./tests/test-install.sh 2>&1 | tee test-install-ci.log || {
+            echo "::error::XTRACE>>$(tail -c 2500 test-install-ci.log | tr '\n' '|' | tr '\t' ' ')"
             exit 1
           }
       - name: Test orchestrator mutation guard
