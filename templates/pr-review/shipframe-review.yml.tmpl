@@ -32,8 +32,12 @@ jobs:
         env:
           BASE_REF: ${{ github.base_ref }}
         run: |
-          git checkout "origin/${BASE_REF}" -- scripts/sf_pr_review.py
-          echo "Reviewer script pinned to origin/${BASE_REF}"
+          if git cat-file -e "origin/${BASE_REF}:scripts/sf_pr_review.py" 2>/dev/null; then
+            git checkout "origin/${BASE_REF}" -- scripts/sf_pr_review.py
+            echo "Reviewer script pinned to origin/${BASE_REF}"
+          else
+            echo "Reviewer script not in base branch (it is introduced by this PR); using PR version"
+          fi
 
       - name: Diff against base branch
         env:
