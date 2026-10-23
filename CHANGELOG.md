@@ -1,5 +1,16 @@
 # Changelog
 
+## v0.8.5 — 2026-10-23
+
+### Added
+- Opt-in AI PR reviewer: `install.sh --pr-review <provider>` installs a GitHub
+  Actions gatekeeper (`.github/workflows/shipframe-review.yml` +
+  `scripts/sf_pr_review.py`) that reviews each pull request with the user's
+  provider (nan-builders, claude, openai, or any custom OpenAI-compatible
+  endpoint), enforces `.shipframe/profile.md` conventions when present, and
+  keeps one updating comment per PR. Fork PRs are skipped; the workflow only
+  comments and cannot push code.
+
 ## v0.8.4 — 2026-10-12
 
 ### Changed

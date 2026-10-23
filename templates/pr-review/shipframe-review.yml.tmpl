@@ -1,0 +1,45 @@
+name: ShipFrame AI PR review (__SF_PROVIDER__)
+
+# Opt-in gatekeeper installed by `install.sh --pr-review <provider>`.
+# One comment per PR, edited on every push. Fork PRs are skipped:
+# GitHub does not hand secrets to forks, which keeps the API key safe.
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: read
+  pull-requests: write
+
+concurrency:
+  group: shipframe-review-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  review:
+    runs-on: ubuntu-latest
+    if: github.event.pull_request.head.repo.fork == false
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Diff against base branch
+        run: |
+          git diff "origin/${{ github.base_ref }}...HEAD" > pr.diff || true
+          echo "Diff size: $(wc -c < pr.diff) bytes"
+
+      - name: AI review
+        env:
+          SF_REVIEW_API: "__SF_REVIEW_API__"
+          SF_REVIEW_BASE_URL: "__SF_REVIEW_BASE_URL__"
+          SF_REVIEW_MODEL: "__SF_REVIEW_MODEL__"
+          SF_REVIEW_API_KEY: ${{ secrets.SF_REVIEW_API_KEY }}
+          PR_TITLE: ${{ github.event.pull_request.title }}
+          PR_BODY: ${{ github.event.pull_request.body }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          REPO: ${{ github.repository }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          GITHUB_TOKEN: ${{ github.token }}
+        run: python3 scripts/sf_pr_review.py

@@ -495,6 +495,36 @@ existing workflows unless a user opts into it.
 
 ---
 
+## AI PR reviewer (opt-in)
+
+ShipFrame can install a gatekeeper GitHub Action that reviews every pull
+request with your own AI provider and leaves one comment per PR, updated on
+every push — the CI-side counterpart of the `code-review` skill. Nothing is
+installed unless you ask for it:
+
+```bash
+./install.sh --codex --pr-review nan-builders
+# providers: nan-builders | claude | openai | custom | off
+# custom needs SF_REVIEW_BASE_URL and SF_REVIEW_MODEL
+```
+
+Interactive installs ask whether to enable it; non-interactive runs skip it
+unless `--pr-review` is passed. The installer writes two ShipFrame-owned files
+into `--project-dir` (default: current directory):
+
+- `.github/workflows/shipframe-review.yml` — trigger, concurrency, fork guard
+- `scripts/sf_pr_review.py` — stdlib-only review script with OpenAI-compatible
+  and Anthropic API adapters
+
+One manual step remains: add the `SF_REVIEW_API_KEY` repository secret with
+your provider key. Fork PRs are skipped (GitHub does not deliver secrets to
+forks, and third-party diffs must never touch your key), the script never
+prints the key, and the workflow cannot push code — it only comments.
+
+If `.shipframe/profile.md` or `shipframe.profile.md` exists, the reviewer
+enforces those conventions on top of the generic checklist. Remove everything
+with `./install.sh --uninstall --yes`.
+
 ## Codex workflow
 
 Codex supports native subagents in compatible CLI/runtime configurations. ShipFrame installs a routing table into `~/.codex/AGENTS.md`; it does not modify user-owned `config.toml` or enable experimental settings. For substantive, separable work, the workflow asks the host to use native delegation when available and an independent read-only review after non-trivial implementation. Trivial tasks remain in the primary agent. If the host cannot actually delegate, it must say so and must not claim independent review.
@@ -657,6 +687,26 @@ Valida la configuración opcional con:
 ```
 
 Nota legacy avanzada: `./install.sh --sync-docs` sigue existiendo para manifests explícitos antiguos, pero ya no es el camino recomendado.
+
+### Reviewer de PRs con IA (opt-in)
+
+ShipFrame puede instalar un GitHub Action gatekeeper que revisa cada pull
+request con tu propio proveedor de IA y deja un comentario por PR, editado en
+cada push — la contraparte en CI de la skill `code-review`:
+
+```bash
+./install.sh --codex --pr-review nan-builders
+# proveedores: nan-builders | claude | openai | custom | off
+# custom requiere SF_REVIEW_BASE_URL y SF_REVIEW_MODEL
+```
+
+Las instalaciones interactivas preguntan si activarlo; las no interactivas lo
+saltan salvo que se pase `--pr-review`. El instalador escribe
+`.github/workflows/shipframe-review.yml` y `scripts/sf_pr_review.py` en el
+repo (removibles con `--uninstall --yes`). Paso manual único: crear el secret
+`SF_REVIEW_API_KEY` con tu clave del proveedor. Los PRs de forks se ignoran,
+el script nunca imprime la clave y el workflow no puede pushear código: solo
+comenta.
 
 ### Flujo recomendado
 
