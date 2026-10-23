@@ -90,16 +90,19 @@ while [ "$#" -gt 0 ]; do
     --purge) PURGE=true ;;
     --dry-run) DRY_RUN=true ;;
     --project-dir)
-      shift || { echo "Missing value for --project-dir" >&2; exit 2; }
-      PROJECT_DIR="$1"
+      [ "$#" -ge 2 ] || { echo "Missing value for --project-dir" >&2; exit 2; }
+      PROJECT_DIR="$2"
+      shift
       ;;
     --opencode-model|--model)
-      shift || { echo "Missing value for --opencode-model" >&2; exit 2; }
-      OPENCODE_MODEL="$1"
+      [ "$#" -ge 2 ] || { echo "Missing value for --opencode-model" >&2; exit 2; }
+      OPENCODE_MODEL="$2"
+      shift
       ;;
     --pr-review)
-      shift || { echo "Missing value for --pr-review" >&2; exit 2; }
-      PR_REVIEW="$1"
+      [ "$#" -ge 2 ] || { echo "Missing value for --pr-review" >&2; exit 2; }
+      PR_REVIEW="$2"
+      shift
       ;;
     -h|--help) print_banner; print_usage; exit 0 ;;
     *) echo "Unknown argument: $1" >&2; print_usage; exit 2 ;;
@@ -939,6 +942,10 @@ run_repair() {
 }
 install_pr_review() {
   local provider="$PR_REVIEW"
+  if [ "$DRY_RUN" = true ]; then
+    echo "dry-run: would ${provider:-prompt for} AI PR reviewer install into $PROJECT_DIR (use --pr-review with a real run)"
+    return 0
+  fi
   if [ -z "$provider" ]; then
     if [ -t 0 ] && [ -t 1 ]; then
       local suggestion choice=""
@@ -949,7 +956,7 @@ install_pr_review() {
         *) suggestion="nan-builders" ;;
       esac
       echo ""
-      printf "Install the AI PR reviewer (GitHub Action) into %s? Provider [nan-builders/claude/openai/custom/off] or Enter to skip: " "$PROJECT_DIR"
+      printf "Install the AI PR reviewer (GitHub Action) into %s? Provider [nan-builders/claude/openai/custom/off] (suggested for your host: %s) or Enter to skip: " "$PROJECT_DIR" "$suggestion"
       read -r choice || true
       case "$choice" in
         "") echo "AI PR reviewer: skipped. Enable later with: ./install.sh --pr-review <provider>" ; return 0 ;;

@@ -19,7 +19,7 @@ concurrency:
 jobs:
   review:
     runs-on: ubuntu-latest
-    timeout-minutes: 25
+    timeout-minutes: 45
     if: github.event.pull_request.head.repo.fork == false
     steps:
       - uses: actions/checkout@v4

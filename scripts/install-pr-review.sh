@@ -39,6 +39,9 @@ provider_config() {
   esac
 }
 
+# Escapa caracteres especiales de sed en el reemplazo (& y | con delimitador |).
+sed_escape() { printf '%s' "$1" | sed -e 's/[\\&|]/\\&/g'; }
+
 if [ "$provider" = "custom" ]; then
   api="openai_compatible"
   base_url="${SF_REVIEW_BASE_URL:-}"
@@ -61,16 +64,21 @@ else
   IFS='|' read -r api base_url model <<< "$(provider_config "$provider")"
 fi
 
+case "$base_url" in
+  http://*|https://*) ;;
+  *) echo "Error: base URL must start with http:// or https:// (got: $base_url)" >&2; exit 2 ;;
+esac
+
 workflow_dir="$project_dir/.github/workflows"
 workflow_dst="$workflow_dir/shipframe-review.yml"
 script_dst="$project_dir/scripts/sf_pr_review.py"
 
 mkdir -p "$workflow_dir" "$project_dir/scripts"
 sed \
-  -e "s|__SF_PROVIDER__|$provider|g" \
-  -e "s|__SF_REVIEW_API__|$api|g" \
-  -e "s|__SF_REVIEW_BASE_URL__|$base_url|g" \
-  -e "s|__SF_REVIEW_MODEL__|$model|g" \
+  -e "s|__SF_PROVIDER__|$(sed_escape "$provider")|g" \
+  -e "s|__SF_REVIEW_API__|$(sed_escape "$api")|g" \
+  -e "s|__SF_REVIEW_BASE_URL__|$(sed_escape "$base_url")|g" \
+  -e "s|__SF_REVIEW_MODEL__|$(sed_escape "$model")|g" \
   "$TEMPLATE_DIR/shipframe-review.yml.tmpl" > "$workflow_dst"
 cp "$TEMPLATE_DIR/sf_pr_review.py" "$script_dst"
 chmod +x "$script_dst"

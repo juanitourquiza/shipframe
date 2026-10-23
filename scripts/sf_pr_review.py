@@ -61,7 +61,12 @@ def http_json(url: str, method: str, token: str, payload: dict | None = None,
         try:
             with urllib.request.urlopen(req, timeout=REQUEST_TIMEOUT) as resp:
                 data = resp.read().decode()
-                return json.loads(data) if data else {}
+                if not data:
+                    return {}
+                try:
+                    return json.loads(data)
+                except json.JSONDecodeError as exc:
+                    raise RuntimeError(f"Non-JSON response from {url}: {data[:200]}") from exc
         except urllib.error.HTTPError as exc:
             detail = exc.read().decode(errors="replace")[:500]
             if exc.code in (429, 500, 502, 503, 504) and attempt < MAX_ATTEMPTS:
@@ -118,7 +123,10 @@ def build_messages(title: str, body: str, diff: str) -> tuple[str, str]:
     profile = load_profile_context()
     if profile:
         system += f"\n\nProject conventions (shipframe profile):\n{profile}"
-    user = f"PR title: {title}\n\nDescription:\n{body or '(no description)'}\n\nDiff:\n```diff\n{diff}\n```"
+    user = (
+        f"PR title: {title}\n\nDescription:\n{body or '(no description)'}\n\n"
+        f"Diff:\n````diff\n{diff}\n````"
+    )
     return system, user
 
 
@@ -177,8 +185,14 @@ def publish_comment(repo: str, pr_number: str, token: str, sha: str, model: str,
         f"<sub>Reviewed commit `{sha[:12]}` · updates on every push · shipframe PR reviewer</sub>"
     )
     base = f"https://api.github.com/repos/{repo}/issues/{pr_number}/comments?per_page=100"
-    existing = http_json(base, "GET", token)
-    own = next((c for c in existing if MARKER in c.get("body", "")), None)
+    page = 1
+    own = None
+    while own is None:
+        existing = http_json(f"{base}&page={page}" if "?" in base else f"{base}?page={page}", "GET", token)
+        own = next((c for c in existing if MARKER in c.get("body", "")), None)
+        if own or len(existing) < 100:
+            break
+        page += 1
     if own:
         http_json(f"https://api.github.com/repos/{repo}/issues/{pr_number}/comments/{own['id']}",
                   "PATCH", token, {"body": body})

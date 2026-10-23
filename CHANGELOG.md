@@ -11,6 +11,20 @@
   keeps one updating comment per PR. Fork PRs are skipped; the workflow only
   comments and cannot push code.
 
+### Fixed
+- Installer test suite is now shellcheck-clean (SC2034 in the interactive
+  `--pr-review` prompt) and exercises the reviewer: provider validation,
+  custom-provider env requirements, templated workflow contents, template/copy
+  sync, and artifact removal on uninstall. Uninstall tests pass an explicit
+  `--project-dir` so they no longer touch the repository checkout.
+- Flag values (`--project-dir`, `--opencode-model`, `--pr-review`) error
+  cleanly when given as the last argument instead of failing on an unbound
+  variable under `set -u`.
+- Reviewer script: comment lookup paginates past 100 comments, non-JSON
+  provider responses raise a descriptive error, the prompt fence tolerates
+  triple-backtick diffs, and provider read timeouts retry once more with the
+  job timeout raised to 45 minutes.
+
 ## v0.8.4 — 2026-10-12
 
 ### Changed

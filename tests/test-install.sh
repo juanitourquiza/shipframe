@@ -69,7 +69,29 @@ assert_link(){ [ -L "$1" ] || { echo "Missing symlink: $1" >&2; exit 1; }; }
 assert_directory(){ [ -d "$1" ] && [ ! -L "$1" ] || { echo "Missing physical directory: $1" >&2; exit 1; }; }
 
 bash -n "$ROOT/install.sh"
-"$ROOT/install.sh" --doctor --repo-only > "$TMP/shipframe-doctor-repo-only.log" 2>&1
+"$ROOT/install.sh" --doctor --repo-only > "$TMP/shipframe-doctor-repo-only.log" 2>&1 || { echo "=== doctor --repo-only FAILED, log: ==="; cat "$TMP/shipframe-doctor-repo-only.log"; exit 1; }
+
+# --- AI PR reviewer (opt-in) ---
+PR_TARGET="$TMP/pr-review-target"
+mkdir -p "$PR_TARGET"
+# Empty dir so uninstall invocations below never touch the repo checkout itself.
+PR_CLEAN="$TMP/pr-review-clean"
+mkdir -p "$PR_CLEAN"
+if "$ROOT/install.sh" --pr-review bogus "$PR_TARGET" >/dev/null 2>&1; then
+  echo "invalid --pr-review provider accepted" >&2; exit 1
+fi
+if SF_REVIEW_BASE_URL="https://example.com/v1" "$ROOT/scripts/install-pr-review.sh" custom "$PR_TARGET" >/dev/null 2>&1; then
+  echo "custom provider accepted without SF_REVIEW_MODEL" >&2; exit 1
+fi
+SF_REVIEW_BASE_URL="https://example.com/v1" SF_REVIEW_MODEL="test-model" "$ROOT/scripts/install-pr-review.sh" custom "$PR_TARGET" >"$TMP/pr-review-custom.log" 2>&1
+grep -q 'test-model' "$PR_TARGET/.github/workflows/shipframe-review.yml"
+grep -q 'https://example.com/v1' "$PR_TARGET/.github/workflows/shipframe-review.yml"
+"$ROOT/scripts/install-pr-review.sh" nan-builders "$PR_TARGET" >"$TMP/pr-review-nan.log" 2>&1
+grep -q 'api.nan.builders' "$PR_TARGET/.github/workflows/shipframe-review.yml"
+grep -q 'glm5.3-flash' "$PR_TARGET/.github/workflows/shipframe-review.yml"
+cmp -s "$ROOT/templates/pr-review/sf_pr_review.py" "$ROOT/scripts/sf_pr_review.py" || { echo "dogfood copy drifted from templates/pr-review/sf_pr_review.py" >&2; exit 1; }
+"$ROOT/install.sh" --uninstall --codex --project-dir "$PR_TARGET" --yes >"$TMP/pr-review-uninstall.log" 2>&1
+[ ! -e "$PR_TARGET/.github/workflows/shipframe-review.yml" ] || { echo "uninstall did not remove shipframe-review.yml" >&2; exit 1; }
 
 # Repair is non-mutating unless --yes is explicit, across every target host.
 REPAIR_HOME="$TMP/repair-dry-run-home"
@@ -95,7 +117,7 @@ HOME="$OPENWORK_HOME" XDG_STATE_HOME="$TMP/openwork-state" "$ROOT/install.sh" --
 grep -q 'OpenWork physical skill folders' "$TMP/openwork-doctor.log"
 HOME="$OPENWORK_HOME" XDG_STATE_HOME="$TMP/openwork-state" "$ROOT/install.sh" --openwork > "$TMP/openwork-install-again.log"
 assert_file "$OPENWORK_HOME/.claude/skills/code-review/SKILL.md"
-HOME="$OPENWORK_HOME" XDG_STATE_HOME="$TMP/openwork-state" "$ROOT/install.sh" --uninstall --openwork --yes > "$TMP/openwork-uninstall.log"
+HOME="$OPENWORK_HOME" XDG_STATE_HOME="$TMP/openwork-state" "$ROOT/install.sh" --uninstall --openwork --project-dir "$PR_CLEAN" --yes > "$TMP/openwork-uninstall.log"
 [ ! -e "$OPENWORK_HOME/.claude/skills/code-review" ]
 
 # Convert only a manifest-style ShipFrame symlink and restore it on uninstall.
@@ -104,7 +126,7 @@ mkdir -p "$PRELINK_HOME/.claude/skills"
 ln -s "$ROOT/skills/code-review" "$PRELINK_HOME/.claude/skills/code-review"
 HOME="$PRELINK_HOME" XDG_STATE_HOME="$TMP/openwork-prelink-state" "$ROOT/install.sh" --openwork > "$TMP/openwork-convert.log"
 assert_directory "$PRELINK_HOME/.claude/skills/code-review"
-HOME="$PRELINK_HOME" XDG_STATE_HOME="$TMP/openwork-prelink-state" "$ROOT/install.sh" --uninstall --openwork --yes > "$TMP/openwork-restore.log"
+HOME="$PRELINK_HOME" XDG_STATE_HOME="$TMP/openwork-prelink-state" "$ROOT/install.sh" --uninstall --openwork --project-dir "$PR_CLEAN" --yes > "$TMP/openwork-restore.log"
 assert_link "$PRELINK_HOME/.claude/skills/code-review"
 [ "$(readlink "$PRELINK_HOME/.claude/skills/code-review")" = "$ROOT/skills/code-review" ]
 
@@ -168,9 +190,9 @@ assert_file "$CODEX_AGENT_HOME/.codex/agents/reviewer.toml"
 grep -q 'shipframe-managed: codex-agent-v1' "$CODEX_AGENT_HOME/.codex/agents/reviewer.toml"
 grep -q 'user-owned = true' "$CODEX_AGENT_HOME/.codex/config.toml"
 HOME="$CODEX_AGENT_HOME" XDG_STATE_HOME="$TMP/codex-agent-state" "$ROOT/install.sh" --repair --codex --codex-agents --yes > "$TMP/codex-agents-repair.log"
-HOME="$CODEX_AGENT_HOME" XDG_STATE_HOME="$TMP/codex-agent-state" "$ROOT/install.sh" --uninstall --codex > "$TMP/codex-agents-uninstall-dry.log"
+HOME="$CODEX_AGENT_HOME" XDG_STATE_HOME="$TMP/codex-agent-state" "$ROOT/install.sh" --uninstall --codex --project-dir "$PR_CLEAN" > "$TMP/codex-agents-uninstall-dry.log"
 assert_file "$CODEX_AGENT_HOME/.codex/agents/reviewer.toml"
-HOME="$CODEX_AGENT_HOME" XDG_STATE_HOME="$TMP/codex-agent-state" "$ROOT/install.sh" --uninstall --codex --yes > "$TMP/codex-agents-uninstall.log"
+HOME="$CODEX_AGENT_HOME" XDG_STATE_HOME="$TMP/codex-agent-state" "$ROOT/install.sh" --uninstall --codex --project-dir "$PR_CLEAN" --yes > "$TMP/codex-agents-uninstall.log"
 [ ! -e "$CODEX_AGENT_HOME/.codex/agents/reviewer.toml" ]
 assert_link "$CODEX_AGENT_HOME/.codex/agents/explorer.toml"
 assert_file "$CODEX_AGENT_HOME/.codex/agents/explorer-custom.toml"
@@ -224,10 +246,10 @@ mkdir "$HOME/.agents/skills/code-review" "$HOME/.codex/skills/code-review"
 assert_link "$HOME/.agents/skills/code-review"
 assert_link "$HOME/.codex/skills/code-review"
 
-"$ROOT/install.sh" --uninstall --all --purge >"$TMP/shipframe-uninstall-dry-run.log" 2>&1
+"$ROOT/install.sh" --uninstall --all --purge --project-dir "$PR_CLEAN" >"$TMP/shipframe-uninstall-dry-run.log" 2>&1
 assert_link "$HOME/.agents/skills/code-review"
 [ -f "$XDG_STATE_HOME/shipframe/install-state.json" ]
-"$ROOT/install.sh" --uninstall --all --yes --purge >"$TMP/shipframe-uninstall.log" 2>&1
+"$ROOT/install.sh" --uninstall --all --yes --purge --project-dir "$PR_CLEAN" >"$TMP/shipframe-uninstall.log" 2>&1
 [ ! -L "$HOME/.agents/skills/code-review" ]
 [ ! -L "$HOME/.codex/skills/code-review" ]
 [ ! -e "$HOME/.claude/skills/code-review" ]
