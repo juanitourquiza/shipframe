@@ -1,5 +1,45 @@
 # Changelog
 
+## v0.8.5 — 2026-10-23
+
+### Added
+- Opt-in AI PR reviewer: `install.sh --pr-review <provider>` installs a GitHub
+  Actions gatekeeper (`.github/workflows/shipframe-review.yml` +
+  `scripts/sf_pr_review.py`) that reviews each pull request with the user's
+  provider (nan-builders, claude, openai, or any custom OpenAI-compatible
+  endpoint), enforces `.shipframe/profile.md` conventions when present, and
+  keeps one updating comment per PR. Fork PRs are skipped; the workflow only
+  comments and cannot push code.
+
+### Fixed
+- Installer test suite is now shellcheck-clean (SC2034 in the interactive
+  `--pr-review` prompt) and exercises the reviewer: provider validation,
+  custom-provider env requirements, templated workflow contents, template/copy
+  sync, and artifact removal on uninstall. Uninstall tests pass an explicit
+  `--project-dir` so they no longer touch the repository checkout.
+- Flag values (`--project-dir`, `--opencode-model`, `--pr-review`) error
+  cleanly when given as the last argument instead of failing on an unbound
+  variable under `set -u`.
+- Reviewer script: comment lookup paginates past 100 comments, non-JSON
+  provider responses raise a descriptive error, the prompt fence tolerates
+  triple-backtick diffs, and provider read timeouts retry once more with the
+  job timeout raised to 45 minutes. Transient provider connection resets
+  (`RemoteDisconnected`) now retry with backoff, and any failure is surfaced
+  as a check-run annotation with its real cause. If the existing review
+  comment cannot be updated (404/410), the reviewer posts a fresh one instead
+  of failing.
+- Security: the workflow pins `scripts/sf_pr_review.py` to the base branch
+  before running it, so a same-repo PR cannot tamper with the reviewer to
+  exfiltrate `SF_REVIEW_API_KEY` (the fork guard alone did not cover this).
+- Correctness: a missing or empty diff now fails the review (fail closed)
+  instead of letting the model post a false approval; the diff step no
+  longer swallows git errors with `|| true`.
+- Hardening: interactive provider choice is validated, double quotes are
+  rejected in custom base URL/model (they broke the generated workflow),
+  the `::error` annotation collapses newlines, stale review comments are
+  deleted so only one remains, uninstall removes now-empty directories, and
+  the help documents that `--pr-review` requires an install target.
+
 ## v0.8.4 — 2026-10-12
 
 ### Changed

@@ -42,6 +42,12 @@ Options:
   --yes                               Apply --repair/--uninstall changes.
   --purge                             With --uninstall, remove ShipFrame cache/state too.
   --opencode-model provider/model     Explicit OpenCode model override for converted agents.
+  --pr-review <provider>              Opt-in: install the AI PR reviewer GitHub Action into
+                                      --project-dir. Requires an install target (--claude,
+                                      --openwork, --opencode, --codex or --all). Providers:
+                                      nan-builders, claude, openai, custom (needs
+                                      SF_REVIEW_BASE_URL + SF_REVIEW_MODEL), off.
+                                      Interactive installs ask before skipping.
   --dry-run                           Legacy --sync-docs compatibility option only.
   -h, --help                          Show this help.
 
@@ -66,6 +72,7 @@ REPO_ONLY=false
 YES=false
 PURGE=false
 OPENCODE_MODEL=""
+PR_REVIEW=""
 
 while [ "$#" -gt 0 ]; do
   case "$1" in
@@ -85,12 +92,19 @@ while [ "$#" -gt 0 ]; do
     --purge) PURGE=true ;;
     --dry-run) DRY_RUN=true ;;
     --project-dir)
-      shift || { echo "Missing value for --project-dir" >&2; exit 2; }
-      PROJECT_DIR="$1"
+      [ "$#" -ge 2 ] || { echo "Missing value for --project-dir" >&2; exit 2; }
+      PROJECT_DIR="$2"
+      shift
       ;;
     --opencode-model|--model)
-      shift || { echo "Missing value for --opencode-model" >&2; exit 2; }
-      OPENCODE_MODEL="$1"
+      [ "$#" -ge 2 ] || { echo "Missing value for --opencode-model" >&2; exit 2; }
+      OPENCODE_MODEL="$2"
+      shift
+      ;;
+    --pr-review)
+      [ "$#" -ge 2 ] || { echo "Missing value for --pr-review" >&2; exit 2; }
+      PR_REVIEW="$2"
+      shift
       ;;
     -h|--help) print_banner; print_usage; exit 0 ;;
     *) echo "Unknown argument: $1" >&2; print_usage; exit 2 ;;
@@ -102,6 +116,11 @@ if [ "$CODEX_AGENTS" = true ] && [ "$TARGET" != "codex" ] && [ "$TARGET" != "all
   echo "--codex-agents requires --codex or --all." >&2
   exit 2
 fi
+
+case "$PR_REVIEW" in
+  ""|nan-builders|claude|openai|custom|off) ;;
+  *) echo "Unknown --pr-review provider: $PR_REVIEW (valid: nan-builders, claude, openai, custom, off)" >&2; exit 2 ;;
+esac
 
 if [ "$ACTION" = "doctor" ] && [ "$REPO_ONLY" = true ] && [ -n "$TARGET" ]; then
   echo "--doctor --repo-only does not use install targets." >&2
@@ -872,6 +891,15 @@ remove_opencode_router() {
   fi
 }
 run_uninstall() {
+  if [ -f "$PROJECT_DIR/.github/workflows/shipframe-review.yml" ] || [ -f "$PROJECT_DIR/scripts/sf_pr_review.py" ]; then
+    if [ "$YES" = true ]; then
+      echo "Removing AI PR reviewer artifacts from $PROJECT_DIR..."
+      rm -f "$PROJECT_DIR/.github/workflows/shipframe-review.yml" "$PROJECT_DIR/scripts/sf_pr_review.py"
+      rmdir "$PROJECT_DIR/.github/workflows" "$PROJECT_DIR/scripts" 2>/dev/null || true
+    else
+      echo "dry-run: would remove AI PR reviewer artifacts in $PROJECT_DIR (.github/workflows/shipframe-review.yml, scripts/sf_pr_review.py)"
+    fi
+  fi
   case "$TARGET" in
     claude|all)
       echo "Removing Claude Code / OpenWork skills..."; uninstall_openwork_skills
@@ -915,6 +943,39 @@ run_repair() {
   esac
   [ "$YES" = true ] && write_manifest || true
 }
+install_pr_review() {
+  local provider="$PR_REVIEW"
+  if [ "$DRY_RUN" = true ]; then
+    echo "dry-run: would ${provider:-prompt for} AI PR reviewer install into $PROJECT_DIR (use --pr-review with a real run)"
+    return 0
+  fi
+  if [ -z "$provider" ]; then
+    if [ -t 0 ] && [ -t 1 ]; then
+      local suggestion choice=""
+      case "$TARGET" in
+        claude) suggestion="claude" ;;
+        codex) suggestion="openai" ;;
+        opencode) suggestion="custom" ;;
+        *) suggestion="nan-builders" ;;
+      esac
+      echo ""
+      printf "Install the AI PR reviewer (GitHub Action) into %s? Provider [nan-builders/claude/openai/custom/off] (suggested for your host: %s) or Enter to skip: " "$PROJECT_DIR" "$suggestion"
+      read -r choice || true
+      case "$choice" in
+        "") echo "AI PR reviewer: skipped. Enable later with: ./install.sh --pr-review <provider>" ; return 0 ;;
+        nan-builders|claude|openai|custom|off) provider="$choice" ;;
+        *) echo "Invalid provider: $choice (use nan-builders, claude, openai, custom or off)" >&2 ; exit 2 ;;
+      esac
+    else
+      echo "AI PR reviewer: not requested. Enable with --pr-review <nan-builders|claude|openai|custom|off>."
+      return 0
+    fi
+  fi
+  echo ""
+  echo "AI PR reviewer ($provider):"
+  "$SOURCE_DIR/scripts/install-pr-review.sh" "$provider" "$PROJECT_DIR"
+}
+
 check_engram_memory() {
   [ "$ACTION" = "doctor" ] || [ "$ACTION" = "uninstall" ] || echo ""
   [ "$ACTION" = "doctor" ] || [ "$ACTION" = "uninstall" ] || echo "Optional persistent memory:"
@@ -968,6 +1029,7 @@ case "$ACTION" in
         if [ "$missing" -gt 0 ]; then echo "Partial install: $missing requested target(s) were unavailable; install their CLI and rerun." >&2; exit 1; fi ;;
       *) echo "Missing target. Use --claude, --openwork, --opencode, --codex, or --all." >&2; exit 2 ;;
     esac
+    install_pr_review
     check_engram_memory
     check_project_memory_suggestion
     check_context_mcp install

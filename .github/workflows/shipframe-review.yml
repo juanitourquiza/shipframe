@@ -1,0 +1,61 @@
+name: ShipFrame AI PR review (nan-builders)
+
+# Opt-in gatekeeper installed by `install.sh --pr-review <provider>`.
+# One comment per PR, replaced on every push. Fork PRs are skipped:
+# GitHub does not hand secrets to forks, which keeps the API key safe.
+# The reviewer script itself is always pinned to the base branch, so a
+# same-repo PR cannot tamper with it to exfiltrate the API key.
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: read
+  pull-requests: write
+
+concurrency:
+  group: shipframe-review-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  review:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    if: github.event.pull_request.head.repo.fork == false
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Pin reviewer script to base branch (anti-tamper)
+        env:
+          BASE_REF: ${{ github.base_ref }}
+        run: |
+          if git cat-file -e "origin/${BASE_REF}:scripts/sf_pr_review.py" 2>/dev/null; then
+            git checkout "origin/${BASE_REF}" -- scripts/sf_pr_review.py
+            echo "Reviewer script pinned to origin/${BASE_REF}"
+          else
+            echo "Reviewer script not in base branch (it is introduced by this PR); using PR version"
+          fi
+
+      - name: Diff against base branch
+        env:
+          BASE_REF: ${{ github.base_ref }}
+        run: |
+          git diff "origin/${BASE_REF}...HEAD" > pr.diff
+          echo "Diff size: $(wc -c < pr.diff) bytes"
+
+      - name: AI review
+        env:
+          SF_REVIEW_API: "openai_compatible"
+          SF_REVIEW_BASE_URL: "https://api.nan.builders/v1"
+          SF_REVIEW_MODEL: "glm5.3-flash"
+          SF_REVIEW_API_KEY: ${{ secrets.SF_REVIEW_API_KEY }}
+          PR_TITLE: ${{ github.event.pull_request.title }}
+          PR_BODY: ${{ github.event.pull_request.body }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          REPO: ${{ github.repository }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          GITHUB_TOKEN: ${{ github.token }}
+        run: python3 scripts/sf_pr_review.py
