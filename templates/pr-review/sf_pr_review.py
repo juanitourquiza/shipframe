@@ -191,8 +191,11 @@ def publish_comment(repo: str, pr_number: str, token: str, sha: str, model: str,
     own = None
     while own is None:
         existing = http_json(f"{base}&page={page}" if "?" in base else f"{base}?page={page}", "GET", token)
-        own = next((c for c in existing if MARKER in c.get("body", "")), None)
-        if own or len(existing) < 100:
+        matches = [c for c in existing if MARKER in c.get("body", "")]
+        if matches:
+            own = max(matches, key=lambda c: c["id"])
+            break
+        if len(existing) < 100:
             break
         page += 1
     if own:
@@ -203,10 +206,16 @@ def publish_comment(repo: str, pr_number: str, token: str, sha: str, model: str,
             return
         except RuntimeError as exc:
             # El comentario puede desaparecer (o no ser editable) entre el GET
-            # y el PATCH; en ese caso creamos uno nuevo en vez de morir.
+            # y el PATCH; en ese caso lo reemplazamos en vez de morir.
             if "HTTP 404" not in str(exc) and "HTTP 410" not in str(exc):
                 raise
-            print(f"Could not update comment {own['id']} ({exc}); posting a new one.")
+            print(f"Could not update comment {own['id']} ({exc}); replacing it.")
+            try:
+                http_json(f"https://api.github.com/repos/{repo}/issues/comments/{own['id']}",
+                          "DELETE", token)
+                print(f"Deleted stale comment {own['id']}.")
+            except RuntimeError as dexc:
+                print(f"Could not delete stale comment ({dexc}); leaving it and posting a new one.")
     http_json(f"https://api.github.com/repos/{repo}/issues/{pr_number}/comments",
               "POST", token, {"body": body})
     print("Posted new review comment.")
