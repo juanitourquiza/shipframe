@@ -196,13 +196,20 @@ def publish_comment(repo: str, pr_number: str, token: str, sha: str, model: str,
             break
         page += 1
     if own:
-        http_json(f"https://api.github.com/repos/{repo}/issues/{pr_number}/comments/{own['id']}",
-                  "PATCH", token, {"body": body})
-        print(f"Updated comment {own['id']}.")
-    else:
-        http_json(f"https://api.github.com/repos/{repo}/issues/{pr_number}/comments",
-                  "POST", token, {"body": body})
-        print("Posted new review comment.")
+        try:
+            http_json(f"https://api.github.com/repos/{repo}/issues/{pr_number}/comments/{own['id']}",
+                      "PATCH", token, {"body": body})
+            print(f"Updated comment {own['id']}.")
+            return
+        except RuntimeError as exc:
+            # El comentario puede desaparecer (o no ser editable) entre el GET
+            # y el PATCH; en ese caso creamos uno nuevo en vez de morir.
+            if "HTTP 404" not in str(exc) and "HTTP 410" not in str(exc):
+                raise
+            print(f"Could not update comment {own['id']} ({exc}); posting a new one.")
+    http_json(f"https://api.github.com/repos/{repo}/issues/{pr_number}/comments",
+              "POST", token, {"body": body})
+    print("Posted new review comment.")
 
 
 def main() -> None:

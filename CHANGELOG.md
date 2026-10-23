@@ -25,7 +25,9 @@
   triple-backtick diffs, and provider read timeouts retry once more with the
   job timeout raised to 45 minutes. Transient provider connection resets
   (`RemoteDisconnected`) now retry with backoff, and any failure is surfaced
-  as a check-run annotation with its real cause.
+  as a check-run annotation with its real cause. If the existing review
+  comment cannot be updated (404/410), the reviewer posts a fresh one instead
+  of failing.
 
 ## v0.8.4 — 2026-10-12
 
