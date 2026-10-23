@@ -188,37 +188,50 @@ def publish_comment(repo: str, pr_number: str, token: str, sha: str, model: str,
     )
     base = f"https://api.github.com/repos/{repo}/issues/{pr_number}/comments?per_page=100"
     page = 1
-    own = None
-    while own is None:
+    matches = []
+    while not matches:
         existing = http_json(f"{base}&page={page}" if "?" in base else f"{base}?page={page}", "GET", token)
         matches = [c for c in existing if MARKER in c.get("body", "")]
-        if matches:
-            own = max(matches, key=lambda c: c["id"])
-            break
-        if len(existing) < 100:
+        if matches or len(existing) < 100:
             break
         page += 1
-    if own:
+
+    def delete_comment(comment_id: int) -> None:
+        http_json(f"https://api.github.com/repos/{repo}/issues/comments/{comment_id}",
+                  "DELETE", token)
+
+    if not matches:
+        http_json(f"https://api.github.com/repos/{repo}/issues/{pr_number}/comments",
+                  "POST", token, {"body": body})
+        print("Posted new review comment.")
+        return
+
+    own = max(matches, key=lambda c: c["id"])
+    updated = False
+    try:
+        http_json(f"https://api.github.com/repos/{repo}/issues/{pr_number}/comments/{own['id']}",
+                  "PATCH", token, {"body": body})
+        updated = True
+        print(f"Updated comment {own['id']}.")
+    except RuntimeError as exc:
+        # El comentario puede no ser editable (comentarios del bot con
+        # GITHUB_TOKEN); se reemplaza por uno nuevo en vez de fallar.
+        if "HTTP 404" not in str(exc) and "HTTP 410" not in str(exc):
+            raise
+        print(f"Could not update comment {own['id']} ({exc}); replacing it.")
+    # Converger a un solo comentario: borrar los marcados que quedaron.
+    for c in matches:
+        if updated and c["id"] == own["id"]:
+            continue
         try:
-            http_json(f"https://api.github.com/repos/{repo}/issues/{pr_number}/comments/{own['id']}",
-                      "PATCH", token, {"body": body})
-            print(f"Updated comment {own['id']}.")
-            return
-        except RuntimeError as exc:
-            # El comentario puede desaparecer (o no ser editable) entre el GET
-            # y el PATCH; en ese caso lo reemplazamos en vez de morir.
-            if "HTTP 404" not in str(exc) and "HTTP 410" not in str(exc):
-                raise
-            print(f"Could not update comment {own['id']} ({exc}); replacing it.")
-            try:
-                http_json(f"https://api.github.com/repos/{repo}/issues/comments/{own['id']}",
-                          "DELETE", token)
-                print(f"Deleted stale comment {own['id']}.")
-            except RuntimeError as dexc:
-                print(f"Could not delete stale comment ({dexc}); leaving it and posting a new one.")
-    http_json(f"https://api.github.com/repos/{repo}/issues/{pr_number}/comments",
-              "POST", token, {"body": body})
-    print("Posted new review comment.")
+            delete_comment(c["id"])
+            print(f"Deleted comment {c['id']}.")
+        except RuntimeError as dexc:
+            print(f"Could not delete comment {c['id']} ({dexc}); leaving it.")
+    if not updated:
+        http_json(f"https://api.github.com/repos/{repo}/issues/{pr_number}/comments",
+                  "POST", token, {"body": body})
+        print("Posted new review comment.")
 
 
 def main() -> None:
