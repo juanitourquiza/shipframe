@@ -13,7 +13,7 @@ Configuration comes from workflow env vars (values are baked in by
 - SF_REVIEW_MODEL      model name
 - SF_REVIEW_API_KEY    secret; never printed
 - SF_REVIEW_LANGUAGE   comment language (default es)
-- SF_REVIEW_MAX_DIFF_CHARS  diff cap before truncation (default 60000)
+- SF_REVIEW_MAX_DIFF_CHARS  diff cap before truncation (default 40000)
 
 Project context: if `.shipframe/profile.md` or `shipframe.profile.md` exists
 in the checkout, it is included (truncated) so the review enforces the
@@ -70,7 +70,7 @@ def http_json(url: str, method: str, token: str, payload: dict | None = None,
                     raise RuntimeError(f"Non-JSON response from {url}: {data[:200]}") from exc
         except urllib.error.HTTPError as exc:
             detail = exc.read().decode(errors="replace")[:500]
-            if exc.code in (429, 500, 502, 503, 504) and attempt < MAX_ATTEMPTS:
+            if exc.code in (408, 429, 500, 502, 503, 504) and attempt < MAX_ATTEMPTS:
                 wait = 2 ** attempt
                 print(f"HTTP {exc.code} from {url} (attempt {attempt}); retrying in {wait}s")
                 time.sleep(wait)
@@ -168,7 +168,7 @@ def ask_provider(api: str, base_url: str, model: str, api_key: str, system: str,
 
 
 def load_diff() -> str:
-    max_chars = int(os.environ.get("SF_REVIEW_MAX_DIFF_CHARS", "60000"))
+    max_chars = int(os.environ.get("SF_REVIEW_MAX_DIFF_CHARS", "40000"))
     path = os.environ.get("DIFF_PATH", "pr.diff")
     if not os.path.exists(path):
         return "(diff could not be generated)"
