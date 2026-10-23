@@ -1,6 +1,6 @@
 # Changelog
 
-## v0.8.5 — 2026-10-23
+## v1.0.0 — 2026-10-23
 
 ### Added
 - Opt-in AI PR reviewer: `install.sh --pr-review <provider>` installs a GitHub
