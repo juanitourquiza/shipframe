@@ -120,7 +120,7 @@ def build_messages(title: str, body: str, diff: str) -> tuple[str, str]:
         "- pass/fail **Conventions**: does the change follow the project conventions below?\n\n"
         "Then an optional '## Suggestions' section with non-blocking improvements.\n"
         "Be concrete: cite files and lines from the diff. Never invent code that is not in the diff. "
-        "If the diff is empty or documentation-only, say so and do not block the PR."
+        "If the diff is documentation-only, say so and do not block the PR."
     )
     profile = load_profile_context()
     if profile:
@@ -171,13 +171,17 @@ def load_diff() -> str:
     max_chars = int(os.environ.get("SF_REVIEW_MAX_DIFF_CHARS", "40000"))
     path = os.environ.get("DIFF_PATH", "pr.diff")
     if not os.path.exists(path):
-        return "(diff could not be generated)"
+        # Fail closed: sin diff no hay veredicto (un falso aprobado es el peor
+        # modo de fallo de un gatekeeper).
+        raise RuntimeError(
+            f"{path} not found: the diff step failed; refusing to post a verdict"
+        )
     with open(path, encoding="utf-8", errors="replace") as fh:
         diff = fh.read()
+    if not diff.strip():
+        raise RuntimeError("Empty diff: refusing to post a verdict (fail closed).")
     if len(diff) > max_chars:
         return diff[:max_chars] + f"\n\n[DIFF TRUNCATED: {len(diff)} -> {max_chars} chars; read the full PR on GitHub]"
-    if not diff.strip():
-        return "(empty diff)"
     return diff
 
 
@@ -189,10 +193,10 @@ def publish_comment(repo: str, pr_number: str, token: str, sha: str, model: str,
     base = f"https://api.github.com/repos/{repo}/issues/{pr_number}/comments?per_page=100"
     page = 1
     matches = []
-    while not matches:
+    while True:
         existing = http_json(f"{base}&page={page}" if "?" in base else f"{base}?page={page}", "GET", token)
-        matches = [c for c in existing if MARKER in c.get("body", "")]
-        if matches or len(existing) < 100:
+        matches.extend(c for c in existing if MARKER in c.get("body", ""))
+        if len(existing) < 100:
             break
         page += 1
 
@@ -257,5 +261,7 @@ if __name__ == "__main__":
         main()
     except Exception as exc:
         # Surface the real cause as a check-run annotation; logs are private.
-        print(f"::error title=AI review failed::{exc}", file=sys.stderr)
+        # Collapse newlines: a multi-line annotation message renders broken.
+        flat = " ".join(str(exc).split())
+        print(f"::error title=AI review failed::{flat}", file=sys.stderr)
         raise SystemExit(1)

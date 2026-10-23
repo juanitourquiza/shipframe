@@ -28,6 +28,17 @@
   as a check-run annotation with its real cause. If the existing review
   comment cannot be updated (404/410), the reviewer posts a fresh one instead
   of failing.
+- Security: the workflow pins `scripts/sf_pr_review.py` to the base branch
+  before running it, so a same-repo PR cannot tamper with the reviewer to
+  exfiltrate `SF_REVIEW_API_KEY` (the fork guard alone did not cover this).
+- Correctness: a missing or empty diff now fails the review (fail closed)
+  instead of letting the model post a false approval; the diff step no
+  longer swallows git errors with `|| true`.
+- Hardening: interactive provider choice is validated, double quotes are
+  rejected in custom base URL/model (they broke the generated workflow),
+  the `::error` annotation collapses newlines, stale review comments are
+  deleted so only one remains, uninstall removes now-empty directories, and
+  the help documents that `--pr-review` requires an install target.
 
 ## v0.8.4 — 2026-10-12
 

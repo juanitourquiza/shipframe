@@ -43,8 +43,10 @@ Options:
   --purge                             With --uninstall, remove ShipFrame cache/state too.
   --opencode-model provider/model     Explicit OpenCode model override for converted agents.
   --pr-review <provider>              Opt-in: install the AI PR reviewer GitHub Action into
-                                      --project-dir. Providers: nan-builders, claude, openai,
-                                      custom (needs SF_REVIEW_BASE_URL + SF_REVIEW_MODEL), off.
+                                      --project-dir. Requires an install target (--claude,
+                                      --openwork, --opencode, --codex or --all). Providers:
+                                      nan-builders, claude, openai, custom (needs
+                                      SF_REVIEW_BASE_URL + SF_REVIEW_MODEL), off.
                                       Interactive installs ask before skipping.
   --dry-run                           Legacy --sync-docs compatibility option only.
   -h, --help                          Show this help.
@@ -893,6 +895,7 @@ run_uninstall() {
     if [ "$YES" = true ]; then
       echo "Removing AI PR reviewer artifacts from $PROJECT_DIR..."
       rm -f "$PROJECT_DIR/.github/workflows/shipframe-review.yml" "$PROJECT_DIR/scripts/sf_pr_review.py"
+      rmdir "$PROJECT_DIR/.github/workflows" "$PROJECT_DIR/scripts" 2>/dev/null || true
     else
       echo "dry-run: would remove AI PR reviewer artifacts in $PROJECT_DIR (.github/workflows/shipframe-review.yml, scripts/sf_pr_review.py)"
     fi
@@ -960,7 +963,8 @@ install_pr_review() {
       read -r choice || true
       case "$choice" in
         "") echo "AI PR reviewer: skipped. Enable later with: ./install.sh --pr-review <provider>" ; return 0 ;;
-        *) provider="$choice" ;;
+        nan-builders|claude|openai|custom|off) provider="$choice" ;;
+        *) echo "Invalid provider: $choice (use nan-builders, claude, openai, custom or off)" >&2 ; exit 2 ;;
       esac
     else
       echo "AI PR reviewer: not requested. Enable with --pr-review <nan-builders|claude|openai|custom|off>."

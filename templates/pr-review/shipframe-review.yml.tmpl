@@ -1,8 +1,10 @@
 name: ShipFrame AI PR review (__SF_PROVIDER__)
 
 # Opt-in gatekeeper installed by `install.sh --pr-review <provider>`.
-# One comment per PR, edited on every push. Fork PRs are skipped:
+# One comment per PR, replaced on every push. Fork PRs are skipped:
 # GitHub does not hand secrets to forks, which keeps the API key safe.
+# The reviewer script itself is always pinned to the base branch, so a
+# same-repo PR cannot tamper with it to exfiltrate the API key.
 
 on:
   pull_request:
@@ -26,9 +28,18 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Diff against base branch
+      - name: Pin reviewer script to base branch (anti-tamper)
+        env:
+          BASE_REF: ${{ github.base_ref }}
         run: |
-          git diff "origin/${{ github.base_ref }}...HEAD" > pr.diff || true
+          git checkout "origin/${BASE_REF}" -- scripts/sf_pr_review.py
+          echo "Reviewer script pinned to origin/${BASE_REF}"
+
+      - name: Diff against base branch
+        env:
+          BASE_REF: ${{ github.base_ref }}
+        run: |
+          git diff "origin/${BASE_REF}...HEAD" > pr.diff
           echo "Diff size: $(wc -c < pr.diff) bytes"
 
       - name: AI review

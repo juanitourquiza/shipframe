@@ -83,6 +83,9 @@ fi
 if SF_REVIEW_BASE_URL="https://example.com/v1" "$ROOT/scripts/install-pr-review.sh" custom "$PR_TARGET" >/dev/null 2>&1; then
   echo "custom provider accepted without SF_REVIEW_MODEL" >&2; exit 1
 fi
+if SF_REVIEW_BASE_URL='https://example.com/v1"' SF_REVIEW_MODEL='test-model' "$ROOT/scripts/install-pr-review.sh" custom "$PR_TARGET" >/dev/null 2>&1; then
+  echo "double quote in base URL accepted" >&2; exit 1
+fi
 SF_REVIEW_BASE_URL="https://example.com/v1" SF_REVIEW_MODEL="test-model" "$ROOT/scripts/install-pr-review.sh" custom "$PR_TARGET" >"$TMP/pr-review-custom.log" 2>&1
 grep -q 'test-model' "$PR_TARGET/.github/workflows/shipframe-review.yml"
 grep -q 'https://example.com/v1' "$PR_TARGET/.github/workflows/shipframe-review.yml"

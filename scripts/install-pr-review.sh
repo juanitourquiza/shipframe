@@ -69,6 +69,13 @@ case "$base_url" in
   *) echo "Error: base URL must start with http:// or https:// (got: $base_url)" >&2; exit 2 ;;
 esac
 
+case "$base_url" in
+  *\"*) echo "Error: double quotes are not allowed in the base URL (breaks the generated workflow)" >&2; exit 2 ;;
+esac
+case "$model" in
+  *\"*) echo "Error: double quotes are not allowed in the model name (breaks the generated workflow)" >&2; exit 2 ;;
+esac
+
 workflow_dir="$project_dir/.github/workflows"
 workflow_dst="$workflow_dir/shipframe-review.yml"
 script_dst="$project_dir/scripts/sf_pr_review.py"
