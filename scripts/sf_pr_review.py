@@ -222,4 +222,9 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except Exception as exc:
+        # Surface the real cause as a check-run annotation; logs are private.
+        print(f"::error title=AI review failed::{exc}", file=sys.stderr)
+        raise SystemExit(1)
