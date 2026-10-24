@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## v1.1.0 — 2026-10-23
 
 ### Added
 - Extend the opt-in AI PR reviewer to GitLab Merge Requests with origin-based
