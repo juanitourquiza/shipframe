@@ -12,6 +12,16 @@ make_repo() {
   git -C "$path" remote add origin "$remote"
 }
 
+# Platform detection must inspect the remote host, not strings in the path.
+HOST_TEST="$TMP/host-detect"
+make_repo "$HOST_TEST" "https://gitlab.com/acme/github.io.git"
+test "$("$ROOT/scripts/detect-pr-review-platform.sh" "$HOST_TEST")" = gitlab
+git -C "$HOST_TEST" remote set-url origin "https://bitbucket.org/acme/gitlab-mirror.git"
+if "$ROOT/scripts/detect-pr-review-platform.sh" "$HOST_TEST" >/dev/null 2>&1; then
+  echo 'provider detected from repository path instead of host' >&2
+  exit 1
+fi
+
 GITLAB="$TMP/gitlab-project"
 make_repo "$GITLAB" "https://gitlab.example.com/group/team/project.git"
 "$ROOT/scripts/install-pr-review.sh" nan-builders "$GITLAB" --model glm5.3 > "$TMP/gitlab-install.log"
@@ -26,6 +36,12 @@ grep -q '^\.shipframe-ai-mr-review-template:' "$GITLAB/.gitlab/ci/shipframe-revi
 grep -q 'SF_REVIEW_GITLAB_TOKEN' "$GITLAB/.gitlab/ci/shipframe-review.yml"
 grep -q 'SF_REVIEW_MODEL: "glm5.3"' "$GITLAB/.gitlab/ci/shipframe-review.yml"
 
+# Optional project_dir works when provider flags follow the provider argument.
+GITLAB_NO_DIR="$TMP/gitlab-no-dir"
+make_repo "$GITLAB_NO_DIR" "git@gitlab.example.com:group/project.git"
+(cd "$GITLAB_NO_DIR" && "$ROOT/scripts/install-pr-review.sh" nan-builders --platform gitlab >/dev/null)
+test -f "$GITLAB_NO_DIR/.gitlab-ci.yml"
+
 # Reinstallation must not duplicate the CI include.
 "$ROOT/scripts/install-pr-review.sh" nan-builders "$GITLAB" --model glm5.3 >/dev/null
 test "$(grep -c '.gitlab/ci/shipframe-review.yml' "$GITLAB/.gitlab-ci.yml")" = 1
@@ -33,15 +49,13 @@ test "$(grep -c '.gitlab/ci/shipframe-review.yml' "$GITLAB/.gitlab-ci.yml")" = 1
 # Existing include lists are preserved and extended once.
 GITLAB_EXISTING="$TMP/gitlab-existing"
 make_repo "$GITLAB_EXISTING" "git@gitlab.company.test:group/project.git"
-cat > "$GITLAB_EXISTING/.gitlab-ci.yml" <<'YAML'
-include:
-  - local: .gitlab/ci/base.yml
-stages: [test, deploy]
-YAML
+printf "include: ['.gitlab/ci/base.yml', { project: group/central, file: shared.yml }]\nstages: [test, deploy]\n" > "$GITLAB_EXISTING/.gitlab-ci.yml"
+chmod 644 "$GITLAB_EXISTING/.gitlab-ci.yml"
 "$ROOT/scripts/install-pr-review.sh" openai "$GITLAB_EXISTING" >/dev/null
 grep -q '.gitlab/ci/base.yml' "$GITLAB_EXISTING/.gitlab-ci.yml"
 test "$(grep -c '.gitlab/ci/shipframe-review.yml' "$GITLAB_EXISTING/.gitlab-ci.yml")" = 1
 test "$(grep -c '^shipframe-ai-mr-review:' "$GITLAB_EXISTING/.gitlab-ci.yml")" = 1
+test "$(stat -f '%Lp' "$GITLAB_EXISTING/.gitlab-ci.yml")" = 644
 "$ROOT/scripts/manage-gitlab-ci-include.py" --remove "$GITLAB_EXISTING/.gitlab-ci.yml"
 grep -q '.gitlab/ci/base.yml' "$GITLAB_EXISTING/.gitlab-ci.yml"
 ! grep -q 'shipframe-ai-mr-review\|.gitlab/ci/shipframe-review.yml' "$GITLAB_EXISTING/.gitlab-ci.yml"
@@ -55,6 +69,22 @@ if "$ROOT/scripts/install-pr-review.sh" nan-builders "$BLOCKED" >/dev/null 2>&1;
   exit 1
 fi
 test ! -e "$BLOCKED/.gitlab/ci/shipframe-review.yml"
+
+INLINE_BLOCKED="$TMP/gitlab-inline-workflow"
+make_repo "$INLINE_BLOCKED" "https://gitlab.com/group/inline-workflow.git"
+printf 'workflow: { rules: [{ if: "$CI_COMMIT_BRANCH" }] }\n' > "$INLINE_BLOCKED/.gitlab-ci.yml"
+if "$ROOT/scripts/install-pr-review.sh" nan-builders "$INLINE_BLOCKED" >/dev/null 2>&1; then
+  echo 'inline incompatible workflow unexpectedly accepted' >&2
+  exit 1
+fi
+
+COLLISION="$TMP/gitlab-job-collision"
+make_repo "$COLLISION" "https://gitlab.com/group/job-collision.git"
+printf 'shipframe-ai-mr-review: { script: [echo existing] }\n' > "$COLLISION/.gitlab-ci.yml"
+if "$ROOT/scripts/install-pr-review.sh" nan-builders "$COLLISION" >/dev/null 2>&1; then
+  echo 'inline job collision unexpectedly accepted' >&2
+  exit 1
+fi
 
 # Unsupported repositories fail closed without creating reviewer files.
 UNKNOWN="$TMP/unknown"

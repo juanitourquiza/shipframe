@@ -7,11 +7,12 @@ TEMPLATE_DIR="$SOURCE_DIR/templates/pr-review"
 usage() { echo "Usage: install-pr-review.sh <nan-builders|claude|openai|custom|off> [project_dir] [--platform github|gitlab] [--model id]"; }
 
 provider="${1:-}"
-project_dir="${2:-$(pwd)}"
-if [ "$#" -ge 1 ]; then shift; fi
-if [ "$#" -ge 1 ] && [[ "$1" != --* ]]; then shift; fi
+if [ -z "$provider" ]; then usage >&2; exit 2; fi
+shift
+project_dir="$(pwd)"
+if [ "$#" -gt 0 ] && [[ "$1" != --* ]]; then project_dir="$1"; shift; fi
 platform=""
-model_override="${SF_REVIEW_MODEL:-}"
+model_override=""
 while [ "$#" -gt 0 ]; do
   case "$1" in
     --platform) [ "$#" -ge 2 ] || { echo "Missing value for --platform" >&2; exit 2; }; platform="$2"; shift ;;
@@ -64,7 +65,7 @@ else
 fi
 
 case "$base_url" in http://*|https://*) ;; *) echo "Error: base URL must start with http:// or https://" >&2; exit 2 ;; esac
-case "$base_url$model" in *\"*|*$'\n'*|*$'\r'*) echo "Error: quotes/newlines are not allowed in URL/model values" >&2; exit 2 ;; esac
+case "$base_url$model" in *\"*|*\\*|*$'\n'*|*$'\r'*) echo "Error: quotes, backslashes, and newlines are not allowed in URL/model values" >&2; exit 2 ;; esac
 
 if [ -z "$platform" ]; then
   platform="$("$SOURCE_DIR/scripts/detect-pr-review-platform.sh" "$project_dir")" || exit $?

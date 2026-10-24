@@ -88,6 +88,9 @@ fi
 if SF_REVIEW_BASE_URL='https://example.com/v1"' SF_REVIEW_MODEL='test-model' "$ROOT/scripts/install-pr-review.sh" custom "$PR_TARGET" >/dev/null 2>&1; then
   echo "double quote in base URL accepted" >&2; exit 1
 fi
+if SF_REVIEW_BASE_URL='https://example.com/v1\path' SF_REVIEW_MODEL='test-model' "$ROOT/scripts/install-pr-review.sh" custom "$PR_TARGET" >/dev/null 2>&1; then
+  echo "backslash in base URL accepted" >&2; exit 1
+fi
 SF_REVIEW_BASE_URL="https://example.com/v1" SF_REVIEW_MODEL="test-model" "$ROOT/scripts/install-pr-review.sh" custom "$PR_TARGET" >"$TMP/pr-review-custom.log" 2>&1
 grep -q 'test-model' "$PR_TARGET/.github/workflows/shipframe-review.yml"
 grep -q 'https://example.com/v1' "$PR_TARGET/.github/workflows/shipframe-review.yml"
@@ -96,6 +99,8 @@ grep -q 'api.nan.builders' "$PR_TARGET/.github/workflows/shipframe-review.yml"
 grep -q 'glm5.3-flash' "$PR_TARGET/.github/workflows/shipframe-review.yml"
 "$ROOT/scripts/install-pr-review.sh" nan-builders "$PR_TARGET" --model glm5.3 > /dev/null
 grep -q 'SF_REVIEW_MODEL: "glm5.3"' "$PR_TARGET/.github/workflows/shipframe-review.yml"
+SF_REVIEW_MODEL=ignored-for-standard-provider "$ROOT/scripts/install-pr-review.sh" nan-builders "$PR_TARGET" >/dev/null
+grep -q 'SF_REVIEW_MODEL: "glm5.3-flash"' "$PR_TARGET/.github/workflows/shipframe-review.yml"
 "$ROOT/scripts/install-pr-review.sh" nan-builders "$PR_TARGET" > /dev/null
 grep -q 'SF_REVIEW_MODEL: "glm5.3-flash"' "$PR_TARGET/.github/workflows/shipframe-review.yml"
 "$ROOT/scripts/install-pr-review.sh" nan-builders "$PR_TARGET" --platform gitlab > /dev/null

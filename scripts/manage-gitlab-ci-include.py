@@ -24,6 +24,12 @@ JOB_BLOCK = (
 
 
 def ensure_mr_pipeline_allowed(lines: list[str]) -> None:
+    workflow_line = next((line.rstrip("\r\n") for line in lines if re.match(r"^workflow:", line)), None)
+    if workflow_line is not None and not re.fullmatch(r"workflow:\s*(?:#.*)?", workflow_line):
+        raise ValueError(
+            "inline workflow configuration is not supported; convert it to block style "
+            "and add a compatible merge_request_event rule before installing"
+        )
     start = next((i for i, line in enumerate(lines) if re.match(r"^workflow:\s*$", line.rstrip("\r\n"))), None)
     if start is None:
         return
@@ -75,7 +81,7 @@ def updated_content(path: Path) -> str:
     source = path.read_text(encoding="utf-8") if path.exists() else ""
     lines = source.splitlines(keepends=True)
     ensure_mr_pipeline_allowed(lines)
-    job_match = re.search(rf"^{re.escape(JOB)}:\s*$", source, re.MULTILINE)
+    job_match = re.search(rf"^{re.escape(JOB)}\s*:", source, re.MULTILINE)
     if job_match and JOB_MARKER not in source:
         raise ValueError(f"a {JOB} job already exists; rename it before installing ShipFrame's managed job")
     if INCLUDE not in source:
@@ -134,10 +140,12 @@ def main() -> int:
     if args.check:
         return 0
     args.config.parent.mkdir(parents=True, exist_ok=True)
+    mode = (args.config.stat().st_mode & 0o777) if args.config.exists() else 0o644
     fd, temp_name = tempfile.mkstemp(prefix=f".{args.config.name}.", dir=args.config.parent)
     try:
         with os.fdopen(fd, "w", encoding="utf-8") as handle:
             handle.write(result)
+        os.chmod(temp_name, mode)
         os.replace(temp_name, args.config)
     finally:
         if os.path.exists(temp_name):
