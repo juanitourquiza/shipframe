@@ -37,14 +37,17 @@ def ensure_mr_pipeline_allowed(lines: list[str]) -> None:
     workflow_rules = [strip_yaml_comments(line) for line in lines[start:end]]
     # Fail closed unless an actual workflow rule selects MR pipelines. A token
     # in `name`, a comment, or a `when: never` rule must not count as support.
-    allows_merge_requests = any(
+    positive_rule_indexes = [index for index, line in enumerate(workflow_rules) if (
         re.match(r"^\s*-\s*if:\s*", line)
         and re.search(r"\bCI_PIPELINE_SOURCE\s*==\s*['\"]?merge_request_event\b", line)
-        for line in workflow_rules
-    ) and not any(
+    )]
+    denied_rule_indexes = [index for index, line in enumerate(workflow_rules) if (
         re.match(r"^\s*-\s*if:\s*.*CI_PIPELINE_SOURCE.*merge_request_event", line)
         and re.search(r"\n\s*when:\s*never\b", "\n".join(workflow_rules[index : index + 3]))
-        for index, line in enumerate(workflow_rules)
+    )]
+    unconditional_denies = [index for index, line in enumerate(workflow_rules) if re.match(r"^\s*-\s*when:\s*never\b", line)]
+    allows_merge_requests = bool(positive_rule_indexes) and not any(
+        denied < positive_rule_indexes[0] for denied in denied_rule_indexes + unconditional_denies
     )
     if not allows_merge_requests:
         raise ValueError(

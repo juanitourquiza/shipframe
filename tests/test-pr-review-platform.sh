@@ -124,15 +124,17 @@ if "$ROOT/scripts/install-pr-review.sh" nan-builders "$COMMENTED_EVENT" >/dev/nu
 fi
 test ! -e "$COMMENTED_EVENT/.gitlab/ci/shipframe-review.yml"
 
-for invalid_workflow in name_only denied_rule negative_rule; do
+for invalid_workflow in name_only denied_rule negative_rule catchall_deny; do
   INVALID_WORKFLOW="$TMP/gitlab-workflow-$invalid_workflow"
   make_repo "$INVALID_WORKFLOW" "https://gitlab.com/group/$invalid_workflow.git"
   if [ "$invalid_workflow" = name_only ]; then
     printf 'workflow:\n  name: "merge_request_event"\n  rules:\n    - if: "$CI_COMMIT_BRANCH"\n' > "$INVALID_WORKFLOW/.gitlab-ci.yml"
   elif [ "$invalid_workflow" = denied_rule ]; then
     printf 'workflow:\n  rules:\n    - if: "$CI_PIPELINE_SOURCE == \\\"merge_request_event\\\""\n      when: never\n' > "$INVALID_WORKFLOW/.gitlab-ci.yml"
-  else
+  elif [ "$invalid_workflow" = negative_rule ]; then
     printf 'workflow:\n  rules:\n    - if: "$CI_PIPELINE_SOURCE != \\\"merge_request_event\\\""\n' > "$INVALID_WORKFLOW/.gitlab-ci.yml"
+  else
+    printf 'workflow:\n  rules:\n    - when: never\n    - if: "$CI_PIPELINE_SOURCE == \\\"merge_request_event\\\""\n' > "$INVALID_WORKFLOW/.gitlab-ci.yml"
   fi
   if "$ROOT/scripts/install-pr-review.sh" nan-builders "$INVALID_WORKFLOW" >/dev/null 2>&1; then
     echo "unsafe workflow unexpectedly accepted: $invalid_workflow" >&2
