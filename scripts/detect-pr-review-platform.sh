@@ -21,6 +21,6 @@ else
 fi
 case "$host" in
   github.com|*.github.com) echo github ;;
-  *gitlab*) echo gitlab ;;
+  gitlab*|*.gitlab.*|*.gitlab-*|*-gitlab|*-gitlab.*) echo gitlab ;;
   *) echo "Error: origin host is not recognized as GitHub or GitLab; specify --pr-review-platform github|gitlab." >&2; exit 2 ;;
 esac

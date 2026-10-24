@@ -34,11 +34,33 @@ def ensure_mr_pipeline_allowed(lines: list[str]) -> None:
     if start is None:
         return
     end = next((i for i in range(start + 1, len(lines)) if lines[i].strip() and not lines[i].startswith((" ", "\t", "#"))), len(lines))
-    if "merge_request_event" not in "".join(lines[start:end]):
+    workflow_rules = "\n".join(strip_yaml_comments(line) for line in lines[start:end])
+    if "merge_request_event" not in workflow_rules:
         raise ValueError(
             "existing top-level workflow rules do not allow merge_request_event; "
             "add a compatible MR workflow rule, then rerun the installer"
         )
+
+
+def strip_yaml_comments(line: str) -> str:
+    quote = ""
+    escaped = False
+    for index, char in enumerate(line):
+        if escaped:
+            escaped = False
+            continue
+        if quote == '"' and char == "\\":
+            escaped = True
+            continue
+        if quote:
+            if char == quote:
+                quote = ""
+            continue
+        if char in ("'", '"'):
+            quote = char
+        elif char == "#" and (index == 0 or line[index - 1].isspace()):
+            return line[:index]
+    return line
 
 
 def add_include(source: str) -> str:

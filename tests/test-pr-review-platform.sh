@@ -21,6 +21,11 @@ if "$ROOT/scripts/detect-pr-review-platform.sh" "$HOST_TEST" >/dev/null 2>&1; th
   echo 'provider detected from repository path instead of host' >&2
   exit 1
 fi
+git -C "$HOST_TEST" remote set-url origin "ssh://git@notgitlab.internal/group/project.git"
+if "$ROOT/scripts/detect-pr-review-platform.sh" "$HOST_TEST" >/dev/null 2>&1; then
+  echo 'host containing the gitlab substring was incorrectly accepted' >&2
+  exit 1
+fi
 
 GITLAB="$TMP/gitlab-project"
 make_repo "$GITLAB" "https://gitlab.example.com/group/team/project.git"
@@ -109,6 +114,15 @@ if "$ROOT/scripts/install-pr-review.sh" nan-builders "$BLOCKED" >/dev/null 2>&1;
   exit 1
 fi
 test ! -e "$BLOCKED/.gitlab/ci/shipframe-review.yml"
+
+COMMENTED_EVENT="$TMP/gitlab-workflow-comment"
+make_repo "$COMMENTED_EVENT" "https://gitlab.com/group/commented-event.git"
+printf 'workflow:\n  rules:\n    - if: "$CI_COMMIT_BRANCH" # merge_request_event is not enabled here\n' > "$COMMENTED_EVENT/.gitlab-ci.yml"
+if "$ROOT/scripts/install-pr-review.sh" nan-builders "$COMMENTED_EVENT" >/dev/null 2>&1; then
+  echo 'comment-only workflow event unexpectedly accepted' >&2
+  exit 1
+fi
+test ! -e "$COMMENTED_EVENT/.gitlab/ci/shipframe-review.yml"
 
 INLINE_BLOCKED="$TMP/gitlab-inline-workflow"
 make_repo "$INLINE_BLOCKED" "https://gitlab.com/group/inline-workflow.git"

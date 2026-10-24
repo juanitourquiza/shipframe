@@ -5,6 +5,14 @@ set -euo pipefail
 SOURCE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 TEMPLATE_DIR="$SOURCE_DIR/templates/pr-review"
 usage() { echo "Usage: install-pr-review.sh <nan-builders|claude|openai|custom|off> [project_dir] [--platform github|gitlab] [--model id]"; }
+default_model() {
+  case "$1" in
+    nan-builders) echo glm5.3-flash ;;
+    claude) echo claude-sonnet-4-5 ;;
+    openai) echo gpt-4o-mini ;;
+    *) return 1 ;;
+  esac
+}
 
 provider="${1:-}"
 if [ -z "$provider" ]; then usage >&2; exit 2; fi
@@ -19,7 +27,7 @@ while [ "$#" -gt 0 ]; do
     --model) [ "$#" -ge 2 ] || { echo "Missing value for --model" >&2; exit 2; }; model_override="$2"; shift ;;
     --detect) exec "$SOURCE_DIR/scripts/detect-pr-review-platform.sh" "$project_dir" ;;
     --default-model)
-      case "$provider" in nan-builders) echo glm5.3-flash;; claude) echo claude-sonnet-4-5;; openai) echo gpt-4o-mini;; *) echo;; esac
+      default_model "$provider" || true
       exit 0 ;;
     *) echo "Unknown option: $1" >&2; usage >&2; exit 2 ;;
   esac
@@ -39,9 +47,9 @@ project_dir="$(git -C "$project_dir" rev-parse --show-toplevel 2>/dev/null)" || 
 
 provider_config() {
   case "$1" in
-    nan-builders) echo "openai_compatible|https://api.nan.builders/v1|glm5.3-flash" ;;
-    claude) echo "anthropic|https://api.anthropic.com|claude-sonnet-4-5" ;;
-    openai) echo "openai_compatible|https://api.openai.com/v1|gpt-4o-mini" ;;
+    nan-builders) echo "openai_compatible|https://api.nan.builders/v1|$(default_model nan-builders)" ;;
+    claude) echo "anthropic|https://api.anthropic.com|$(default_model claude)" ;;
+    openai) echo "openai_compatible|https://api.openai.com/v1|$(default_model openai)" ;;
     *) return 1 ;;
   esac
 }
@@ -56,7 +64,7 @@ if [ "$provider" = custom ]; then
     [ -n "$model" ] || { printf 'Model name: '; read -r model || true; }
   fi
   if [ -z "$base_url" ] || [ -z "$model" ]; then
-    echo "Error: --pr-review custom needs SF_REVIEW_BASE_URL and SF_REVIEW_MODEL (or --pr-review-model)." >&2
+    echo "Error: --pr-review custom needs SF_REVIEW_BASE_URL and SF_REVIEW_MODEL (or --model)." >&2
     exit 2
   fi
 else

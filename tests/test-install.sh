@@ -76,6 +76,20 @@ PR_TARGET="$TMP/pr-review-target"
 mkdir -p "$PR_TARGET"
 git -C "$PR_TARGET" init -q
 git -C "$PR_TARGET" remote add origin https://github.com/example/pr-review-target.git
+
+# Explicit reviewer selection on an unsupported remote should not abort the
+# unrelated global installer work; the reviewer is skipped with an override hint.
+UNKNOWN_ORIGIN="$TMP/unsupported-review-origin"
+UNKNOWN_HOME="$TMP/unsupported-review-home"
+UNKNOWN_STATE="$TMP/unsupported-review-state"
+mkdir -p "$UNKNOWN_ORIGIN" "$UNKNOWN_HOME"
+git -C "$UNKNOWN_ORIGIN" init -q
+git -C "$UNKNOWN_ORIGIN" remote add origin https://bitbucket.org/example/project.git
+HOME="$UNKNOWN_HOME" XDG_STATE_HOME="$UNKNOWN_STATE" "$ROOT/install.sh" --codex --pr-review nan-builders --project-dir "$UNKNOWN_ORIGIN" > "$TMP/unsupported-origin.log" 2>&1
+grep -q 'reviewer: skipped because the repository host could not be detected' "$TMP/unsupported-origin.log"
+[ ! -e "$UNKNOWN_ORIGIN/.github/workflows/shipframe-review.yml" ]
+[ ! -e "$UNKNOWN_ORIGIN/.gitlab/ci/shipframe-review.yml" ]
+
 # Empty dir so uninstall invocations below never touch the repo checkout itself.
 PR_CLEAN="$TMP/pr-review-clean"
 mkdir -p "$PR_CLEAN"
@@ -107,6 +121,24 @@ grep -q 'SF_REVIEW_MODEL: "glm5.3-flash"' "$PR_TARGET/.github/workflows/shipfram
 grep -q 'SF_REVIEW_PLATFORM: "gitlab"' "$PR_TARGET/.gitlab/ci/shipframe-review.yml"
 grep -q '.gitlab/ci/shipframe-review.yml' "$PR_TARGET/.gitlab-ci.yml"
 "$ROOT/scripts/manage-gitlab-ci-include.py" --remove "$PR_TARGET/.gitlab-ci.yml"
+
+# A failed/missing Python helper must not abort GitHub cleanup or destroy the
+# GitLab workflow while its managed root-config entry remains in place.
+PR_UNINSTALL_TARGET="$TMP/pr-review-uninstall-python-failure"
+mkdir -p "$PR_UNINSTALL_TARGET"
+git -C "$PR_UNINSTALL_TARGET" init -q
+git -C "$PR_UNINSTALL_TARGET" remote add origin https://gitlab.com/example/uninstall-test.git
+"$ROOT/scripts/install-pr-review.sh" nan-builders "$PR_UNINSTALL_TARGET" >/dev/null
+mkdir -p "$PR_UNINSTALL_TARGET/.github/workflows" "$TMP/failed-python"
+touch "$PR_UNINSTALL_TARGET/.github/workflows/shipframe-review.yml"
+printf '#!/bin/sh\nexit 1\n' > "$TMP/failed-python/python3"
+chmod +x "$TMP/failed-python/python3"
+PATH="$TMP/failed-python:$PATH" "$ROOT/install.sh" --uninstall --project-dir "$PR_UNINSTALL_TARGET" --yes > "$TMP/pr-review-uninstall-failure.log" 2>&1
+grep -q 'could not safely remove the managed GitLab CI entry' "$TMP/pr-review-uninstall-failure.log"
+[ ! -e "$PR_UNINSTALL_TARGET/.github/workflows/shipframe-review.yml" ]
+[ -e "$PR_UNINSTALL_TARGET/.gitlab/ci/shipframe-review.yml" ]
+[ -e "$PR_UNINSTALL_TARGET/scripts/sf_pr_review.py" ]
+
 cmp -s "$ROOT/templates/pr-review/sf_pr_review.py" "$ROOT/scripts/sf_pr_review.py" || { echo "dogfood copy drifted from templates/pr-review/sf_pr_review.py" >&2; exit 1; }
 "$ROOT/install.sh" --uninstall --codex --project-dir "$PR_TARGET" --yes >"$TMP/pr-review-uninstall.log" 2>&1
 [ ! -e "$PR_TARGET/.github/workflows/shipframe-review.yml" ] || { echo "uninstall did not remove shipframe-review.yml" >&2; exit 1; }

@@ -911,9 +911,22 @@ run_uninstall() {
     if [ "$YES" = true ]; then
       echo "Removing AI PR/MR reviewer artifacts from $PROJECT_DIR..."
       resolve_source_dir
-      python3 "$SOURCE_DIR/scripts/manage-gitlab-ci-include.py" --remove "$PROJECT_DIR/.gitlab-ci.yml"
-      rm -f "$PROJECT_DIR/.github/workflows/shipframe-review.yml" "$PROJECT_DIR/.gitlab/ci/shipframe-review.yml" "$PROJECT_DIR/scripts/sf_pr_review.py"
-      rmdir "$PROJECT_DIR/.github/workflows" "$PROJECT_DIR/.gitlab/ci" "$PROJECT_DIR/scripts" 2>/dev/null || true
+      local gitlab_removed=true
+      if command_exists python3; then
+        if python3 "$SOURCE_DIR/scripts/manage-gitlab-ci-include.py" --remove "$PROJECT_DIR/.gitlab-ci.yml"; then
+          rm -f "$PROJECT_DIR/.gitlab/ci/shipframe-review.yml"
+        else
+          echo "Warning: could not safely remove the managed GitLab CI entry; leaving GitLab reviewer files in place." >&2
+          gitlab_removed=false
+        fi
+      elif [ -f "$PROJECT_DIR/.gitlab/ci/shipframe-review.yml" ] || grep -q 'shipframe-pr-review-managed-include\|shipframe-pr-review-managed-job' "$PROJECT_DIR/.gitlab-ci.yml" 2>/dev/null; then
+        echo "Warning: Python 3 is unavailable; leaving GitLab reviewer config/files in place to avoid a broken .gitlab-ci.yml." >&2
+        gitlab_removed=false
+      fi
+      rm -f "$PROJECT_DIR/.github/workflows/shipframe-review.yml"
+      if [ "$gitlab_removed" = true ]; then rm -f "$PROJECT_DIR/scripts/sf_pr_review.py"; fi
+      rmdir "$PROJECT_DIR/.github/workflows" 2>/dev/null || true
+      if [ "$gitlab_removed" = true ]; then rmdir "$PROJECT_DIR/.gitlab/ci" "$PROJECT_DIR/scripts" 2>/dev/null || true; fi
     else
       echo "dry-run: would remove AI PR/MR reviewer files and the marked GitLab CI include from $PROJECT_DIR"
     fi
@@ -1003,7 +1016,10 @@ install_pr_review() {
     fi
   fi
   if [ "$provider" != "off" ] && [ -z "$platform" ]; then
-    platform="$("$SOURCE_DIR/scripts/detect-pr-review-platform.sh" "$PROJECT_DIR")" || return $?
+    if ! platform="$("$SOURCE_DIR/scripts/detect-pr-review-platform.sh" "$PROJECT_DIR")"; then
+      echo "AI PR/MR reviewer: skipped because the repository host could not be detected; use --pr-review-platform github|gitlab to override."
+      return 0
+    fi
   fi
   echo ""
   echo "AI PR/MR reviewer ($platform / $provider):"
