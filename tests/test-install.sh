@@ -133,7 +133,7 @@ mkdir -p "$PR_UNINSTALL_TARGET/.github/workflows" "$TMP/failed-python"
 touch "$PR_UNINSTALL_TARGET/.github/workflows/shipframe-review.yml"
 printf '#!/bin/sh\nexit 1\n' > "$TMP/failed-python/python3"
 chmod +x "$TMP/failed-python/python3"
-PATH="$TMP/failed-python:$PATH" "$ROOT/install.sh" --uninstall --project-dir "$PR_UNINSTALL_TARGET" --yes > "$TMP/pr-review-uninstall-failure.log" 2>&1
+PATH="$TMP/failed-python:$PATH" "$ROOT/install.sh" --uninstall --codex --project-dir "$PR_UNINSTALL_TARGET" --yes > "$TMP/pr-review-uninstall-failure.log" 2>&1
 grep -q 'could not safely remove the managed GitLab CI entry' "$TMP/pr-review-uninstall-failure.log"
 [ ! -e "$PR_UNINSTALL_TARGET/.github/workflows/shipframe-review.yml" ]
 [ -e "$PR_UNINSTALL_TARGET/.gitlab/ci/shipframe-review.yml" ]

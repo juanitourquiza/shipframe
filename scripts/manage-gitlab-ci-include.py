@@ -34,8 +34,20 @@ def ensure_mr_pipeline_allowed(lines: list[str]) -> None:
     if start is None:
         return
     end = next((i for i in range(start + 1, len(lines)) if lines[i].strip() and not lines[i].startswith((" ", "\t", "#"))), len(lines))
-    workflow_rules = "\n".join(strip_yaml_comments(line) for line in lines[start:end])
-    if "merge_request_event" not in workflow_rules:
+    workflow_rules = [strip_yaml_comments(line) for line in lines[start:end]]
+    # Fail closed unless an actual workflow rule selects MR pipelines. A token
+    # in `name`, a comment, or a `when: never` rule must not count as support.
+    allows_merge_requests = any(
+        re.match(r"^\s*-\s*if:\s*", line)
+        and "CI_PIPELINE_SOURCE" in line
+        and "merge_request_event" in line
+        for line in workflow_rules
+    ) and not any(
+        re.match(r"^\s*-\s*if:\s*.*CI_PIPELINE_SOURCE.*merge_request_event", line)
+        and re.search(r"\n\s*when:\s*never\b", "\n".join(workflow_rules[index : index + 3]))
+        for index, line in enumerate(workflow_rules)
+    )
+    if not allows_merge_requests:
         raise ValueError(
             "existing top-level workflow rules do not allow merge_request_event; "
             "add a compatible MR workflow rule, then rerun the installer"
