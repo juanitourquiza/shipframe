@@ -54,11 +54,24 @@ chmod 644 "$GITLAB_EXISTING/.gitlab-ci.yml"
 "$ROOT/scripts/install-pr-review.sh" openai "$GITLAB_EXISTING" >/dev/null
 grep -q '.gitlab/ci/base.yml' "$GITLAB_EXISTING/.gitlab-ci.yml"
 test "$(grep -c '.gitlab/ci/shipframe-review.yml' "$GITLAB_EXISTING/.gitlab-ci.yml")" = 1
+test "$(grep -c '^include:' "$GITLAB_EXISTING/.gitlab-ci.yml")" = 1
+grep -q 'project: group/central' "$GITLAB_EXISTING/.gitlab-ci.yml"
+if command -v ruby >/dev/null 2>&1; then ruby -e 'require "yaml"; YAML.load_file(ARGV[0])' "$GITLAB_EXISTING/.gitlab-ci.yml"; fi
 test "$(grep -c '^shipframe-ai-mr-review:' "$GITLAB_EXISTING/.gitlab-ci.yml")" = 1
 test "$(stat -f '%Lp' "$GITLAB_EXISTING/.gitlab-ci.yml")" = 644
 "$ROOT/scripts/manage-gitlab-ci-include.py" --remove "$GITLAB_EXISTING/.gitlab-ci.yml"
 grep -q '.gitlab/ci/base.yml' "$GITLAB_EXISTING/.gitlab-ci.yml"
 ! grep -q 'shipframe-ai-mr-review\|.gitlab/ci/shipframe-review.yml' "$GITLAB_EXISTING/.gitlab-ci.yml"
+
+# Inline mapping and empty flow-list include forms stay valid after extension.
+for inline in "{ local: .gitlab/ci/base.yml }" "[]"; do
+  INLINE_INCLUDE="$TMP/gitlab-inline-include-${RANDOM}"
+  make_repo "$INLINE_INCLUDE" "https://gitlab.com/group/inline-include.git"
+  printf 'include: %s\n' "$inline" > "$INLINE_INCLUDE/.gitlab-ci.yml"
+  "$ROOT/scripts/install-pr-review.sh" nan-builders "$INLINE_INCLUDE" >/dev/null
+  test "$(grep -c '^include:' "$INLINE_INCLUDE/.gitlab-ci.yml")" = 1
+  if command -v ruby >/dev/null 2>&1; then ruby -e 'require "yaml"; YAML.load_file(ARGV[0])' "$INLINE_INCLUDE/.gitlab-ci.yml"; fi
+done
 
 # Respect an existing workflow gate instead of silently making MRs unrunnable.
 BLOCKED="$TMP/gitlab-workflow-blocked"

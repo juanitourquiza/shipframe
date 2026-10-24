@@ -45,24 +45,31 @@ def add_include(source: str) -> str:
     lines = source.splitlines(keepends=True)
     if INCLUDE in source:
         return source
-    include_index = next((i for i, line in enumerate(lines) if re.match(r"^include:\s*(?:#.*)?$", line.rstrip("\r\n"))), None)
+    include_index = next((i for i, line in enumerate(lines) if re.match(r"^include:", line)), None)
     if include_index is None:
         prefix = "---\n" if lines and lines[0].strip() == "---" else ""
         body = "".join(lines[1:]) if prefix else source
         return prefix + f"include:\n  - local: '{INCLUDE}' {INCLUDE_MARKER}\n" + body
 
-    inline = lines[include_index].split(":", 1)[1].strip()
+    inline, comment = split_inline_comment(lines[include_index].split(":", 1)[1].strip())
     if inline:
         if inline.startswith("[") and inline.endswith("]"):
-            entries = inline[1:-1].strip()
-            lines[include_index] = f"include: [{entries}, {{ local: '{INCLUDE}' }}] {INCLUDE_MARKER}\n"
-            return "".join(lines)
-        if inline.startswith("#"):
-            pass
+            entries = split_flow_items(inline[1:-1])
+        elif inline.startswith("{") and inline.endswith("}"):
+            entries = [inline]
         else:
-            lines[include_index] = f"include:\n  - {inline}\n"
-            lines.insert(include_index + 1, f"  - local: '{INCLUDE}' {INCLUDE_MARKER}\n")
-            return "".join(lines)
+            entries = [inline]
+        if not entries and not comment:
+            entries = []
+        elif not entries and comment:
+            entries = []
+        # Convert flow/scalar notation into a block list, retaining each existing
+        # include as one item so removal can delete only ShipFrame's marked entry.
+        replacement = [f"include:{(' ' + comment) if comment else ''}\n"]
+        replacement.extend(f"  - {entry}\n" for entry in entries)
+        replacement.append(f"  - local: '{INCLUDE}' {INCLUDE_MARKER}\n")
+        lines[include_index : include_index + 1] = replacement
+        return "".join(lines)
 
     end = include_index + 1
     while end < len(lines):
@@ -75,6 +82,63 @@ def add_include(source: str) -> str:
         raise ValueError("top-level include is a mapping, not a list; add the local include manually to avoid rewriting existing CI YAML")
     lines.insert(end, f"  - local: '{INCLUDE}' {INCLUDE_MARKER}\n")
     return "".join(lines)
+
+
+def split_inline_comment(value: str) -> tuple[str, str]:
+    quote = ""
+    escaped = False
+    for index, char in enumerate(value):
+        if escaped:
+            escaped = False
+            continue
+        if quote == '"' and char == "\\":
+            escaped = True
+            continue
+        if quote:
+            if char == quote:
+                quote = ""
+            continue
+        if char in ("'", '"'):
+            quote = char
+        elif char == "#" and (index == 0 or value[index - 1].isspace()):
+            return value[:index].rstrip(), value[index:].strip()
+    return value, ""
+
+
+def split_flow_items(value: str) -> list[str]:
+    items: list[str] = []
+    start = 0
+    depth = 0
+    quote = ""
+    escaped = False
+    for index, char in enumerate(value):
+        if escaped:
+            escaped = False
+            continue
+        if quote == '"' and char == "\\":
+            escaped = True
+            continue
+        if quote:
+            if char == quote:
+                quote = ""
+            continue
+        if char in ("'", '"'):
+            quote = char
+        elif char in "[{":
+            depth += 1
+        elif char in "]}":
+            depth -= 1
+        elif char == "," and depth == 0:
+            item = value[start:index].strip()
+            if item:
+                items.append(item)
+            start = index + 1
+    item = value[start:].strip()
+    if item:
+        items.append(item)
+    if depth != 0 or quote:
+        raise ValueError("invalid inline include value; fix its brackets/quotes and retry")
+    return items
 
 
 def updated_content(path: Path) -> str:
