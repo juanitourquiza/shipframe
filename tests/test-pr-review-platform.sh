@@ -73,6 +73,33 @@ for inline in "{ local: .gitlab/ci/base.yml }" "[]"; do
   if command -v ruby >/dev/null 2>&1; then ruby -e 'require "yaml"; YAML.load_file(ARGV[0])' "$INLINE_INCLUDE/.gitlab-ci.yml"; fi
 done
 
+EMPTY_INCLUDE="$TMP/gitlab-empty-inline-include"
+make_repo "$EMPTY_INCLUDE" "https://gitlab.com/group/empty-inline-include.git"
+printf 'include: []\nstages: [test]\n' > "$EMPTY_INCLUDE/.gitlab-ci.yml"
+"$ROOT/scripts/install-pr-review.sh" nan-builders "$EMPTY_INCLUDE" >/dev/null
+"$ROOT/scripts/manage-gitlab-ci-include.py" --remove "$EMPTY_INCLUDE/.gitlab-ci.yml"
+! grep -q '^include:' "$EMPTY_INCLUDE/.gitlab-ci.yml"
+grep -q '^stages:' "$EMPTY_INCLUDE/.gitlab-ci.yml"
+if command -v ruby >/dev/null 2>&1; then ruby -e 'require "yaml"; YAML.load_file(ARGV[0])' "$EMPTY_INCLUDE/.gitlab-ci.yml"; fi
+
+# Unsupported multiline flow YAML is refused before any reviewer file is created.
+MULTILINE_INCLUDE="$TMP/gitlab-multiline-include"
+make_repo "$MULTILINE_INCLUDE" "https://gitlab.com/group/multiline-include.git"
+cat > "$MULTILINE_INCLUDE/.gitlab-ci.yml" <<'YAML'
+include: [
+  '.gitlab/ci/base.yml',
+  { project: group/central, file: shared.yml },
+]
+stages: [test]
+YAML
+cp "$MULTILINE_INCLUDE/.gitlab-ci.yml" "$TMP/multiline-before.yml"
+if "$ROOT/scripts/install-pr-review.sh" nan-builders "$MULTILINE_INCLUDE" >/dev/null 2>&1; then
+  echo 'multiline flow include unexpectedly accepted' >&2
+  exit 1
+fi
+cmp -s "$TMP/multiline-before.yml" "$MULTILINE_INCLUDE/.gitlab-ci.yml"
+test ! -e "$MULTILINE_INCLUDE/.gitlab/ci/shipframe-review.yml"
+
 # Respect an existing workflow gate instead of silently making MRs unrunnable.
 BLOCKED="$TMP/gitlab-workflow-blocked"
 make_repo "$BLOCKED" "https://gitlab.com/group/blocked.git"

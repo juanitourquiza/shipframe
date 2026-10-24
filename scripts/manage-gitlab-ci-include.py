@@ -53,6 +53,11 @@ def add_include(source: str) -> str:
 
     inline, comment = split_inline_comment(lines[include_index].split(":", 1)[1].strip())
     if inline:
+        if inline.startswith("[") and not inline.endswith("]"):
+            raise ValueError(
+                "multiline flow-style include is not supported; convert it to a block list "
+                "and rerun the installer"
+            )
         if inline.startswith("[") and inline.endswith("]"):
             entries = split_flow_items(inline[1:-1])
         elif inline.startswith("{") and inline.endswith("}"):
@@ -172,6 +177,14 @@ def remove_managed(path: Path) -> None:
     )
     lines = source.splitlines(keepends=True)
     lines = [line for line in lines if not (INCLUDE_MARKER in line and INCLUDE in line)]
+    # Removing the only ShipFrame include from a prior `include: []` must not
+    # leave a null-valued `include:` key next to other root CI settings.
+    for index, line in enumerate(lines):
+        if re.match(r"^include:\s*$", line.rstrip("\r\n")):
+            next_content = next((item for item in lines[index + 1 :] if item.strip() and not item.lstrip().startswith("#")), None)
+            if next_content is None or not next_content.startswith((" ", "\t")):
+                lines[index] = ""
+            break
     result = "".join(lines)
     if result == "include:\n":
         result = ""

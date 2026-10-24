@@ -520,7 +520,8 @@ shipframe install --codex --pr-review nan-builders
 
 - GitHub: `.github/workflows/shipframe-review.yml`
 - GitLab: `.gitlab/ci/shipframe-review.yml` and an idempotent local include in
-  `.gitlab-ci.yml` (existing include lists are preserved).
+  `.gitlab-ci.yml` (existing inline/block include lists are preserved where
+  supported; unsupported multiline flow forms fail safely before writing).
 - Both: `scripts/sf_pr_review.py`, a stdlib-only script with OpenAI-compatible
   and Anthropic API adapters.
 
