@@ -74,6 +74,8 @@ bash -n "$ROOT/install.sh"
 # --- AI PR reviewer (opt-in) ---
 PR_TARGET="$TMP/pr-review-target"
 mkdir -p "$PR_TARGET"
+git -C "$PR_TARGET" init -q
+git -C "$PR_TARGET" remote add origin https://github.com/example/pr-review-target.git
 # Empty dir so uninstall invocations below never touch the repo checkout itself.
 PR_CLEAN="$TMP/pr-review-clean"
 mkdir -p "$PR_CLEAN"
@@ -92,6 +94,14 @@ grep -q 'https://example.com/v1' "$PR_TARGET/.github/workflows/shipframe-review.
 "$ROOT/scripts/install-pr-review.sh" nan-builders "$PR_TARGET" >"$TMP/pr-review-nan.log" 2>&1
 grep -q 'api.nan.builders' "$PR_TARGET/.github/workflows/shipframe-review.yml"
 grep -q 'glm5.3-flash' "$PR_TARGET/.github/workflows/shipframe-review.yml"
+"$ROOT/scripts/install-pr-review.sh" nan-builders "$PR_TARGET" --model glm5.3 > /dev/null
+grep -q 'SF_REVIEW_MODEL: "glm5.3"' "$PR_TARGET/.github/workflows/shipframe-review.yml"
+"$ROOT/scripts/install-pr-review.sh" nan-builders "$PR_TARGET" > /dev/null
+grep -q 'SF_REVIEW_MODEL: "glm5.3-flash"' "$PR_TARGET/.github/workflows/shipframe-review.yml"
+"$ROOT/scripts/install-pr-review.sh" nan-builders "$PR_TARGET" --platform gitlab > /dev/null
+grep -q 'SF_REVIEW_PLATFORM: "gitlab"' "$PR_TARGET/.gitlab/ci/shipframe-review.yml"
+grep -q '.gitlab/ci/shipframe-review.yml' "$PR_TARGET/.gitlab-ci.yml"
+"$ROOT/scripts/manage-gitlab-ci-include.py" --remove "$PR_TARGET/.gitlab-ci.yml"
 cmp -s "$ROOT/templates/pr-review/sf_pr_review.py" "$ROOT/scripts/sf_pr_review.py" || { echo "dogfood copy drifted from templates/pr-review/sf_pr_review.py" >&2; exit 1; }
 "$ROOT/install.sh" --uninstall --codex --project-dir "$PR_TARGET" --yes >"$TMP/pr-review-uninstall.log" 2>&1
 [ ! -e "$PR_TARGET/.github/workflows/shipframe-review.yml" ] || { echo "uninstall did not remove shipframe-review.yml" >&2; exit 1; }

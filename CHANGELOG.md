@@ -1,5 +1,16 @@
 # Changelog
 
+## Unreleased
+
+### Added
+- Extend the opt-in AI PR reviewer to GitLab Merge Requests with origin-based
+  GitHub/GitLab detection, idempotent `.gitlab-ci.yml` wiring, and a GitLab Notes
+  API integration. The installer asks whether to enable it and lets users
+  override the suggested model.
+- Add GitLab CI/CD secret guidance and trusted-contributor/fork-MR safeguards;
+  only project MRs are reviewed, comments are updated in place, and the job
+  never pushes code.
+
 ## v1.0.0 — 2026-10-23
 
 ### Added

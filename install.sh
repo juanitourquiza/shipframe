@@ -42,12 +42,12 @@ Options:
   --yes                               Apply --repair/--uninstall changes.
   --purge                             With --uninstall, remove ShipFrame cache/state too.
   --opencode-model provider/model     Explicit OpenCode model override for converted agents.
-  --pr-review <provider>              Opt-in: install the AI PR reviewer GitHub Action into
-                                      --project-dir. Requires an install target (--claude,
-                                      --openwork, --opencode, --codex or --all). Providers:
-                                      nan-builders, claude, openai, custom (needs
-                                      SF_REVIEW_BASE_URL + SF_REVIEW_MODEL), off.
-                                      Interactive installs ask before skipping.
+  --pr-review <provider>              Install the AI PR/MR reviewer into --project-dir.
+                                      Detects GitHub Actions or GitLab CI from origin.
+                                      Providers: nan-builders, claude, openai, custom, off.
+  --pr-review-platform <host>          Override remote detection: github or gitlab.
+  --pr-review-model <id>               Override the provider's suggested model.
+                                      Secrets are configured by you in host CI settings.
   --dry-run                           Legacy --sync-docs compatibility option only.
   -h, --help                          Show this help.
 
@@ -73,6 +73,8 @@ YES=false
 PURGE=false
 OPENCODE_MODEL=""
 PR_REVIEW=""
+PR_REVIEW_PLATFORM=""
+PR_REVIEW_MODEL=""
 
 while [ "$#" -gt 0 ]; do
   case "$1" in
@@ -106,6 +108,16 @@ while [ "$#" -gt 0 ]; do
       PR_REVIEW="$2"
       shift
       ;;
+    --pr-review-platform)
+      [ "$#" -ge 2 ] || { echo "Missing value for --pr-review-platform" >&2; exit 2; }
+      PR_REVIEW_PLATFORM="$2"
+      shift
+      ;;
+    --pr-review-model)
+      [ "$#" -ge 2 ] || { echo "Missing value for --pr-review-model" >&2; exit 2; }
+      PR_REVIEW_MODEL="$2"
+      shift
+      ;;
     -h|--help) print_banner; print_usage; exit 0 ;;
     *) echo "Unknown argument: $1" >&2; print_usage; exit 2 ;;
   esac
@@ -120,6 +132,10 @@ fi
 case "$PR_REVIEW" in
   ""|nan-builders|claude|openai|custom|off) ;;
   *) echo "Unknown --pr-review provider: $PR_REVIEW (valid: nan-builders, claude, openai, custom, off)" >&2; exit 2 ;;
+esac
+case "${PR_REVIEW_PLATFORM:-}" in
+  ""|github|gitlab) ;;
+  *) echo "Unknown PR review platform: $PR_REVIEW_PLATFORM (valid: github, gitlab)" >&2; exit 2 ;;
 esac
 
 if [ "$ACTION" = "doctor" ] && [ "$REPO_ONLY" = true ] && [ -n "$TARGET" ]; then
@@ -891,13 +907,15 @@ remove_opencode_router() {
   fi
 }
 run_uninstall() {
-  if [ -f "$PROJECT_DIR/.github/workflows/shipframe-review.yml" ] || [ -f "$PROJECT_DIR/scripts/sf_pr_review.py" ]; then
+  if [ -f "$PROJECT_DIR/.github/workflows/shipframe-review.yml" ] || [ -f "$PROJECT_DIR/.gitlab/ci/shipframe-review.yml" ] || [ -f "$PROJECT_DIR/scripts/sf_pr_review.py" ]; then
     if [ "$YES" = true ]; then
-      echo "Removing AI PR reviewer artifacts from $PROJECT_DIR..."
-      rm -f "$PROJECT_DIR/.github/workflows/shipframe-review.yml" "$PROJECT_DIR/scripts/sf_pr_review.py"
-      rmdir "$PROJECT_DIR/.github/workflows" "$PROJECT_DIR/scripts" 2>/dev/null || true
+      echo "Removing AI PR/MR reviewer artifacts from $PROJECT_DIR..."
+      resolve_source_dir
+      python3 "$SOURCE_DIR/scripts/manage-gitlab-ci-include.py" --remove "$PROJECT_DIR/.gitlab-ci.yml"
+      rm -f "$PROJECT_DIR/.github/workflows/shipframe-review.yml" "$PROJECT_DIR/.gitlab/ci/shipframe-review.yml" "$PROJECT_DIR/scripts/sf_pr_review.py"
+      rmdir "$PROJECT_DIR/.github/workflows" "$PROJECT_DIR/.gitlab/ci" "$PROJECT_DIR/scripts" 2>/dev/null || true
     else
-      echo "dry-run: would remove AI PR reviewer artifacts in $PROJECT_DIR (.github/workflows/shipframe-review.yml, scripts/sf_pr_review.py)"
+      echo "dry-run: would remove AI PR/MR reviewer files and the marked GitLab CI include from $PROJECT_DIR"
     fi
   fi
   case "$TARGET" in
@@ -945,13 +963,20 @@ run_repair() {
 }
 install_pr_review() {
   local provider="$PR_REVIEW"
+  local platform="${PR_REVIEW_PLATFORM:-}" model="${PR_REVIEW_MODEL:-}"
   if [ "$DRY_RUN" = true ]; then
-    echo "dry-run: would ${provider:-prompt for} AI PR reviewer install into $PROJECT_DIR (use --pr-review with a real run)"
+    echo "dry-run: would ${provider:-prompt for} AI PR/MR reviewer install into $PROJECT_DIR (use --pr-review with a real run)"
     return 0
   fi
   if [ -z "$provider" ]; then
     if [ -t 0 ] && [ -t 1 ]; then
       local suggestion choice=""
+      if [ -z "$platform" ]; then
+        if ! platform="$("$SOURCE_DIR/scripts/detect-pr-review-platform.sh" "$PROJECT_DIR" 2>/dev/null)"; then
+          echo "AI PR/MR reviewer: skipped; no supported GitHub/GitLab origin was detected in $PROJECT_DIR."
+          return 0
+        fi
+      fi
       case "$TARGET" in
         claude) suggestion="claude" ;;
         codex) suggestion="openai" ;;
@@ -959,21 +984,33 @@ install_pr_review() {
         *) suggestion="nan-builders" ;;
       esac
       echo ""
-      printf "Install the AI PR reviewer (GitHub Action) into %s? Provider [nan-builders/claude/openai/custom/off] (suggested for your host: %s) or Enter to skip: " "$PROJECT_DIR" "$suggestion"
+      printf "Install the AI PR/MR reviewer for %s in %s? Choose provider [nan-builders/claude/openai/custom/off] (suggested for your agent: %s) or Enter to skip: " "$platform" "$PROJECT_DIR" "$suggestion"
       read -r choice || true
       case "$choice" in
-        "") echo "AI PR reviewer: skipped. Enable later with: ./install.sh --pr-review <provider>" ; return 0 ;;
+        "") echo "AI PR/MR reviewer: skipped. Enable later with: ./install.sh --pr-review <provider>" ; return 0 ;;
         nan-builders|claude|openai|custom|off) provider="$choice" ;;
         *) echo "Invalid provider: $choice (use nan-builders, claude, openai, custom or off)" >&2 ; exit 2 ;;
       esac
+      if [ "$provider" != "custom" ] && [ "$provider" != "off" ] && [ -z "$model" ]; then
+        local suggested_model
+        suggested_model="$("$SOURCE_DIR/scripts/install-pr-review.sh" "$provider" "$PROJECT_DIR" --default-model)"
+        printf "Model ID [default: %s] (Enter to keep default, or type another model): " "$suggested_model"
+        read -r model || true
+      fi
     else
-      echo "AI PR reviewer: not requested. Enable with --pr-review <nan-builders|claude|openai|custom|off>."
+      echo "AI PR/MR reviewer: not requested. Enable with --pr-review <nan-builders|claude|openai|custom|off>."
       return 0
     fi
   fi
+  if [ "$provider" != "off" ] && [ -z "$platform" ]; then
+    platform="$("$SOURCE_DIR/scripts/detect-pr-review-platform.sh" "$PROJECT_DIR")" || return $?
+  fi
   echo ""
-  echo "AI PR reviewer ($provider):"
-  "$SOURCE_DIR/scripts/install-pr-review.sh" "$provider" "$PROJECT_DIR"
+  echo "AI PR/MR reviewer ($platform / $provider):"
+  local args=("$provider" "$PROJECT_DIR")
+  [ -z "$platform" ] || args+=(--platform "$platform")
+  [ -z "$model" ] || args+=(--model "$model")
+  "$SOURCE_DIR/scripts/install-pr-review.sh" "${args[@]}"
 }
 
 check_engram_memory() {

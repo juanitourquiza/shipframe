@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-"""ShipFrame AI PR reviewer.
+"""ShipFrame AI PR/MR reviewer for GitHub Actions and GitLab CI.
 
-Runs inside GitHub Actions. Reads the PR diff, asks the configured AI provider
-for a gatekeeper-style review, and posts/updates ONE comment on the PR
+Runs inside GitHub Actions or GitLab CI. Reads the change diff, asks the
+configured AI provider for a gatekeeper-style review, and posts/updates ONE comment
 (identified by an HTML marker so later pushes edit it instead of piling up).
 
 Configuration comes from workflow env vars (values are baked in by
@@ -12,6 +12,8 @@ Configuration comes from workflow env vars (values are baked in by
 - SF_REVIEW_BASE_URL   provider API base URL
 - SF_REVIEW_MODEL      model name
 - SF_REVIEW_API_KEY    secret; never printed
+- SF_REVIEW_PLATFORM   github (default) | gitlab
+- SF_REVIEW_GITLAB_TOKEN  project token for GitLab notes API; never printed
 - SF_REVIEW_LANGUAGE   comment language (default es)
 - SF_REVIEW_MAX_DIFF_CHARS  diff cap before truncation (default 40000)
 
@@ -190,11 +192,11 @@ def publish_comment(repo: str, pr_number: str, token: str, sha: str, model: str,
         f"{MARKER}\n## 🤖 ShipFrame AI review (`{model}`)\n\n{review}\n\n---\n"
         f"<sub>Reviewed commit `{sha[:12]}` · updates on every push · shipframe PR reviewer</sub>"
     )
-    base = f"https://api.github.com/repos/{repo}/issues/{pr_number}/comments?per_page=100"
+    base = f"https://api.github.com/repos/{repo}/issues/{pr_number}/comments"
     page = 1
     matches = []
     while True:
-        existing = http_json(f"{base}&page={page}" if "?" in base else f"{base}?page={page}", "GET", token)
+        existing = http_json(f"{base}?per_page=100&page={page}", "GET", token)
         matches.extend(c for c in existing if MARKER in c.get("body", ""))
         if len(existing) < 100:
             break
@@ -205,37 +207,80 @@ def publish_comment(repo: str, pr_number: str, token: str, sha: str, model: str,
                   "DELETE", token)
 
     if not matches:
-        http_json(f"https://api.github.com/repos/{repo}/issues/{pr_number}/comments",
-                  "POST", token, {"body": body})
+        http_json(base, "POST", token, {"body": body})
         print("Posted new review comment.")
         return
 
     own = max(matches, key=lambda c: c["id"])
     updated = False
     try:
-        http_json(f"https://api.github.com/repos/{repo}/issues/{pr_number}/comments/{own['id']}",
-                  "PATCH", token, {"body": body})
+        http_json(f"{base}/{own['id']}", "PATCH", token, {"body": body})
         updated = True
         print(f"Updated comment {own['id']}.")
     except RuntimeError as exc:
-        # El comentario puede no ser editable (comentarios del bot con
-        # GITHUB_TOKEN); se reemplaza por uno nuevo en vez de fallar.
         if "HTTP 404" not in str(exc) and "HTTP 410" not in str(exc):
             raise
         print(f"Could not update comment {own['id']} ({exc}); replacing it.")
-    # Converger a un solo comentario: borrar los marcados que quedaron.
-    for c in matches:
-        if updated and c["id"] == own["id"]:
+    for comment in matches:
+        if updated and comment["id"] == own["id"]:
             continue
         try:
-            delete_comment(c["id"])
-            print(f"Deleted comment {c['id']}.")
-        except RuntimeError as dexc:
-            print(f"Could not delete comment {c['id']} ({dexc}); leaving it.")
+            delete_comment(comment["id"])
+        except RuntimeError as exc:
+            print(f"Could not delete comment {comment['id']} ({exc}); leaving it.")
     if not updated:
-        http_json(f"https://api.github.com/repos/{repo}/issues/{pr_number}/comments",
-                  "POST", token, {"body": body})
+        http_json(base, "POST", token, {"body": body})
         print("Posted new review comment.")
+
+
+def publish_gitlab_comment(api_base: str, project_id: str, mr_iid: str, token: str,
+                           sha: str, model: str, review: str) -> None:
+    """Create/update one MR note using a project access token with API scope."""
+    body = (
+        f"{MARKER}\n## 🤖 ShipFrame AI review (`{model}`)\n\n{review}\n\n---\n"
+        f"<sub>Reviewed commit `{sha[:12]}` · updates on every push · shipframe MR reviewer</sub>"
+    )
+    base = (f"{api_base.rstrip('/')}/projects/{project_id}/merge_requests/"
+            f"{mr_iid}/notes")
+    headers = {"PRIVATE-TOKEN": token}
+    page = 1
+    matches = []
+    while True:
+        existing = http_json(f"{base}?per_page=100&page={page}", "GET", "",
+                             extra_headers=headers)
+        if not isinstance(existing, list):
+            raise RuntimeError("Unexpected GitLab notes response")
+        matches.extend(note for note in existing if MARKER in note.get("body", ""))
+        if len(existing) < 100:
+            break
+        page += 1
+
+    if not matches:
+        http_json(base, "POST", "", {"body": body}, extra_headers=headers)
+        print("Posted new merge request review note.")
+        return
+
+    own = max(matches, key=lambda note: note["id"])
+    updated = False
+    try:
+        http_json(f"{base}/{own['id']}", "PUT", "", {"body": body},
+                  extra_headers=headers)
+        updated = True
+        print(f"Updated note {own['id']}.")
+    except RuntimeError as exc:
+        if "HTTP 404" not in str(exc) and "HTTP 410" not in str(exc):
+            raise
+        print(f"Could not update note {own['id']}; replacing it.")
+    for note in matches:
+        if updated and note["id"] == own["id"]:
+            continue
+        try:
+            http_json(f"{base}/{note['id']}", "DELETE", "", extra_headers=headers)
+        except RuntimeError as exc:
+            print(f"Could not delete duplicate note {note['id']}: {exc}")
+    if not updated:
+        http_json(base, "POST", "", {"body": body}, extra_headers=headers)
+        print("Posted replacement merge request review note.")
 
 
 def main() -> None:
@@ -243,16 +288,28 @@ def main() -> None:
     base_url = _env("SF_REVIEW_BASE_URL")
     model = _env("SF_REVIEW_MODEL")
     api_key = _env("SF_REVIEW_API_KEY")
-    repo = _env("REPO")
-    pr_number = _env("PR_NUMBER")
-    sha = _env("HEAD_SHA")
-    token = _env("GITHUB_TOKEN")
+    platform = os.environ.get("SF_REVIEW_PLATFORM", "github").lower()
 
     diff = load_diff()
-    system, user = build_messages(_env("PR_TITLE"), os.environ.get("PR_BODY", ""), diff)
+    if platform == "github":
+        title = _env("PR_TITLE")
+        body = os.environ.get("PR_BODY", "")
+    elif platform == "gitlab":
+        title = _env("CI_MERGE_REQUEST_TITLE")
+        body = os.environ.get("CI_MERGE_REQUEST_DESCRIPTION", "")
+    else:
+        raise RuntimeError(f"Unknown SF_REVIEW_PLATFORM: {platform}")
+    system, user = build_messages(title, body, diff)
     print(f"Asking {model} ({api}) to review {len(diff)} diff chars...")
     review = ask_provider(api, base_url, model, api_key, system, user)
-    publish_comment(repo, pr_number, token, sha, model, review)
+    if platform == "github":
+        publish_comment(_env("REPO"), _env("PR_NUMBER"), _env("GITHUB_TOKEN"),
+                        _env("HEAD_SHA"), model, review)
+    elif platform == "gitlab":
+        publish_gitlab_comment(_env("CI_API_V4_URL"), _env("CI_PROJECT_ID"),
+                               _env("CI_MERGE_REQUEST_IID"),
+                               _env("SF_REVIEW_GITLAB_TOKEN"),
+                               _env("CI_COMMIT_SHA"), model, review)
     print("Review complete.")
 
 

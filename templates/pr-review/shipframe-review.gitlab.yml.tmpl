@@ -1,0 +1,22 @@
+# Optional ShipFrame AI review job, included from the repository's .gitlab-ci.yml.
+# GitLab MR pipelines execute source-branch CI configuration: only enable secrets
+# for contributors trusted to modify CI configuration. External fork MRs are skipped.
+
+.shipframe-ai-mr-review-template:
+  stage: .post
+  timeout: 45m
+  image: python:3.12-slim
+  variables:
+    GIT_DEPTH: "0"
+    SF_REVIEW_API: "__SF_REVIEW_API__"
+    SF_REVIEW_BASE_URL: "__SF_REVIEW_BASE_URL__"
+    SF_REVIEW_MODEL: "__SF_REVIEW_MODEL__"
+    SF_REVIEW_PLATFORM: "gitlab"
+  script:
+    - test -n "$SF_REVIEW_API_KEY" || { echo "Missing CI/CD variable SF_REVIEW_API_KEY"; exit 1; }
+    - test -n "$SF_REVIEW_GITLAB_TOKEN" || { echo "Missing CI/CD variable SF_REVIEW_GITLAB_TOKEN"; exit 1; }
+    - git fetch origin "$CI_MERGE_REQUEST_TARGET_BRANCH_NAME"
+    - git show "FETCH_HEAD:scripts/sf_pr_review.py" > scripts/sf_pr_review.py
+    - git diff "$CI_MERGE_REQUEST_DIFF_BASE_SHA...$CI_COMMIT_SHA" > pr.diff
+    - test -s pr.diff || { echo "Empty MR diff; refusing to publish a review"; exit 1; }
+    - python3 scripts/sf_pr_review.py
