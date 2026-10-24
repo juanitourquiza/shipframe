@@ -10,7 +10,7 @@ It provides reusable skills, agent workflows, templates, and project profiles fo
 
 > Tagline: **AI coding workflows for teams that plan, prove, and ship.**
 
-**Current stable release:** [v1.0.0](https://github.com/juanitourquiza/shipframe/releases/tag/v1.0.0), introducing the opt-in AI PR reviewer. See the [changelog](CHANGELOG.md) for release details.
+**Current stable release:** [v1.1.0](https://github.com/juanitourquiza/shipframe/releases/tag/v1.1.0), adding GitLab Merge Request reviews to the opt-in AI PR/MR reviewer. See the [changelog](CHANGELOG.md) for release details.
 
 **Website:** https://shipframe.hackeruna.com/  
 **Repository:** https://github.com/juanitourquiza/shipframe
@@ -495,31 +495,66 @@ existing workflows unless a user opts into it.
 
 ---
 
-## AI PR reviewer (opt-in)
+## AI PR/MR reviewer (opt-in)
 
-ShipFrame can install a gatekeeper GitHub Action that reviews every pull
-request with your own AI provider and leaves one comment per PR, updated on
-every push — the CI-side counterpart of the `code-review` skill. Nothing is
-installed unless you ask for it:
+ShipFrame can install a provider-aware CI reviewer in a target Git repository.
+It detects GitHub Actions or GitLab CI from `origin`, reviews each pull/merge
+request with your AI provider, and keeps one comment updated on each new push —
+the CI counterpart to ShipFrame's local `code-review` skill. It is a major step
+from advice-only workflows to continuous, repository-native review, while
+remaining optional and under the project's control.
+
+### Quick setup
+
+1. Install ShipFrame for your coding agent from the root of the target repo;
+   for example:
 
 ```bash
-./install.sh --codex --pr-review nan-builders
-# providers: nan-builders | claude | openai | custom | off
-# custom needs SF_REVIEW_BASE_URL and SF_REVIEW_MODEL
+brew tap juanitourquiza/shipframe
+brew install shipframe
+shipframe install --codex --pr-review nan-builders
 ```
 
-Interactive installs ask whether to enable it; non-interactive runs skip it
-unless `--pr-review` is passed. The installer writes two ShipFrame-owned files
-into `--project-dir` (default: current directory):
+2. The installer detects the repository host and writes its workflow, plus the
+   shared review script, into `--project-dir` (default: current directory):
 
-- `.github/workflows/shipframe-review.yml` — trigger, concurrency, fork guard
-- `scripts/sf_pr_review.py` — stdlib-only review script with OpenAI-compatible
-  and Anthropic API adapters
+- GitHub: `.github/workflows/shipframe-review.yml`
+- GitLab: `.gitlab/ci/shipframe-review.yml` and an idempotent local include in
+  `.gitlab-ci.yml` (existing inline/block include lists are preserved where
+  supported; unsupported multiline flow forms fail safely before writing).
+- Both: `scripts/sf_pr_review.py`, a stdlib-only script with OpenAI-compatible
+  and Anthropic API adapters.
 
-One manual step remains: add the `SF_REVIEW_API_KEY` repository secret with
-your provider key. Fork PRs are skipped (GitHub does not deliver secrets to
-forks, and third-party diffs must never touch your key), the script never
-prints the key, and the workflow cannot push code — it only comments.
+3. Store `SF_REVIEW_API_KEY` as a secret in the host's CI settings. For GitLab,
+   also add `SF_REVIEW_GITLAB_TOKEN`: a project access token with the `api`
+   scope and Reporter role, saved as a masked CI/CD variable. Never put either
+   secret in YAML or commit it. Protect GitLab variables where your protected
+   source/target branch policy allows; MR CI configuration comes from the
+   source branch, so enable this only for contributors trusted to change CI.
+4. Open a same-repository PR/MR or push another commit. The reviewer posts one
+   comment and updates it on subsequent pushes. Fork requests are skipped; the
+   job cannot push source changes. Review files must first reach the target
+   branch before the GitLab template can pin and run the trusted review script.
+
+Interactive setup asks whether to enable the reviewer, which AI API provider to
+use, and whether to override its suggested model. The target tool selection
+(Claude Code, Codex, OpenCode, etc.) is separate from the CI provider/model.
+For example, NaN Builders defaults to `glm5.3-flash`; premium users can select
+`glm5.3`. Override any model with `--pr-review-model <model-id>`. Supported API
+providers are `nan-builders`, `claude`, `openai`, and `custom`; custom also needs
+`SF_REVIEW_BASE_URL` and `SF_REVIEW_MODEL`. Override a self-hosted or ambiguous
+Git remote with `--pr-review-platform github|gitlab`.
+
+Non-interactive example with a model override:
+
+```bash
+shipframe install --codex --pr-review nan-builders --pr-review-model glm5.3
+```
+
+The generated review workflow only comments, never changes the PR/MR or pushes
+code, and the reviewer script never prints API keys. To remove generated
+artifacts and ShipFrame's marked GitLab include, run
+`./install.sh --uninstall --codex --project-dir "$PWD" --yes`.
 
 If `.shipframe/profile.md` or `shipframe.profile.md` exists, the reviewer
 enforces those conventions on top of the generic checklist. Remove everything
@@ -690,23 +725,29 @@ Nota legacy avanzada: `./install.sh --sync-docs` sigue existiendo para manifests
 
 ### Reviewer de PRs con IA (opt-in)
 
-ShipFrame puede instalar un GitHub Action gatekeeper que revisa cada pull
-request con tu propio proveedor de IA y deja un comentario por PR, editado en
-cada push — la contraparte en CI de la skill `code-review`:
+ShipFrame puede instalar un revisor CI optativo que detecta GitHub Actions o
+GitLab CI desde `origin` y revisa cada PR/MR con tu propio proveedor de IA. Es
+la contraparte automatizada de `code-review`: conserva un comentario que se
+actualiza con cada push y no puede subir cambios al repositorio.
 
 ```bash
 ./install.sh --codex --pr-review nan-builders
 # proveedores: nan-builders | claude | openai | custom | off
+# personaliza el modelo sugerido si quieres:
+./install.sh --codex --pr-review nan-builders --pr-review-model glm5.3
 # custom requiere SF_REVIEW_BASE_URL y SF_REVIEW_MODEL
+# usa --pr-review-platform github|gitlab para remotos ambiguos o autohospedados
 ```
 
-Las instalaciones interactivas preguntan si activarlo; las no interactivas lo
-saltan salvo que se pase `--pr-review`. El instalador escribe
-`.github/workflows/shipframe-review.yml` y `scripts/sf_pr_review.py` en el
-repo (removibles con `--uninstall --yes`). Paso manual único: crear el secret
-`SF_REVIEW_API_KEY` con tu clave del proveedor. Los PRs de forks se ignoran,
-el script nunca imprime la clave y el workflow no puede pushear código: solo
-comenta.
+Durante la instalación interactiva puedes activarlo, elegir proveedor y
+personalizar el modelo sugerido; si no hay un `origin` compatible, se omite. El
+instalador añade el workflow específico de GitHub o GitLab y
+`scripts/sf_pr_review.py`. Configura `SF_REVIEW_API_KEY`; en GitLab añade además
+`SF_REVIEW_GITLAB_TOKEN` como variable enmascarada con permisos para crear notas
+de MR. Los requests de forks se omiten. Como GitLab ejecuta CI desde el branch
+fuente, habilita secretos solo para contribuidores de confianza. Para
+desinstalar, ejecuta `./install.sh --uninstall --codex --project-dir "$PWD"
+--yes`.
 
 ### Flujo recomendado
 
