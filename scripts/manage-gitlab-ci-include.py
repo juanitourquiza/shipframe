@@ -39,8 +39,7 @@ def ensure_mr_pipeline_allowed(lines: list[str]) -> None:
     # in `name`, a comment, or a `when: never` rule must not count as support.
     allows_merge_requests = any(
         re.match(r"^\s*-\s*if:\s*", line)
-        and "CI_PIPELINE_SOURCE" in line
-        and "merge_request_event" in line
+        and re.search(r"\bCI_PIPELINE_SOURCE\s*==\s*['\"]?merge_request_event\b", line)
         for line in workflow_rules
     ) and not any(
         re.match(r"^\s*-\s*if:\s*.*CI_PIPELINE_SOURCE.*merge_request_event", line)
