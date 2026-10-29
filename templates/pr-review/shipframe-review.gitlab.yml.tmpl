@@ -3,7 +3,7 @@
 # for contributors trusted to modify CI configuration. External fork MRs are skipped.
 
 .shipframe-ai-mr-review-template:
-  stage: .post
+  stage: test
   timeout: 45m
   image: python:3.12-slim
   variables:
@@ -15,6 +15,7 @@
   script:
     - test -n "$SF_REVIEW_API_KEY" || { echo "Missing CI/CD variable SF_REVIEW_API_KEY"; exit 1; }
     - test -n "$SF_REVIEW_GITLAB_TOKEN" || { echo "Missing CI/CD variable SF_REVIEW_GITLAB_TOKEN"; exit 1; }
+    - apt-get update -qq && apt-get install -y -qq git > /dev/null  # python:3.12-slim ships without git
     - git fetch origin "$CI_MERGE_REQUEST_TARGET_BRANCH_NAME"
     - git show "FETCH_HEAD:scripts/sf_pr_review.py" > scripts/sf_pr_review.py
     - git diff "$CI_MERGE_REQUEST_DIFF_BASE_SHA...$CI_COMMIT_SHA" > pr.diff
