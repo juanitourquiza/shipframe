@@ -169,7 +169,7 @@ Read `templates/wiki/wiki-md-template.md` and replace:
   ```
   If no repos: a sentence in `LANGUAGE` describing the vault's content source.
 
-Write all prose in `LANGUAGE`. Write the result to `CLAUDE.md`.
+Compose all prose in `LANGUAGE`. Save the result as `CLAUDE.md`.
 
 ---
 

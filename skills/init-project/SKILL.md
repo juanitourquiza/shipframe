@@ -109,7 +109,7 @@ Based on findings, classify the project as one or more of:
 
 ### 4. Generate AGENTS.md
 
-Write `AGENTS.md` at the project root with the following structure. Be specific — list actual package versions from dependency files, not guesses. If something is uncertain, omit it rather than guess.
+Create `AGENTS.md` at the project root with the following structure. Be specific — list actual package versions from dependency files, not guesses. If something is uncertain, omit it rather than guess.
 
 ```markdown
 # Project Context
