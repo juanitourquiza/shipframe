@@ -117,7 +117,7 @@ To start working with <project-name> you will need to have some tools previously
 -   [**<Key library>**](<official-url>)
 -   [**<Container/infra tool>**](<official-url>)
 
-## 🧑‍💻 Getting Started
+## 🚀 Getting Started
 
 1. **Clone** this repository.
 

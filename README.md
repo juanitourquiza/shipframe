@@ -197,6 +197,24 @@ If your Homebrew version requires tap trust, run the exact trust command it
 prints (for example, `brew trust --formula juanitourquiza/shipframe/shipframe`)
 and then re-run `brew install shipframe`.
 
+### Hermes Agent
+
+ShipFrame ships as a native Hermes plugin: a `plugin.yaml` manifest plus a
+Python entrypoint that registers every skill in `skills/` as a namespaced,
+read-only Hermes skill (`shipframe:<skill>`), without copying files into
+`~/.hermes/skills`.
+
+Until the entry is listed in the Hermes plugin catalog, install it from this
+repository (in the Desktop app: Capabilities → Plugins → install from
+repository; or from the CLI):
+
+```bash
+hermes plugins install juanitourquiza/shipframe
+```
+
+Once the catalog entry is reviewed and merged, `hermes plugins install
+shipframe` installs the exact reviewed commit.
+
 ### Optional: concise agent responses with Caveman
 
 ShipFrame keeps the base workflow focused on planning, verification, review, and
@@ -437,7 +455,7 @@ project where you run the command:
   `./install.sh --repair --claude --yes`.
 - Codex CLI: links skills into `~/.agents/skills` for the current Agent
   Skills layout, also links compatibility copies into `~/.codex/skills`, and
-  injects the managed workflow block into `~/.codex/AGENTS.md`.
+  inserts the managed workflow block into `~/.codex/AGENTS.md`.
 - OpenCode: links skills into `~/.config/opencode/skills`, writes converted
   agents into `~/.config/opencode/agents`, and links the optional v2 prompt
   router plugin. OpenCode v2 auto-discovers local plugins in this directory;
@@ -617,6 +635,8 @@ shipframe/
 ├── raw/                    # Wiki source staging
 ├── scripts/                # Build helpers, including OpenAI plugin packaging
 ├── .claude-plugin/         # Claude plugin metadata
+├── plugin.yaml             # Hermes Agent plugin manifest
+├── __init__.py             # Hermes plugin entrypoint (registers skills/)
 └── install.sh              # Multi-tool installer
 ```
 
@@ -691,6 +711,13 @@ Si tu versión de Homebrew exige confianza para taps externos, ejecuta el comand
 exacto que Homebrew imprime (por ejemplo,
 `brew trust --formula juanitourquiza/shipframe/shipframe`) y vuelve a correr
 `brew install shipframe`.
+
+En Hermes Agent, ShipFrame se instala como plugin nativo y sus skills quedan
+disponibles con el espacio de nombres `shipframe:<skill>`:
+
+```bash
+hermes plugins install juanitourquiza/shipframe
+```
 
 Para instalar desde un clon local:
 

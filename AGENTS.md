@@ -8,11 +8,13 @@ ShipFrame is an AI coding workflow toolkit for teams that plan, prove, and ship 
 - Bash installer (`install.sh`).
 - Node.js snippets embedded inside `install.sh` for JSON editing and agent conversion.
 - Claude Code plugin metadata in `.claude-plugin/`.
+- Hermes Agent plugin packaging in `plugin.yaml` + `__init__.py`.
 - Codex workflow block in `codex/dev-workflow.md`.
 
 ## Repo structure
 
 - `skills/<name>/SKILL.md` — installable skills. Keep this flat; the installer symlinks each direct child into host skill directories (`~/.agents/skills`, `~/.codex/skills`, `~/.config/opencode/skills`).
+- `plugin.yaml` + `__init__.py` — Hermes Agent plugin manifest and entrypoint at the repo root; `__init__.py` registers each skill under `skills/` as a namespaced `shipframe:<skill>` Hermes skill. Dependency-free (stdlib only); keep it that way.
 - `agents/*.md` — Claude/OpenCode-oriented agents.
 - `codex/dev-workflow.md` — Codex routing workflow inlined into `~/.codex/AGENTS.md` by the installer.
 - `hooks/prompt-router-core.cjs` — shared advisory bypass/suggest/route prompt classifier.
