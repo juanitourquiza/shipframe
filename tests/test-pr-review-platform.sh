@@ -40,6 +40,12 @@ grep -q 'extends: .shipframe-ai-mr-review-template' "$GITLAB/.gitlab-ci.yml"
 grep -q '^\.shipframe-ai-mr-review-template:' "$GITLAB/.gitlab/ci/shipframe-review.yml"
 grep -q 'SF_REVIEW_GITLAB_TOKEN' "$GITLAB/.gitlab/ci/shipframe-review.yml"
 grep -q 'SF_REVIEW_MODEL: "glm5.3"' "$GITLAB/.gitlab/ci/shipframe-review.yml"
+grep -q '^  stage: test$' "$GITLAB/.gitlab/ci/shipframe-review.yml"
+if grep -q 'stage: \.post' "$GITLAB/.gitlab/ci/shipframe-review.yml"; then
+  echo 'GitLab template must not use the .post stage' >&2
+  exit 1
+fi
+grep -q 'apt-get install -y -qq git' "$GITLAB/.gitlab/ci/shipframe-review.yml"
 
 # Optional project_dir works when provider flags follow the provider argument.
 GITLAB_NO_DIR="$TMP/gitlab-no-dir"

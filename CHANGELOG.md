@@ -1,5 +1,18 @@
 # Changelog
 
+## v1.1.1 — 2026-10-29
+
+### Fixed
+- The GitLab MR review template no longer declares the `.post` stage, which
+  GitLab could reject at pipeline creation time; the job now runs in the
+  standard `test` stage. If your `.gitlab-ci.yml` overrides `stages:`, include
+  `test`.
+- The GitLab MR review job installs `git` at runtime because `python:3.12-slim`
+  ships without it; previously `git fetch`/`git show` failed inside the job.
+- GitLab users who installed the reviewer before v1.1.1 should re-run the
+  installer to refresh `.gitlab/ci/shipframe-review.yml`; the include wiring is
+  idempotent.
+
 ## v1.1.0 — 2026-10-23
 
 ### Added

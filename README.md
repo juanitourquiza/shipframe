@@ -10,7 +10,7 @@ It provides reusable skills, agent workflows, templates, and project profiles fo
 
 > Tagline: **AI coding workflows for teams that plan, prove, and ship.**
 
-**Current stable release:** [v1.1.0](https://github.com/juanitourquiza/shipframe/releases/tag/v1.1.0), adding GitLab Merge Request reviews to the opt-in AI PR/MR reviewer. See the [changelog](CHANGELOG.md) for release details.
+**Current stable release:** [v1.1.1](https://github.com/juanitourquiza/shipframe/releases/tag/v1.1.1), fixing the GitLab MR review template so pipelines are created and the job can run git. See the [changelog](CHANGELOG.md) for release details.
 
 **Website:** https://shipframe.hackeruna.com/  
 **Repository:** https://github.com/juanitourquiza/shipframe
@@ -553,6 +553,13 @@ shipframe install --codex --pr-review nan-builders
    comment and updates it on subsequent pushes. Fork requests are skipped; the
    job cannot push source changes. Review files must first reach the target
    branch before the GitLab template can pin and run the trusted review script.
+5. GitLab jobs run in the `test` stage. If your `.gitlab-ci.yml` overrides
+   `stages:`, make sure `test` is listed, or the MR review job fails with an
+   unknown-stage error. Repositories using GitLab's default stages need no
+   change. If you installed the GitLab review before v1.1.1, re-run the
+   installer to refresh `.gitlab/ci/shipframe-review.yml` (it is idempotent):
+   the previous template used the `.post` stage, which GitLab could reject at
+   pipeline creation, and the job image did not include git.
 
 Interactive setup asks whether to enable the reviewer, which AI API provider to
 use, and whether to override its suggested model. The target tool selection
@@ -775,6 +782,14 @@ de MR. Los requests de forks se omiten. Como GitLab ejecuta CI desde el branch
 fuente, habilita secretos solo para contribuidores de confianza. Para
 desinstalar, ejecuta `./install.sh --uninstall --codex --project-dir "$PWD"
 --yes`.
+
+En GitLab el job corre en el stage `test`. Si tu `.gitlab-ci.yml` define
+`stages:` propios, asegúrate de incluir `test` o el job fallará con un error de
+stage desconocido; los repos con los stages por defecto no necesitan cambios. Si
+instalaste la revisión de GitLab antes de v1.1.1, vuelve a ejecutar el
+instalador para refrescar `.gitlab/ci/shipframe-review.yml` (es idempotente): la
+plantilla anterior usaba el stage `.post`, que GitLab podía rechazar al crear el
+pipeline, y la imagen del job no incluía git.
 
 ### Flujo recomendado
 
