@@ -36,11 +36,14 @@ Actions:
   --doctor       Read-only diagnostics. Use --repo-only for CI-safe repo checks.
   --repair       Repair ShipFrame-owned artifacts. Dry-run unless --yes is passed.
   --uninstall    Remove ShipFrame-owned artifacts. Dry-run unless --yes is passed.
+  --star         Star the ShipFrame GitHub repo with your gh CLI login.
 
 Options:
   --repo-only                         Only validate the ShipFrame repository.
   --yes                               Apply --repair/--uninstall changes.
   --purge                             With --uninstall, remove ShipFrame cache/state too.
+  --no-star-ask                       Skip the one-time post-install star prompt
+                                      (also SHIPFRAME_NO_STAR_ASK=1).
   --opencode-model provider/model     Explicit OpenCode model override for converted agents.
   --pr-review <provider>              Install the AI PR/MR reviewer into --project-dir.
                                       Detects GitHub Actions or GitLab CI from origin.
@@ -75,6 +78,7 @@ OPENCODE_MODEL=""
 PR_REVIEW=""
 PR_REVIEW_PLATFORM=""
 PR_REVIEW_MODEL=""
+NO_STAR_ASK=false
 
 while [ "$#" -gt 0 ]; do
   case "$1" in
@@ -82,6 +86,7 @@ while [ "$#" -gt 0 ]; do
     --doctor|--check) ACTION="doctor" ;;
     --repair) ACTION="repair" ;;
     --uninstall) ACTION="uninstall" ;;
+    --star) ACTION="star" ;;
     --sync-docs) ACTION="sync-docs" ;; # legacy advanced: hidden from help
     --claude) TARGET="claude" ;;
     --openwork) TARGET="openwork" ;;
@@ -92,6 +97,7 @@ while [ "$#" -gt 0 ]; do
     --repo-only) REPO_ONLY=true ;;
     --yes) YES=true ;;
     --purge) PURGE=true ;;
+    --no-star-ask) NO_STAR_ASK=true ;;
     --dry-run) DRY_RUN=true ;;
     --project-dir)
       [ "$#" -ge 2 ] || { echo "Missing value for --project-dir" >&2; exit 2; }
@@ -137,6 +143,66 @@ case "${PR_REVIEW_PLATFORM:-}" in
   ""|github|gitlab) ;;
   *) echo "Unknown PR review platform: $PR_REVIEW_PLATFORM (valid: github, gitlab)" >&2; exit 2 ;;
 esac
+
+# Star CTA. These helpers are defined early because `--star` exits before the
+# installer's environment setup (Node check, banner, target prompt).
+STAR_REPO_URL="https://github.com/juanitourquiza/shipframe"
+
+star_shipframe() {
+  if command -v gh >/dev/null 2>&1 && gh auth status >/dev/null 2>&1; then
+    if gh api --method PUT /user/starred/juanitourquiza/shipframe >/dev/null 2>&1; then
+      echo "Starred juanitourquiza/shipframe. Thank you."
+      return 0
+    fi
+    echo "Could not star automatically; your gh token may lack the public_repo scope." >&2
+  else
+    echo "GitHub CLI (gh) is not installed or not authenticated." >&2
+  fi
+  echo "Star it manually: $STAR_REPO_URL" >&2
+  return 1
+}
+
+print_star_hint() {
+  echo ""
+  echo "If ShipFrame saves you time, a star helps other teams find it:"
+  echo "  $STAR_REPO_URL"
+}
+
+maybe_ask_for_star() {
+  # One-time, interactive-only ask after a successful install. Never in CI,
+  # never in non-interactive shells beyond a silent link, and never repeated
+  # on the same machine.
+  if [ -n "${CI:-}" ]; then return 0; fi
+  if [ "$NO_STAR_ASK" = true ]; then return 0; fi
+  if [ -n "${SHIPFRAME_NO_STAR_ASK:-}" ]; then return 0; fi
+  if [ -f "$STATE_DIR/star-ask.once" ]; then return 0; fi
+  if ! [ -t 0 ] || ! [ -r /dev/tty ]; then
+    print_star_hint
+    return 0
+  fi
+  mkdir -p "$STATE_DIR" 2>/dev/null || true
+
+  echo ""
+  echo "If ShipFrame saves you time, a star helps other teams find it:"
+  echo "  $STAR_REPO_URL"
+  printf "Star it now with your GitHub account (uses your gh login)? [y/N] "
+  local answer=""
+  read -r answer < /dev/tty || answer=""
+  case "$answer" in
+    y|Y|yes|YES|s|S|si|sí|SI|SÍ)
+      star_shipframe || true
+      ;;
+    *)
+      echo "No problem. You can star later: $STAR_REPO_URL"
+      ;;
+  esac
+  : > "$STATE_DIR/star-ask.once" 2>/dev/null || true
+}
+
+if [ "$ACTION" = "star" ]; then
+  star_shipframe
+  exit $?
+fi
 
 if [ "$ACTION" = "doctor" ] && [ "$REPO_ONLY" = true ] && [ -n "$TARGET" ]; then
   echo "--doctor --repo-only does not use install targets." >&2
@@ -1086,6 +1152,7 @@ case "$ACTION" in
     check_engram_memory
     check_project_memory_suggestion
     check_context_mcp install
+    maybe_ask_for_star
     ;;
   *) echo "Invalid action: $ACTION" >&2; exit 2 ;;
 esac

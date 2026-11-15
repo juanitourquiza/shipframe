@@ -309,6 +309,70 @@ assert_link "$HOME/.agents/skills/code-review"
 ! grep -q '<!-- BEGIN shipframe' "$HOME/.codex/AGENTS.md"
 [ ! -e "$XDG_STATE_HOME/shipframe" ]
 
+# --- Star CTA: explicit command, one-time prompt guards, non-interactive hint ---
+STAR_HOME="$TMP/star-cta-home"
+STAR_STATE="$TMP/star-cta-state"
+mkdir -p "$STAR_HOME"
+
+# Without gh on PATH, --star must print the manual link and fail, never succeed.
+# /usr/bin:/bin stay present so `bash` resolves; Homebrew's gh (if any) does not.
+STAR_NO_GH_LOG="$TMP/star-no-gh.log"
+if PATH="$TMP/bin:/usr/bin:/bin" bash "$ROOT/install.sh" --star >"$STAR_NO_GH_LOG" 2>&1; then
+  echo "--star must fail without an authenticated gh" >&2
+  exit 1
+fi
+grep -q 'Star it manually: https://github.com/juanitourquiza/shipframe' "$STAR_NO_GH_LOG"
+
+# With an authenticated gh restricted to the star call, --star succeeds exactly once.
+cat > "$TMP/bin/gh" <<'SH'
+#!/usr/bin/env bash
+if [ "${1:-}" = "auth" ] && [ "${2:-}" = "status" ]; then
+  exit 0
+fi
+if [ "${1:-}" = "api" ]; then
+  if [ "${2:-}" = "--method" ] && [ "${3:-}" = "PUT" ] && [ "${4:-}" = "/user/starred/juanitourquiza/shipframe" ]; then
+    exit 0
+  fi
+  exit 1
+fi
+exit 1
+SH
+chmod +x "$TMP/bin/gh"
+STAR_OK_LOG="$TMP/star-ok.log"
+PATH="$TMP/bin:/usr/bin:/bin" bash "$ROOT/install.sh" --star >"$STAR_OK_LOG" 2>&1
+grep -q 'Starred juanitourquiza/shipframe. Thank you.' "$STAR_OK_LOG"
+rm "$TMP/bin/gh"
+
+# Usage documents both the action and the opt-out.
+grep -q -- '--star' "$TMP/shipframe-help.log"
+grep -q -- '--no-star-ask' "$TMP/shipframe-help.log"
+
+# Non-interactive install (not CI) prints the one-line hint without prompting
+# and without writing the once-per-machine marker.
+CI='' HOME="$STAR_HOME" XDG_STATE_HOME="$STAR_STATE" "$ROOT/install.sh" --openwork </dev/null >"$TMP/star-hint.log" 2>&1
+grep -q 'a star helps other teams find it' "$TMP/star-hint.log"
+[ ! -e "$STAR_STATE/shipframe/star-ask.once" ]
+
+# Once the marker exists, every later run on the machine stays silent.
+mkdir -p "$STAR_STATE/shipframe"
+: > "$STAR_STATE/shipframe/star-ask.once"
+CI='' HOME="$STAR_HOME" XDG_STATE_HOME="$STAR_STATE" "$ROOT/install.sh" --openwork </dev/null >"$TMP/star-silent.log" 2>&1
+! grep -q 'a star helps other teams find it' "$TMP/star-silent.log"
+
+# Opt-out flag and env var suppress the ask entirely.
+rm -rf "$STAR_STATE"
+CI='' HOME="$STAR_HOME" XDG_STATE_HOME="$STAR_STATE" "$ROOT/install.sh" --openwork --no-star-ask </dev/null >"$TMP/star-flag.log" 2>&1
+! grep -q 'a star helps other teams find it' "$TMP/star-flag.log"
+rm -rf "$STAR_STATE"
+CI='' SHIPFRAME_NO_STAR_ASK=1 HOME="$STAR_HOME" XDG_STATE_HOME="$STAR_STATE" "$ROOT/install.sh" --openwork </dev/null >"$TMP/star-env.log" 2>&1
+! grep -q 'a star helps other teams find it' "$TMP/star-env.log"
+
+# CI never sees the ask.
+rm -rf "$STAR_STATE"
+CI=true HOME="$STAR_HOME" XDG_STATE_HOME="$STAR_STATE" "$ROOT/install.sh" --openwork </dev/null >"$TMP/star-ci.log" 2>&1
+! grep -q 'a star helps other teams find it' "$TMP/star-ci.log"
+rm -rf "$STAR_STATE"
+
 # Project-memory opt-in suggestions belong only to successful installs.
 for action_log in \
   "$TMP/shipframe-doctor-repo-only.log" \
