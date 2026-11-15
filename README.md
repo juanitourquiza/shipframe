@@ -3,6 +3,7 @@
 <p align="center"><img src="https://shipframe.hackeruna.com/brand/shipframe-lockup.svg" alt="ShipFrame — AI coding workflows for teams" width="308"></p>
 
 <p align="center"><a href="https://shipframe.hackeruna.com/#install">Install with Homebrew</a> · <a href="https://shipframe.hackeruna.com/#demo">Watch the 30-second demo</a> · <a href="https://github.com/juanitourquiza/shipframe">Visit & star on GitHub</a> · <a href="LICENSE">MIT License</a> · <a href="https://github.com/juanitourquiza/shipframe/security">Security</a> · <a href="CONTRIBUTING.md">Contributing</a></p>
+<p align="center"><a href="https://github.com/juanitourquiza/shipframe/stargazers"><img alt="GitHub stars" src="https://img.shields.io/github/stars/juanitourquiza/shipframe?style=social"></a></p>
 
 **ShipFrame** is a practical AI coding workflow toolkit for teams that plan, prove, and ship software changes with discipline.
 
@@ -10,7 +11,7 @@ It provides reusable skills, agent workflows, templates, and project profiles fo
 
 > Tagline: **AI coding workflows for teams that plan, prove, and ship.**
 
-**Current stable release:** [v1.1.1](https://github.com/juanitourquiza/shipframe/releases/tag/v1.1.1), fixing the GitLab MR review template so pipelines are created and the job can run git. See the [changelog](CHANGELOG.md) for release details.
+**Current stable release:** [v1.2.0](https://github.com/juanitourquiza/shipframe/releases/tag/v1.2.0), adding `shipframe star` and a one-time post-install star prompt. See the [changelog](CHANGELOG.md) for release details.
 
 **Website:** https://shipframe.hackeruna.com/  
 **Repository:** https://github.com/juanitourquiza/shipframe
@@ -196,6 +197,22 @@ shipframe install --codex
 If your Homebrew version requires tap trust, run the exact trust command it
 prints (for example, `brew trust --formula juanitourquiza/shipframe/shipframe`)
 and then re-run `brew install shipframe`.
+
+### Star ShipFrame
+
+If ShipFrame saves you time, a star helps other teams find it:
+
+```bash
+shipframe star          # when installed via Homebrew
+./install.sh --star     # local clone; uses your gh CLI login
+```
+
+The installer also asks once — interactive sessions only — after a successful
+install. Skip it forever with `--no-star-ask` or `SHIPFRAME_NO_STAR_ASK=1`.
+Non-interactive installs (such as `curl | bash`) print the link without
+prompting. `--uninstall --purge` removes the once-per-machine marker together
+with the rest of ShipFrame's state. ShipFrame never stars on your behalf
+without an explicit yes.
 
 ### Hermes Agent
 
@@ -718,6 +735,23 @@ Si tu versión de Homebrew exige confianza para taps externos, ejecuta el comand
 exacto que Homebrew imprime (por ejemplo,
 `brew trust --formula juanitourquiza/shipframe/shipframe`) y vuelve a correr
 `brew install shipframe`.
+
+### Apoya el proyecto con una estrella
+
+Si ShipFrame te ahorra tiempo, una estrella ayuda a que otros equipos lo
+encuentren:
+
+```bash
+shipframe star          # si instalaste con Homebrew
+./install.sh --star     # clon local; usa tu login de gh
+```
+
+El instalador también pregunta una sola vez —solo en sesiones interactivas—
+después de una instalación exitosa. Puedes desactivarlo para siempre con
+`--no-star-ask` o `SHIPFRAME_NO_STAR_ASK=1`. Las instalaciones no interactivas
+(como `curl | bash`) solo muestran el enlace. `--uninstall --purge` elimina el
+marcador "una vez por máquina" junto con el resto del estado de ShipFrame.
+ShipFrame nunca agrega la estrella por ti sin un "sí" explícito.
 
 En Hermes Agent, ShipFrame se instala como plugin nativo y sus skills quedan
 disponibles con el espacio de nombres `shipframe:<skill>`:

@@ -1,5 +1,21 @@
 # Changelog
 
+## v1.2.0 — 2026-11-14
+
+### Added
+- `install.sh --star` (also available as `shipframe star` with the Homebrew
+  wrapper): stars `juanitourquiza/shipframe` with the user's authenticated
+  `gh` CLI login. The action only runs when invoked explicitly; it never stars
+  automatically and falls back to printing the repository link when `gh` is
+  missing, unauthenticated, or lacks the `public_repo` scope.
+- A one-time, interactive-only star prompt at the end of a successful install.
+  It is skipped entirely in CI, non-interactive shells, when `--no-star-ask` is
+  passed, and when `SHIPFRAME_NO_STAR_ASK=1`; the once-per-machine marker lives
+  at `${XDG_STATE_HOME:-~/.local/state}/shipframe/star-ask.once` and is removed
+  by `--uninstall --purge`.
+- Non-interactive installs (such as `curl | bash`) print the repository link
+  once without prompting or blocking.
+
 ## v1.1.1 — 2026-10-29
 
 ### Fixed
