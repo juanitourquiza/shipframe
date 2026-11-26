@@ -221,16 +221,19 @@ Python entrypoint that registers every skill in `skills/` as a namespaced,
 read-only Hermes skill (`shipframe:<skill>`), without copying files into
 `~/.hermes/skills`.
 
-Until the entry is listed in the Hermes plugin catalog, install it from this
-repository (in the Desktop app: Capabilities → Plugins → install from
-repository; or from the CLI):
+The catalog entry is merged (`plugin-catalog/shipframe.yaml`, reviewed v1.2.0),
+so install the exact reviewed release from the Hermes catalog:
+
+```bash
+hermes plugins install shipframe
+```
+
+To install directly from this repository instead — for example, to test an
+unreleased commit — use:
 
 ```bash
 hermes plugins install juanitourquiza/shipframe
 ```
-
-Once the catalog entry is reviewed and merged, `hermes plugins install
-shipframe` installs the exact reviewed commit.
 
 ### Optional: concise agent responses with Caveman
 
@@ -754,7 +757,16 @@ marcador "una vez por máquina" junto con el resto del estado de ShipFrame.
 ShipFrame nunca agrega la estrella por ti sin un "sí" explícito.
 
 En Hermes Agent, ShipFrame se instala como plugin nativo y sus skills quedan
-disponibles con el espacio de nombres `shipframe:<skill>`:
+disponibles con el espacio de nombres `shipframe:<skill>`. La entrada del
+catálogo ya está mergeada (`plugin-catalog/shipframe.yaml`, v1.2.0), así que
+instala la release revisada desde el catálogo:
+
+```bash
+hermes plugins install shipframe
+```
+
+Para instalar directamente desde este repositorio (por ejemplo, para probar un
+commit no publicado):
 
 ```bash
 hermes plugins install juanitourquiza/shipframe
